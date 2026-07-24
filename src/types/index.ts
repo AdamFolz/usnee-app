@@ -134,7 +134,7 @@ export type AppScreen =
   | 'profile';
 
 export interface UserSettings {
-  pin?: string;
+  pinHash?: string; // PBKDF2 verifier, never the raw PIN
   useBiometrics?: boolean;
   darkTheme: boolean;
   dailyLimit?: number;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
+import { hashPin } from './utils/crypto';
 import { Layout } from './components/Layout';
 import { PinLock } from './components/PinLock';
 import { Onboarding } from './components/Onboarding';
@@ -24,9 +25,22 @@ function App() {
   const dismissOnboarding = useAppStore((s) => s.dismissOnboarding);
 
   useEffect(() => {
-    initDB().then(() => {
+    initDB().then(async () => {
       setDbReady(true);
-      if (!settings.onboardingCompleted) {
+      const st = useAppStore.getState();
+      const legacyPin = (st.settings as { pin?: string }).pin;
+      // Migrate legacy plaintext PIN -> PBKDF2 hash so it is never stored in cleartext.
+      if (legacyPin && !st.settings.pinHash && /^\d{4}$/.test(legacyPin)) {
+        try {
+          const hashed = await hashPin(legacyPin);
+          useAppStore.setState((s) => ({
+            settings: { ...(s.settings as any), pinHash: hashed, pin: undefined }
+          }));
+        } catch {
+          // crypto.subtle unavailable (insecure context); leave as-is so user can re-set.
+        }
+      }
+      if (!st.settings.onboardingCompleted) {
         useAppStore.setState({ showOnboarding: true });
       }
     });
@@ -52,10 +66,10 @@ function App() {
     return <Onboarding onDone={dismissOnboarding} />;
   }
 
-  if (settings.pin && !unlocked) {
+  if (settings.pinHash && !unlocked) {
     return (
       <PinLock
-        pin={settings.pin}
+        pinHash={settings.pinHash}
         onUnlock={() => setUnlocked(true)}
       />
     );

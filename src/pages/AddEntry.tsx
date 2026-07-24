@@ -31,11 +31,12 @@ import {
   User,
   AlertTriangle,
   Star,
-  Heart
+  Heart,
+  Undo2
 } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 import { ConsumptionEntry, MethodField } from '../types';
-import { addEntry } from '../utils/db';
+import { addEntry, getEntries, deleteEntry } from '../utils/db';
 import { generateId } from '../utils/date';
 import { SUBSTANCES, CATEGORY_LABELS, CATEGORY_ORDER } from '../constants/substances';
 import { METHODS, METHOD_ABBREVIATIONS } from '../constants/methods';
@@ -89,6 +90,30 @@ function getLocalDatetimeInputValue(ts = Date.now()): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Warn if the same substance + method was already logged within the last hour.
+const DOUBLE_DOSE_WINDOW = 60 * 60 * 1000;
+
+async function findRecentDuplicate(
+  substanceId: string,
+  methodId: string,
+  ts: number
+): Promise<{ entry: ConsumptionEntry; mins: number } | null> {
+  const all = await getEntries();
+  let best: ConsumptionEntry | null = null;
+  let bestDiff = Infinity;
+  for (const e of all) {
+    if (e.substanceId === substanceId && e.methodId === methodId) {
+      const diff = Math.abs(e.timestamp - ts);
+      if (diff <= DOUBLE_DOSE_WINDOW && diff < bestDiff) {
+        best = e;
+        bestDiff = diff;
+      }
+    }
+  }
+  if (!best) return null;
+  return { entry: best, mins: Math.max(1, Math.round(bestDiff / 60000)) };
+}
+
 export default function AddEntry() {
   const navigate = useNavigate();
   const refreshEntries = useAppStore((s) => s.refreshEntries);
@@ -111,6 +136,9 @@ export default function AddEntry() {
   const [saved, setSaved] = useState(false);
   const [highlightMissing, setHighlightMissing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedEntry, setSavedEntry] = useState<ConsumptionEntry | null>(null);
+  const [pendingDuplicate, setPendingDuplicate] = useState<{ entry: ConsumptionEntry; mins: number } | null>(null);
+  const [dupAck, setDupAck] = useState(false);
 
   const totalSteps = 6;
 
@@ -148,9 +176,22 @@ export default function AddEntry() {
     if (!selectedSubstanceId && !customSubstanceName) return;
     if (!selectedMethod) return;
 
+    if (pendingDuplicate && !dupAck) setDupAck(true);
+
     setSaving(true);
 
     const substanceId = selectedSubstanceId || 'custom';
+
+    // Double-dose guard: same substance + method logged within the last hour.
+    if (!dupAck) {
+      const dup = await findRecentDuplicate(substanceId, selectedMethod.id, new Date(timestamp).getTime());
+      if (dup) {
+        setPendingDuplicate(dup);
+        setSaving(false);
+        return;
+      }
+    }
+
     const substanceName = selectedSubstance?.name || customSubstanceName || 'Неизвестно';
     const methodName = selectedMethod.name;
 
@@ -190,8 +231,21 @@ export default function AddEntry() {
 
     await addEntry(entry);
     await refreshEntries();
+    setSavedEntry(entry);
     setSaving(false);
     setSaved(true);
+  };
+
+  const handleUndo = async () => {
+    if (savedEntry) {
+      await deleteEntry(savedEntry.id);
+      await refreshEntries();
+    }
+    setSavedEntry(null);
+    setSaved(false);
+    setDupAck(false);
+    setPendingDuplicate(null);
+    setStep(6);
   };
 
   const handleAddNote = () => {
@@ -221,6 +275,9 @@ export default function AddEntry() {
     setTimestamp(getLocalDatetimeInputValue());
     setSaved(false);
     setHighlightMissing(false);
+    setSavedEntry(null);
+    setPendingDuplicate(null);
+    setDupAck(false);
   };
 
   // --- Рендер полей деталей способа ---
@@ -341,6 +398,13 @@ export default function AddEntry() {
           <p className="mt-1 text-sm text-usnee-text2">Данные в безопасности. Ты — в зоне риска.</p>
         </div>
         <div className="flex w-full flex-col gap-3">
+          <button
+            onClick={handleUndo}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-usnee-danger bg-usnee-surface py-3 text-sm font-medium text-usnee-danger transition-transform active:scale-95"
+          >
+            <Undo2 className="h-4 w-4" />
+            Отменить запись
+          </button>
           <button
             onClick={handleRepeat}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-usnee-surface py-3 text-sm font-medium text-usnee-text transition-transform active:scale-95"
@@ -585,6 +649,22 @@ export default function AddEntry() {
       {/* --- Шаг 6: Дополнительно --- */}
       {step === 6 && (
         <div className="flex flex-col gap-3">
+          {pendingDuplicate && (
+            <div className="rounded-xl border-2 border-usnee-warning bg-usnee-warning/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-usnee-warning">
+                <AlertTriangle className="h-4 w-4" /> Похоже, двойная доза
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-usnee-text2">
+                Такая же запись — {pendingDuplicate.entry.substanceName}, {pendingDuplicate.entry.methodName} — уже была {pendingDuplicate.mins} мин назад. Повтор подряд опасен передозировкой.
+              </p>
+              <button
+                onClick={() => { setDupAck(true); handleSave(); }}
+                className="mt-2 w-full rounded-lg bg-usnee-warning py-2 text-sm font-bold text-usnee-bg transition-transform active:scale-95"
+              >
+                Всё равно сохранить
+              </button>
+            </div>
+          )}
           <h2 className="text-lg font-semibold text-usnee-text">Дополнительно</h2>
 
           {/* Время */}
@@ -764,7 +844,7 @@ export default function AddEntry() {
             ) : (
               <Save className="h-5 w-5" />
             )}
-            Сохранить
+            {pendingDuplicate ? 'Всё равно сохранить' : 'Сохранить'}
           </button>
         )}
       </div>

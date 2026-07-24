@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { clearAllData, getEntries } from '../utils/db';
+import { hashPin, encryptData } from '../utils/crypto';
 import { SUBSTANCES } from '../constants/substances';
 import {
   Shield,
@@ -34,7 +35,7 @@ export default function Settings() {
     refreshEntries();
   }, [refreshEntries]);
 
-  const handlePinDigit = (d: string, isConfirm: boolean) => {
+  const handlePinDigit = async (d: string, isConfirm: boolean) => {
     const target = isConfirm ? pinConfirm : pinNew;
     if (target.length >= 4) return;
     const next = target + d;
@@ -42,7 +43,7 @@ export default function Settings() {
       setPinConfirm(next);
       if (next.length === 4) {
         if (next === pinNew) {
-          updateSettings({ pin: next });
+          updateSettings({ pinHash: await hashPin(next) });
           setPinModal(false);
           setPinNew('');
           setPinConfirm('');
@@ -82,8 +83,8 @@ export default function Settings() {
   };
 
   const togglePin = () => {
-    if (settings.pin) {
-      updateSettings({ pin: undefined });
+    if (settings.pinHash) {
+      updateSettings({ pinHash: undefined });
     } else {
       openPinModal();
     }
@@ -96,7 +97,7 @@ export default function Settings() {
     }
     await clearAllData();
     updateSettings({
-      pin: undefined,
+      pinHash: undefined,
       dailyLimit: undefined,
       limitSubstance: undefined,
       onboardingCompleted: false
@@ -113,14 +114,18 @@ export default function Settings() {
         entries,
         settings: {
           ...settings,
-          pin: undefined,
+          pinHash: undefined,
           dataExportPassword: undefined
         }
       };
       const password = window.prompt('Введи пароль для шифрования (или оставь пустым для простого JSON):');
       let content = JSON.stringify(data, null, 2);
       if (password && password.trim()) {
-        content = btoa(unescape(encodeURIComponent(content + '::' + password)));
+        try {
+          content = await encryptData(content, password);
+        } catch {
+          window.alert('Не удалось зашифровать. Экспортирую как обычный JSON без пароля.');
+        }
       }
       const blob = new Blob([content], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -155,16 +160,16 @@ export default function Settings() {
         <div className="space-y-3 rounded-xl bg-usnee-surface p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {settings.pin ? <Lock className="h-5 w-5 text-usnee-accent" /> : <Unlock className="h-5 w-5 text-usnee-text2" />}
+              {settings.pinHash ? <Lock className="h-5 w-5 text-usnee-accent" /> : <Unlock className="h-5 w-5 text-usnee-text2" />}
               <div>
                 <p className="text-sm font-medium text-usnee-text">PIN-код</p>
-                <p className="text-xs text-usnee-text2">{settings.pin ? 'Установлен' : 'Не установлен'}</p>
+                <p className="text-xs text-usnee-text2">{settings.pinHash ? 'Установлен' : 'Не установлен'}</p>
               </div>
             </div>
             <label className="relative inline-flex cursor-pointer items-center">
               <input
                 type="checkbox"
-                checked={!!settings.pin}
+                checked={!!settings.pinHash}
                 onChange={togglePin}
                 className="peer sr-only"
               />
@@ -173,7 +178,7 @@ export default function Settings() {
             </label>
           </div>
 
-          {settings.pin && (
+          {settings.pinHash && (
             <button
               onClick={openPinModal}
               className="big-tap flex w-full items-center justify-between rounded-lg bg-usnee-surface2 px-4 py-3 text-sm font-medium text-usnee-text transition-all active:scale-95"
@@ -362,7 +367,7 @@ export default function Settings() {
             Отмена
           </button>
           <h2 className="mb-2 text-xl font-bold text-usnee-text">
-            {pinStep === 'new' ? (settings.pin ? 'Новый PIN' : 'Установить PIN') : 'Повтори PIN'}
+            {pinStep === 'new' ? (settings.pinHash ? 'Новый PIN' : 'Установить PIN') : 'Повтори PIN'}
           </h2>
           <p className="mb-6 text-sm text-usnee-text2">
             {pinStep === 'new' ? 'Введи 4 цифры' : 'Ещё раз для проверки'}

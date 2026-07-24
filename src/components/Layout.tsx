@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { BottomNav } from './BottomNav';
 import { PanicButton } from './PanicButton';
+import { SosButton } from './SosButton';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <PanicButton />
+      <SosButton />
       <BottomNav />
     </div>
   );
