@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { UserSettings } from './types';
 import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
 import { hashPin } from './utils/crypto';
@@ -33,9 +34,10 @@ function App() {
       if (legacyPin && !st.settings.pinHash && /^\d{4}$/.test(legacyPin)) {
         try {
           const hashed = await hashPin(legacyPin);
-          useAppStore.setState((s) => ({
-            settings: { ...(s.settings as any), pinHash: hashed, pin: undefined }
-          }));
+          useAppStore.setState((s) => {
+            const { pin: _legacy, ...rest } = s.settings as UserSettings & { pin?: string };
+            return { settings: { ...rest, pinHash: hashed } };
+          });
         } catch {
           // crypto.subtle unavailable (insecure context); leave as-is so user can re-set.
         }
