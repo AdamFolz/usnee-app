@@ -1,406 +1,84 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  History as HistoryIcon,
-  User,
-  Users,
-  CheckCircle,
-  AlertTriangle,
-  HelpCircle,
-  Syringe,
-  Star,
-  Pencil,
-  Trash2,
-  ChevronDown,
-  HeartPulse,
-  Clock,
-  Zap,
-  X
-} from 'lucide-react';
-import { ConsumptionEntry } from '../types';
-import { getEntries, deleteEntry } from '../utils/db';
-import { formatTime, startOfDay, startOfWeek, startOfMonth } from '../utils/date';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Clock3, Eye, FileText, Pencil, Trash2 } from 'lucide-react';
+import type { EntrySyncRecord } from '../contracts';
+import type { ConsumptionEntry } from '../types';
+import { getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
+import { formatDateTime } from '../utils/date';
+import { reverseEntryById } from '../services/entryActions';
 import { SUBSTANCES } from '../constants/substances';
-import { METHODS } from '../constants/methods';
-import { TRIGGERS } from '../constants/triggers';
+import { BottomSheet, Button, Dialog, InlineNotice, StatusBadge, Surface, TopBar } from '../components/ui';
 
-const PAGE_SIZE = 10;
+function toLocalDateTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  return new Date(timestamp - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
 
-type DateFilter = 'today' | 'week' | 'month' | 'all';
-
-function History() {
-  const navigate = useNavigate();
+export function History() {
   const [entries, setEntries] = useState<ConsumptionEntry[]>([]);
+  const [syncById, setSyncById] = useState<Record<string, EntrySyncRecord>>({});
   const [loading, setLoading] = useState(true);
-  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-  const [substanceFilter, setSubstanceFilter] = useState<string>('all');
-  const [methodFilter, setMethodFilter] = useState<string>('all');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [expandedFilters, setExpandedFilters] = useState(false);
+  const [error, setError] = useState('');
+  const [selected, setSelected] = useState<ConsumptionEntry | null>(null);
+  const [editing, setEditing] = useState<ConsumptionEntry | null>(null);
+  const [deleteEntry, setDeleteEntry] = useState<ConsumptionEntry | null>(null);
+  const [editTime, setEditTime] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const loadEntries = useCallback(async () => {
-    setLoading(true);
-    const all = await getEntries();
-    setEntries(all.reverse());
-    setLoading(false);
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const [records, sync] = await Promise.all([getEntries(), getEntrySyncRecords()]);
+      setEntries([...records].sort((a, b) => b.timestamp - a.timestamp));
+      setSyncById(Object.fromEntries(sync.map((item) => [item.entityId, item])));
+    } catch { setError('Не удалось прочитать локальную историю'); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+  useEffect(() => { void load(); }, [load]);
 
-  const filteredEntries = useMemo(() => {
-    let result = [...entries];
-
-    const now = Date.now();
-    if (dateFilter === 'today') {
-      const start = startOfDay(now);
-      result = result.filter((e) => e.timestamp >= start);
-    } else if (dateFilter === 'week') {
-      const start = startOfWeek(now);
-      result = result.filter((e) => e.timestamp >= start);
-    } else if (dateFilter === 'month') {
-      const start = startOfMonth(now);
-      result = result.filter((e) => e.timestamp >= start);
-    }
-
-    if (substanceFilter !== 'all') {
-      result = result.filter((e) => e.substanceId === substanceFilter);
-    }
-    if (methodFilter !== 'all') {
-      result = result.filter((e) => e.methodId === methodFilter);
-    }
-
-    return result;
-  }, [entries, dateFilter, substanceFilter, methodFilter]);
-
-  const visibleEntries = useMemo(() => {
-    return filteredEntries.slice(0, visibleCount);
-  }, [filteredEntries, visibleCount]);
-
-  const hasMore = visibleEntries.length < filteredEntries.length;
-
-  const handleDelete = async (id: string) => {
-    if (confirmDelete === id) {
-      await deleteEntry(id);
-      setConfirmDelete(null);
-      loadEntries();
-    } else {
-      setConfirmDelete(id);
-    }
+  const openEdit = (entry: ConsumptionEntry) => {
+    setEditing(entry); setEditTime(toLocalDateTime(entry.timestamp)); setEditNotes(entry.notes ?? '');
   };
 
-  const handleEdit = (entry: ConsumptionEntry) => {
-    navigate('/add', { state: { entry } });
+  const saveEdit = async () => {
+    if (!editing || busy) return;
+    setBusy(true); setError('');
+    try { await updateEntryDetailsTransaction(editing.id, new Date(editTime).getTime(), editNotes); setEditing(null); await load(); }
+    catch { setError('Не удалось сохранить изменения. Исходная запись не потеряна.'); }
+    finally { setBusy(false); }
   };
 
-  const getSubstanceColor = (substanceId: string) => {
-    const s = SUBSTANCES.find((sub) => sub.id === substanceId);
-    return s?.color || '#a0a0a0';
+  const confirmRemove = async () => {
+    if (!deleteEntry || busy) return;
+    setBusy(true); setError('');
+    try {
+      if (!syncById[deleteEntry.id]?.createOperationId) throw new Error('LEGACY_ENTRY');
+      await reverseEntryById(deleteEntry.id); setDeleteEntry(null); setSelected(null); await load();
+    } catch { setError('Эту старую запись нельзя безопасно удалить в текущей версии.'); }
+    finally { setBusy(false); }
   };
 
-  const getSubstanceName = (substanceId: string, fallback?: string) => {
-    const s = SUBSTANCES.find((sub) => sub.id === substanceId);
-    return s?.name || fallback || substanceId;
-  };
+  const content = useMemo(() => {
+    if (loading) return <div role="status" className="h-40 animate-pulse rounded-card bg-usnee-surface motion-reduce:animate-none" />;
+    if (!entries.length) return <Surface className="p-8 text-center"><Clock3 className="mx-auto h-8 w-8 text-usnee-text3" /><p className="mt-3 text-usnee-text2">Записей пока нет.</p></Surface>;
+    return <div className="space-y-3">{entries.map((entry) => {
+      const sync = syncById[entry.id];
+      const tone = sync?.state === 'failed' ? 'failed' : sync?.state === 'synced' ? 'synced' : sync?.state === 'conflicted' ? 'warning' : sync ? 'pending' : 'offline';
+      const label = sync?.state === 'failed' ? 'Ошибка отправки' : sync?.state === 'synced' ? 'Синхронизировано' : sync?.state === 'conflicted' ? 'Конфликт' : sync ? 'Ждёт отправки' : 'Только на устройстве';
+      const substance = entry.substanceName || SUBSTANCES.find((item) => item.id === entry.substanceId)?.name || entry.substanceId;
+      return <Surface key={entry.id} variant="interactive" className="p-4">
+   <div className="flex items-start justify-between gap-3"><button type="button" onClick={() => setSelected(entry)} className="min-w-0 flex-1 text-left focus-visible:ring-2 focus-visible:ring-usnee-focus"><p className="text-title-md">{substance}</p><p className="mt-1 text-body-sm text-usnee-text2">{entry.dose} {entry.doseUnit} · {entry.methodName || entry.methodId}</p><p className="mt-2 text-caption text-usnee-text3">{formatDateTime(entry.timestamp)}</p></button><StatusBadge tone={tone}>{label}</StatusBadge></div>
+   <div className="mt-3 flex justify-end gap-2"><Button variant="ghost" size="sm" onClick={() => setSelected(entry)}><Eye className="h-4 w-4" />Открыть</Button><Button variant="ghost" size="sm" onClick={() => openEdit(entry)}><Pencil className="h-4 w-4" />Изменить</Button><Button variant="ghost" size="sm" disabled={!sync?.createOperationId} onClick={() => setDeleteEntry(entry)}><Trash2 className="h-4 w-4" />Удалить</Button></div>
+ </Surface>;
+    })}</div>;
+  }, [entries, loading, syncById]);
 
-  const getMethodName = (methodId: string, fallback?: string) => {
-    const m = METHODS.find((me) => me.id === methodId);
-    return m?.name || fallback || methodId;
-  };
-
-  const getTriggerName = (triggerId?: string) => {
-    if (!triggerId) return null;
-    const t = TRIGGERS.find((tr) => tr.id === triggerId);
-    return t?.name || triggerId;
-  };
-
-  const dateFilterOptions: { key: DateFilter; label: string }[] = [
-    { key: 'today', label: 'Сегодня' },
-    { key: 'week', label: 'Неделя' },
-    { key: 'month', label: 'Месяц' },
-    { key: 'all', label: 'Всё' },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-usnee-surface">
-          <HistoryIcon className="h-5 w-5 text-usnee-accent" />
-        </div>
-        <h1 className="text-2xl font-bold text-usnee-text">История</h1>
-      </div>
-
-      {/* Filters */}
-      <div className="space-y-3">
-        {/* Date filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {dateFilterOptions.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => {
-                setDateFilter(opt.key);
-                setVisibleCount(PAGE_SIZE);
-              }}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-all active:scale-95 ${
-                dateFilter === opt.key
-                  ? 'bg-usnee-accent text-white'
-                  : 'bg-usnee-surface text-usnee-text2 hover:text-usnee-text'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Expandable filters */}
-        <button
-          onClick={() => setExpandedFilters(!expandedFilters)}
-          className="flex w-full items-center justify-between rounded-lg bg-usnee-surface px-3 py-2 text-sm text-usnee-text2 transition-colors hover:text-usnee-text"
-        >
-          <span>Фильтры по ПАВ и способу</span>
-          <ChevronDown
-            className={`h-4 w-4 transition-transform ${expandedFilters ? 'rotate-180' : ''}`}
-          />
-        </button>
-
-        {expandedFilters && (
-          <div className="space-y-3 rounded-xl bg-usnee-surface p-3">
-            {/* Substance filter */}
-            <div className="space-y-2">
-              <span className="text-xs font-medium text-usnee-text2">ПАВ</span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSubstanceFilter('all')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-                    substanceFilter === 'all'
-                      ? 'bg-usnee-text text-usnee-bg'
-                      : 'bg-usnee-surface2 text-usnee-text2 hover:text-usnee-text'
-                  }`}
-                >
-                  Все
-                </button>
-                {SUBSTANCES.map((sub) => (
-                  <button
-                    key={sub.id}
-                    onClick={() =>
-                      setSubstanceFilter(sub.id === substanceFilter ? 'all' : sub.id)
-                    }
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-                      substanceFilter === sub.id
-                        ? 'text-white'
-                        : 'bg-usnee-surface2 text-usnee-text2 hover:text-usnee-text'
-                    }`}
-                    style={
-                      substanceFilter === sub.id
-                        ? { backgroundColor: sub.color }
-                        : undefined
-                    }
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Method filter */}
-            <div className="space-y-2">
-              <span className="text-xs font-medium text-usnee-text2">Способ</span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setMethodFilter('all')}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-                    methodFilter === 'all'
-                      ? 'bg-usnee-text text-usnee-bg'
-                      : 'bg-usnee-surface2 text-usnee-text2 hover:text-usnee-text'
-                  }`}
-                >
-                  Все
-                </button>
-                {METHODS.map((me) => (
-                  <button
-                    key={me.id}
-                    onClick={() =>
-                      setMethodFilter(me.id === methodFilter ? 'all' : me.id)
-                    }
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
-                      methodFilter === me.id
-                        ? 'bg-usnee-info text-white'
-                        : 'bg-usnee-surface2 text-usnee-text2 hover:text-usnee-text'
-                    }`}
-                  >
-                    {me.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Entries list */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-usnee-accent border-t-transparent" />
-        </div>
-      ) : filteredEntries.length === 0 ? (
-        <div className="rounded-xl bg-usnee-surface p-8 text-center">
-          <Clock className="mx-auto mb-3 h-8 w-8 text-usnee-text2" />
-          <p className="text-usnee-text2">Пока тишина. Сделай первую запись, пока не забыл.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {visibleEntries.map((entry) => {
-            const subColor = getSubstanceColor(entry.substanceId);
-            const isConfirming = confirmDelete === entry.id;
-
-            return (
-              <div
-                key={entry.id}
-                className="relative overflow-hidden rounded-xl bg-usnee-surface p-4 transition-all"
-              >
-                {/* Confirm delete overlay */}
-                {isConfirming && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-usnee-bg/95 p-4">
-                    <p className="text-center text-sm text-usnee-text">
-                      Точно? Это навсегда.
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleDelete(entry.id)}
-                        className="rounded-lg bg-usnee-danger px-4 py-2 text-sm font-medium text-white transition-transform active:scale-95"
-                      >
-                        Удалить
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(null)}
-                        className="rounded-lg bg-usnee-surface2 px-4 py-2 text-sm font-medium text-usnee-text transition-transform active:scale-95"
-                      >
-                        Оставить
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-2">
-                    {/* Time & substance */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-usnee-text">
-                        {formatTime(entry.timestamp)}
-                      </span>
-                      <span
-                        className="rounded-md px-2 py-0.5 text-xs font-medium text-white"
-                        style={{ backgroundColor: subColor }}
-                      >
-                        {getSubstanceName(entry.substanceId, entry.substanceName)}
-                      </span>
-                      <span className="text-xs text-usnee-text2">
-                        {getMethodName(entry.methodId, entry.methodName)}
-                      </span>
-                    </div>
-
-                    {/* Dose */}
-                    <div className="text-sm text-usnee-text">
-                      <span className="font-medium">{entry.dose}</span>{' '}
-                      <span className="text-usnee-text2">{entry.doseUnit}</span>
-                    </div>
-
-                    {/* Trigger & pulse */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {entry.triggerId && (
-                        <span className="flex items-center gap-1 rounded-md bg-usnee-surface2 px-2 py-0.5 text-xs text-usnee-text2">
-                          <Zap className="h-3 w-3" />
-                          {getTriggerName(entry.triggerId) || entry.customTrigger}
-                        </span>
-                      )}
-                      {entry.pulse && (
-                        <span className="flex items-center gap-1 rounded-md bg-usnee-surface2 px-2 py-0.5 text-xs text-usnee-danger">
-                          <HeartPulse className="h-3 w-3" />
-                          {entry.pulse} bpm
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Icons row */}
-                    <div className="flex items-center gap-3 pt-1">
-                      {entry.alone ? (
-                        <User className="h-4 w-4 text-usnee-text2" />
-                      ) : (
-                        <Users className="h-4 w-4 text-usnee-success" />
-                      )}
-
-                      {entry.fentanylTestResult && (
-                        <span title={`Фентанил: ${entry.fentanylTestResult}`}>
-                          {entry.fentanylTestResult === 'negative' ? (
-                            <CheckCircle className="h-4 w-4 text-usnee-success" />
-                          ) : entry.fentanylTestResult === 'positive' ? (
-                            <AlertTriangle className="h-4 w-4 text-usnee-danger" />
-                          ) : (
-                            <HelpCircle className="h-4 w-4 text-usnee-warning" />
-                          )}
-                        </span>
-                      )}
-
-                      {entry.missedShot && (
-                        <span title="Missed shot" className="flex items-center gap-0.5 text-usnee-danger">
-                          <Syringe className="h-4 w-4" />
-                          <X className="h-3 w-3" />
-                        </span>
-                      )}
-
-                      {entry.qualityNote && (
-                        <Star className="h-4 w-4 text-usnee-warning" />
-                      )}
-                    </div>
-
-                    {/* Notes */}
-                    {entry.notes && (
-                      <p className="text-xs text-usnee-text2">{entry.notes}</p>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => handleEdit(entry)}
-                      className="rounded-lg bg-usnee-surface2 p-2 text-usnee-text2 transition-colors hover:text-usnee-text active:scale-95"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(entry.id)}
-                      className="rounded-lg bg-usnee-surface2 p-2 text-usnee-text2 transition-colors hover:text-usnee-danger active:scale-95"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Load more */}
-          {hasMore && (
-            <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="w-full rounded-xl bg-usnee-surface py-3 text-sm font-medium text-usnee-text2 transition-colors hover:text-usnee-text active:scale-95"
-            >
-              Загрузить ещё
-            </button>
-          )}
-
-          {/* Footer info */}
-          <p className="text-center text-xs text-usnee-text2">
-            Показано {visibleEntries.length} из {filteredEntries.length}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-4"><TopBar title="История" eyebrow={`${entries.length} записей`} />{error && <InlineNotice tone="danger" title="Ошибка">{error}</InlineNotice>}{content}
+    <BottomSheet open={Boolean(selected)} onClose={() => setSelected(null)} title="Запись">{selected && <Surface className="space-y-3 p-4"><p className="text-title-lg">{selected.substanceName || selected.substanceId}</p><p>{selected.dose} {selected.doseUnit} · {selected.methodName || selected.methodId}</p><p className="text-body-sm text-usnee-text2">{formatDateTime(selected.timestamp)}</p>{selected.notes && <p className="flex gap-2 text-body-sm"><FileText className="h-4 w-4" />{selected.notes}</p>}</Surface>}</BottomSheet>
+    <BottomSheet open={Boolean(editing)} onClose={() => setEditing(null)} title="Изменить запись" description="Количество и вещество в этой фазе не изменяются." footer={<Button loading={busy} className="w-full" onClick={saveEdit}>Сохранить изменения</Button>}><div className="space-y-4"><label className="block text-body-sm font-bold" htmlFor="history-time">Время</label><input id="history-time" type="datetime-local" value={editTime} onChange={(event) => setEditTime(event.target.value)} className="min-h-12 w-full rounded-lg bg-usnee-bg px-3" /><label className="block text-body-sm font-bold" htmlFor="history-note">Заметка</label><textarea id="history-note" rows={4} value={editNotes} onChange={(event) => setEditNotes(event.target.value)} className="w-full rounded-lg bg-usnee-bg p-3" /></div></BottomSheet>
+    <Dialog open={Boolean(deleteEntry)} onClose={() => setDeleteEntry(null)} title="Удалить запись?" description="Запись будет отменена локальной компенсирующей операцией." footer={<div className="flex gap-2"><Button variant="secondary" className="flex-1" onClick={() => setDeleteEntry(null)}>Оставить</Button><Button variant="danger" loading={busy} className="flex-1" onClick={confirmRemove}>Удалить</Button></div>}><p className="text-body-sm text-usnee-text2">История операции сохранится для целостности локальных данных.</p></Dialog>
+  </div>;
 }
 
 export default History;
-export { History };

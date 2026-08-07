@@ -1,0 +1,61 @@
+import { useCallback, useEffect, useState } from 'react';
+import type { Batch, ConsumptionEntry, NorsSession, SleepEntry } from '../types';
+import { getActiveBatch, getEntries, getNorsSessions, getSleep } from '../utils/db';
+
+export interface HomeDataErrors {
+  entries?: string;
+  batch?: string;
+  sleep?: string;
+  checkIn?: string;
+}
+
+export interface HomeDataState {
+  status: 'loading' | 'ready' | 'partial-error' | 'error';
+  entries: ConsumptionEntry[];
+  activeBatch: Batch | null;
+  activeSleep: SleepEntry | null;
+  activeCheckIn: NorsSession | null;
+  errors: HomeDataErrors;
+}
+
+const initialState: HomeDataState = {
+  status: 'loading', entries: [], activeBatch: null, activeSleep: null, activeCheckIn: null, errors: {}
+};
+
+function message(reason: unknown): string {
+  return reason instanceof Error ? reason.message : 'Не удалось прочитать локальные данные';
+}
+
+export function useHomeData() {
+  const [state, setState] = useState<HomeDataState>(initialState);
+  const [request, setRequest] = useState(0);
+  const reload = useCallback(() => setRequest((value) => value + 1), []);
+
+  useEffect(() => {
+    let active = true;
+    setState((current) => ({ ...current, status: 'loading', errors: {} }));
+
+    Promise.allSettled([getEntries(), getActiveBatch(), getSleep(), getNorsSessions()]).then((results) => {
+      if (!active) return;
+      const [entriesResult, batchResult, sleepResult, checkInResult] = results;
+      const errors: HomeDataErrors = {};
+      if (entriesResult.status === 'rejected') errors.entries = message(entriesResult.reason);
+      if (batchResult.status === 'rejected') errors.batch = message(batchResult.reason);
+      if (sleepResult.status === 'rejected') errors.sleep = message(sleepResult.reason);
+      if (checkInResult.status === 'rejected') errors.checkIn = message(checkInResult.reason);
+      const errorCount = Object.keys(errors).length;
+      setState({
+        status: errorCount === 4 ? 'error' : errorCount ? 'partial-error' : 'ready',
+        entries: entriesResult.status === 'fulfilled' ? [...entriesResult.value].sort((a, b) => b.timestamp - a.timestamp) : [],
+        activeBatch: batchResult.status === 'fulfilled' ? batchResult.value ?? null : null,
+        activeSleep: sleepResult.status === 'fulfilled' ? sleepResult.value.find((item) => !item.endTime) ?? null : null,
+        activeCheckIn: checkInResult.status === 'fulfilled' ? checkInResult.value.find((item) => item.status === 'active') ?? null : null,
+        errors
+      });
+    });
+
+    return () => { active = false; };
+  }, [request]);
+
+  return { ...state, reload };
+}

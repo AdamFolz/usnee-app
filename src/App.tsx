@@ -5,6 +5,7 @@ import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
 import { hashPin } from './utils/crypto';
 import { Layout } from './components/Layout';
+import { ToastProvider } from './components/ui';
 import { PinLock } from './components/PinLock';
 import { Onboarding } from './components/Onboarding';
 import Home from './pages/Home';
@@ -16,6 +17,7 @@ import { Safety } from './pages/Safety';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
+import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
 
 function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -26,6 +28,7 @@ function App() {
   const dismissOnboarding = useAppStore((s) => s.dismissOnboarding);
 
   useEffect(() => {
+    const unsubscribeViewport = subscribeTelegramViewport();
     initDB().then(async () => {
       setDbReady(true);
       const st = useAppStore.getState();
@@ -45,15 +48,10 @@ function App() {
       if (!st.settings.onboardingCompleted) {
         useAppStore.setState({ showOnboarding: true });
       }
+      initTelegramMiniApp();
     });
 
-    const tw = (window as any).Telegram?.WebApp;
-    if (tw) {
-      tw.ready();
-      tw.expand();
-      tw.setHeaderColor('#0a0a0a');
-      tw.setBackgroundColor('#0a0a0a');
-    }
+    return unsubscribeViewport;
   }, []);
 
   if (!dbReady) {
@@ -78,19 +76,21 @@ function App() {
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/add" element={<AddEntry />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/stats" element={<Stats />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/safety" element={<Safety />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/partials" element={<Partials />} />
-      </Routes>
-    </Layout>
+    <ToastProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/add" element={<AddEntry />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/partials" element={<Partials />} />
+        </Routes>
+      </Layout>
+    </ToastProvider>
   );
 }
 

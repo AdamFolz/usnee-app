@@ -68,6 +68,7 @@ export interface ConsumptionEntry {
   longitude?: number;
   createdAt: number;
   updatedAt: number;
+  reversedAt?: number;
 }
 
 export interface Batch {

@@ -1,26 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import './design/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
-  background: #0a0a0a;
-  color: #e5e5e5;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100%;
+}
+
+html {
+  background: var(--color-bg-void);
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--gradient-screen);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
 }
 
-* {
-  scrollbar-width: none;
-}
-*::-webkit-scrollbar {
-  display: none;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-button {
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+}
+
+button,
+a,
+[role='button'] {
   touch-action: manipulation;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  height: var(--tg-viewport-height, 100dvh);
+  min-height: min(var(--tg-viewport-stable-height, 100dvh), 100dvh);
+  background:
+    radial-gradient(circle at 15% -5%, rgb(139 92 246 / 20%), transparent 32%),
+    radial-gradient(circle at 95% 0%, rgb(96 165 250 / 12%), transparent 28%),
+    var(--gradient-screen);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 .animate-pulse-slow {
@@ -33,16 +73,34 @@ button {
 }
 
 .animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
+  animation: slideUp var(--motion-sheet) var(--easing-ui) forwards;
 }
 
 .glass {
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--color-surface-1) 84%, transparent);
+  border-color: var(--color-border-default);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
 }
 
 .big-tap {
   min-height: 48px;
   min-width: 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid CanvasText;
+  }
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { clearAllData, getEntries } from '../utils/db';
-import { hashPin, encryptData } from '../utils/crypto';
+import { clearAllData, getEntries, addEntry } from '../utils/db';
+import { hashPin, encryptData, decryptData } from '../utils/crypto';
 import { SUBSTANCES } from '../constants/substances';
 import {
   Shield,
@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   ChevronRight,
   Lock,
-  Unlock
+  Unlock,
+  Phone
 } from 'lucide-react';
 
 export default function Settings() {
@@ -188,12 +189,72 @@ export default function Settings() {
             </button>
           )}
 
+          {/* SOS emergency contact */}
+          <div className="rounded-xl border-2 border-usnee-border bg-usnee-surface p-3">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-usnee-text">
+              <Phone className="h-4 w-4 text-usnee-danger" />
+              Телефон для SOS
+            </div>
+            <input
+              type="tel"
+              value={settings.emergencyContact || ''}
+              onChange={(e) => updateSettings({ emergencyContact: e.target.value || undefined })}
+              placeholder="103 (скорая) или свой номер"
+              className="w-full rounded-lg bg-usnee-bg py-3 px-3 text-sm text-usnee-text outline-none"
+            />
+            <p className="mt-1 text-xs text-usnee-text2">
+              Используется в SOS-кнопке. По умолчанию — 103.
+            </p>
+          </div>
+
           <div className="rounded-lg bg-usnee-surface2 p-3">
             <p className="text-sm font-medium text-usnee-text">Паник-кнопка</p>
             <p className="mt-1 text-xs text-usnee-text2">
               Держи 2 секунды в правом верхнем углу для мгновенного выхода из приложения. Полезно, если кто-то заглядывает через плечо.
             </p>
           </div>
+
+          {/* Импорт данных */}
+          <button
+            onClick={async () => {
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = '.json,application/json';
+              fileInput.onchange = async () => {
+                const file = fileInput.files?.[0];
+                if (!file) return;
+                try {
+                  const text = await file.text();
+                  const hasPassword = window.confirm('Файл зашифрован паролем?');
+                  let data: string;
+                  if (hasPassword) {
+                    const password = window.prompt('Введите пароль:');
+                    if (!password) return;
+                    data = await decryptData(text, password);
+                  } else {
+                    data = text;
+                  }
+                  const parsed = JSON.parse(data);
+                  if (!Array.isArray(parsed.entries)) {
+                    throw new Error('Формат файла не распознан. Ожидались записи в entries');
+                  }
+                  for (const entry of parsed.entries) {
+                    await addEntry({ ...entry, createdAt: Date.now(), updatedAt: Date.now() });
+                  }
+                  await refreshEntries();
+                  window.alert(`Загружено записей: ${parsed.entries.length}`);
+                } catch (err) {
+                  window.alert('Ошибка импорта: ' + (err as Error).message);
+                }
+              };
+              fileInput.click();
+            }}
+            disabled={exporting}
+            className="big-tap flex w-full items-center justify-center gap-2 rounded-xl bg-usnee-warning py-3 text-sm font-semibold text-usnee-bg transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+            Импортировать данные
+          </button>
         </div>
       </section>
 

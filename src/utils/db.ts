@@ -1,188 +1,188 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { ConsumptionEntry, Batch, SleepEntry, MoodEntry, FoodEntry, WaterEntry, NorsSession } from '../types';
+import type { BatchMovement } from '../contracts/batch';
+import type { EntrySyncRecord } from '../contracts/persistence';
+import type { OutboxOperation } from '../contracts/sync';
+import type { Batch, ConsumptionEntry, SleepEntry, MoodEntry, FoodEntry, WaterEntry, NorsSession } from '../types';
+import { createUuid } from './ids';
 
 interface USNEEDB extends DBSchema {
-  entries: {
-    key: string;
-    value: ConsumptionEntry;
-    indexes: { 'by-timestamp': number; 'by-substance': string };
-  };
-  batches: {
-    key: string;
-    value: Batch;
-  };
-  sleep: {
-    key: string;
-    value: SleepEntry;
-  };
-  mood: {
-    key: string;
-    value: MoodEntry;
-  };
-  food: {
-    key: string;
-    value: FoodEntry;
-  };
-  water: {
-    key: string;
-    value: WaterEntry;
-  };
-  nors: {
-    key: string;
-    value: NorsSession;
-  };
+  entries: { key: string; value: ConsumptionEntry; indexes: { 'by-timestamp': number; 'by-substance': string } };
+  batches: { key: string; value: Batch };
+  sleep: { key: string; value: SleepEntry };
+  mood: { key: string; value: MoodEntry };
+  food: { key: string; value: FoodEntry };
+  water: { key: string; value: WaterEntry };
+  nors: { key: string; value: NorsSession };
+  outbox: { key: string; value: OutboxOperation; indexes: { 'by-created-at': string; 'by-entity-id': string } };
+  batchMovements: { key: string; value: BatchMovement; indexes: { 'by-batch-id': string; 'by-operation-id': string; 'by-entry-id': string } };
+  entrySync: { key: string; value: EntrySyncRecord; indexes: { 'by-operation-id': string; 'by-state': string } };
 }
+
+type StoreName = 'entries' | 'batches' | 'sleep' | 'mood' | 'food' | 'water' | 'nors' | 'outbox' | 'batchMovements' | 'entrySync';
 
 let db: IDBPDatabase<USNEEDB> | null = null;
 
 export async function initDB(): Promise<IDBPDatabase<USNEEDB>> {
   if (db) return db;
-  db = await openDB<USNEEDB>('usnee-db', 1, {
-    upgrade(db) {
-      const entriesStore = db.createObjectStore('entries', { keyPath: 'id' });
-      entriesStore.createIndex('by-timestamp', 'timestamp');
-      entriesStore.createIndex('by-substance', 'substanceId');
-      db.createObjectStore('batches', { keyPath: 'id' });
-      db.createObjectStore('sleep', { keyPath: 'id' });
-      db.createObjectStore('mood', { keyPath: 'id' });
-      db.createObjectStore('food', { keyPath: 'id' });
-      db.createObjectStore('water', { keyPath: 'id' });
-      db.createObjectStore('nors', { keyPath: 'id' });
+  db = await openDB<USNEEDB>('usnee-db', 2, {
+    upgrade(database, oldVersion) {
+      if (oldVersion < 1) {
+        const entries = database.createObjectStore('entries', { keyPath: 'id' });
+        entries.createIndex('by-timestamp', 'timestamp');
+        entries.createIndex('by-substance', 'substanceId');
+        database.createObjectStore('batches', { keyPath: 'id' });
+        database.createObjectStore('sleep', { keyPath: 'id' });
+        database.createObjectStore('mood', { keyPath: 'id' });
+        database.createObjectStore('food', { keyPath: 'id' });
+        database.createObjectStore('water', { keyPath: 'id' });
+        database.createObjectStore('nors', { keyPath: 'id' });
+      }
+      if (oldVersion < 2) {
+        const outbox = database.createObjectStore('outbox', { keyPath: 'operationId' });
+        outbox.createIndex('by-created-at', 'createdAt');
+        outbox.createIndex('by-entity-id', 'entityId');
+        const movements = database.createObjectStore('batchMovements', { keyPath: 'id' });
+        movements.createIndex('by-batch-id', 'batchId');
+        movements.createIndex('by-operation-id', 'operationId', { unique: true });
+        movements.createIndex('by-entry-id', 'entryId');
+        const sync = database.createObjectStore('entrySync', { keyPath: 'entityId' });
+        sync.createIndex('by-operation-id', 'operationId', { unique: true });
+        sync.createIndex('by-state', 'state');
+      }
     }
   });
   return db;
 }
 
-export async function getDB() {
-  return initDB();
+export function closeDB(): void { db?.close(); db = null; }
+export async function getDB() { return initDB(); }
+
+export interface CreateEntryTransactionCommand {
+  entry: ConsumptionEntry;
+  operation: OutboxOperation;
+  sync: EntrySyncRecord;
+  movement?: BatchMovement;
+  batchId?: string;
+  expectedBatchRemaining?: number;
+  nextBatchRemaining?: number;
 }
 
-export async function addEntry(entry: ConsumptionEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('entries', entry);
-}
-
-export async function getEntries(): Promise<ConsumptionEntry[]> {
-  const d = await getDB();
-  return d.getAllFromIndex('entries', 'by-timestamp');
-}
-
-export async function getEntriesBySubstance(substanceId: string): Promise<ConsumptionEntry[]> {
-  const d = await getDB();
-  return d.getAllFromIndex('entries', 'by-substance', substanceId);
-}
-
-export async function deleteEntry(id: string): Promise<void> {
-  const d = await getDB();
-  await d.delete('entries', id);
-}
-
-export async function updateEntry(entry: ConsumptionEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('entries', entry);
-}
-
-export async function getEntryById(id: string): Promise<ConsumptionEntry | undefined> {
-  const d = await getDB();
-  return d.get('entries', id);
-}
-
-export async function getLastEntry(): Promise<ConsumptionEntry | undefined> {
-  const d = await getDB();
-  const all = await d.getAllFromIndex('entries', 'by-timestamp');
-  return all.length > 0 ? all[all.length - 1] : undefined;
-}
-
-export async function getEntriesBetween(start: number, end: number): Promise<ConsumptionEntry[]> {
-  const d = await getDB();
-  const all = await d.getAllFromIndex('entries', 'by-timestamp');
-  return all.filter(e => e.timestamp >= start && e.timestamp <= end);
-}
-
-export async function addBatch(batch: Batch): Promise<void> {
-  const d = await getDB();
-  await d.put('batches', batch);
-}
-
-export async function getBatches(): Promise<Batch[]> {
-  const d = await getDB();
-  return d.getAll('batches');
-}
-
-export async function getActiveBatch(substanceId?: string): Promise<Batch | undefined> {
-  const batches = await getBatches();
-  if (substanceId) {
-    return batches.find(b => b.substanceId === substanceId && b.active);
+export async function createEntryTransaction(command: CreateEntryTransactionCommand): Promise<'created' | 'duplicate'> {
+  const database = await getDB();
+  const stores: StoreName[] = ['entries', 'outbox', 'entrySync'];
+  if (command.movement && command.batchId) stores.push('batchMovements', 'batches');
+  const tx = database.transaction(stores, 'readwrite');
+  if (await tx.objectStore('outbox').get(command.operation.operationId)) { await tx.done; return 'duplicate'; }
+  if (command.movement && command.batchId) {
+    const batch = await tx.objectStore('batches').get(command.batchId);
+    if (!batch || !batch.active) { await tx.done; throw new Error('BATCH_UNAVAILABLE'); }
+    if (batch.substanceId !== command.entry.substanceId) { await tx.done; throw new Error('BATCH_INCOMPATIBLE'); }
+    if (command.expectedBatchRemaining !== undefined && batch.remaining !== command.expectedBatchRemaining) { await tx.done; throw new Error('BATCH_CHANGED'); }
+    if (command.nextBatchRemaining === undefined || command.nextBatchRemaining < 0) { await tx.done; throw new Error('BATCH_INSUFFICIENT'); }
+    await tx.objectStore('batchMovements').add(command.movement);
+    await tx.objectStore('batches').put({ ...batch, remaining: command.nextBatchRemaining });
   }
-  return batches.find(b => b.active);
+  await tx.objectStore('entries').add(command.entry);
+  await tx.objectStore('outbox').add(command.operation);
+  await tx.objectStore('entrySync').put(command.sync);
+  await tx.done;
+  return 'created';
 }
 
-export async function updateBatch(batch: Batch): Promise<void> {
-  const d = await getDB();
-  await d.put('batches', batch);
+export interface ReverseEntryCommand {
+  entryId: string;
+  reverseOperation: OutboxOperation;
+  reverseMovement?: BatchMovement;
 }
 
-export async function addMood(entry: MoodEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('mood', entry);
+export async function reverseEntryTransaction(command: ReverseEntryCommand): Promise<'reversed' | 'duplicate'> {
+  const database = await getDB();
+  const originalSync = await database.get('entrySync', command.entryId);
+  if (!originalSync) throw new Error('ENTRY_SYNC_NOT_FOUND');
+  if (originalSync.reversedAt) return 'duplicate';
+  const entry = await database.get('entries', command.entryId);
+  if (!entry) throw new Error('ENTRY_NOT_FOUND');
+  const stores: StoreName[] = ['entries', 'outbox', 'entrySync'];
+  if (command.reverseMovement && entry.batchId) stores.push('batchMovements', 'batches');
+  const tx = database.transaction(stores, 'readwrite');
+  if (command.reverseMovement && entry.batchId) {
+    const batch = await tx.objectStore('batches').get(entry.batchId);
+    if (!batch) { await tx.done; throw new Error('BATCH_UNAVAILABLE'); }
+    const restored = batch.remaining + Math.abs(command.reverseMovement.deltaMassMg ?? 0);
+    await tx.objectStore('batchMovements').add(command.reverseMovement);
+    await tx.objectStore('batches').put({ ...batch, remaining: restored });
+  }
+  const reversedAt = new Date().toISOString();
+  await tx.objectStore('entries').put({ ...entry, reversedAt: Date.parse(reversedAt), updatedAt: Date.now() });
+  await tx.objectStore('outbox').add(command.reverseOperation);
+  await tx.objectStore('entrySync').put({ ...originalSync, state: 'pending', reversedAt, reverseOperationId: command.reverseOperation.operationId });
+  await tx.done;
+  return 'reversed';
 }
 
-export async function getMoods(): Promise<MoodEntry[]> {
-  const d = await getDB();
-  return d.getAll('mood');
+export async function getOutboxOperations(): Promise<OutboxOperation[]> { return (await getDB()).getAll('outbox'); }
+export async function getEntrySync(id: string): Promise<EntrySyncRecord | undefined> { return (await getDB()).get('entrySync', id); }
+export async function getEntrySyncRecords(): Promise<EntrySyncRecord[]> { return (await getDB()).getAll('entrySync'); }
+export async function getBatchMovements(batchId: string): Promise<BatchMovement[]> { return (await getDB()).getAllFromIndex('batchMovements', 'by-batch-id', batchId); }
+export async function getBatchMovementByEntry(entryId: string): Promise<BatchMovement | undefined> {
+  const movements = await (await getDB()).getAllFromIndex('batchMovements', 'by-entry-id', entryId);
+  return movements.find((movement) => movement.kind === 'consume');
 }
 
-export async function addSleep(entry: SleepEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('sleep', entry);
+export async function updateEntryDetailsTransaction(entryId: string, timestamp: number, notes?: string): Promise<ConsumptionEntry> {
+  if (!Number.isFinite(timestamp) || timestamp > Date.now() + 5 * 60_000) throw new Error('INVALID_TIMESTAMP');
+  const database = await getDB();
+  const entry = await database.get('entries', entryId);
+  if (!entry || entry.reversedAt) throw new Error('ENTRY_NOT_FOUND');
+  const existingSync = await database.get('entrySync', entryId);
+  const operationId = createUuid();
+  const createdAt = new Date().toISOString();
+  const updated: ConsumptionEntry = { ...entry, timestamp, notes: notes?.trim() || undefined, updatedAt: Date.now() };
+  const operation: OutboxOperation = {
+    operationId, entityId: entryId, entityType: 'entry', kind: 'update',
+    baseRevision: existingSync?.revision ?? 0,
+    payload: { timestamp: new Date(timestamp).toISOString(), notes: updated.notes },
+    createdAt, attempts: 0
+  };
+  const tx = database.transaction(['entries', 'outbox', 'entrySync'], 'readwrite');
+  await tx.objectStore('entries').put(updated);
+  await tx.objectStore('outbox').add(operation);
+  await tx.objectStore('entrySync').put({
+    entityId: entryId,
+    operationId,
+    createOperationId: existingSync?.createOperationId ?? existingSync?.operationId,
+    state: 'pending',
+    revision: existingSync?.revision ?? 0
+  });
+  await tx.done;
+  return updated;
 }
-
-export async function getSleep(): Promise<SleepEntry[]> {
-  const d = await getDB();
-  return d.getAll('sleep');
-}
-
-export async function addFood(entry: FoodEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('food', entry);
-}
-
-export async function getFood(): Promise<FoodEntry[]> {
-  const d = await getDB();
-  return d.getAll('food');
-}
-
-export async function addWater(entry: WaterEntry): Promise<void> {
-  const d = await getDB();
-  await d.put('water', entry);
-}
-
-export async function getWater(): Promise<WaterEntry[]> {
-  const d = await getDB();
-  return d.getAll('water');
-}
-
-export async function addNors(session: NorsSession): Promise<void> {
-  const d = await getDB();
-  await d.put('nors', session);
-}
-
-export async function getNorsSessions(): Promise<NorsSession[]> {
-  const d = await getDB();
-  return d.getAll('nors');
-}
-
+export async function addEntry(entry: ConsumptionEntry): Promise<void> { await (await getDB()).put('entries', entry); }
+export async function getEntries(): Promise<ConsumptionEntry[]> { return (await getDB()).getAllFromIndex('entries', 'by-timestamp').then((entries) => entries.filter((entry) => !entry.reversedAt)); }
+export async function getEntriesBySubstance(substanceId: string): Promise<ConsumptionEntry[]> { return (await getDB()).getAllFromIndex('entries', 'by-substance', substanceId).then((entries) => entries.filter((entry) => !entry.reversedAt)); }
+export async function deleteEntry(id: string): Promise<void> { await (await getDB()).delete('entries', id); }
+export async function updateEntry(entry: ConsumptionEntry): Promise<void> { await (await getDB()).put('entries', entry); }
+export async function getEntryById(id: string): Promise<ConsumptionEntry | undefined> { return (await getDB()).get('entries', id); }
+export async function getLastEntry(): Promise<ConsumptionEntry | undefined> { const all = await getEntries(); return all.length ? all[all.length - 1] : undefined; }
+export async function getEntriesBetween(start: number, end: number): Promise<ConsumptionEntry[]> { return (await getEntries()).filter((entry) => entry.timestamp >= start && entry.timestamp <= end); }
+export async function addBatch(batch: Batch): Promise<void> { await (await getDB()).put('batches', batch); }
+export async function getBatches(): Promise<Batch[]> { return (await getDB()).getAll('batches'); }
+export async function getActiveBatch(substanceId?: string): Promise<Batch | undefined> { return (await getBatches()).find((batch) => batch.active && (!substanceId || batch.substanceId === substanceId)); }
+export async function updateBatch(batch: Batch): Promise<void> { await (await getDB()).put('batches', batch); }
+export async function addMood(entry: MoodEntry): Promise<void> { await (await getDB()).put('mood', entry); }
+export async function getMoods(): Promise<MoodEntry[]> { return (await getDB()).getAll('mood'); }
+export async function addSleep(entry: SleepEntry): Promise<void> { await (await getDB()).put('sleep', entry); }
+export async function getSleep(): Promise<SleepEntry[]> { return (await getDB()).getAll('sleep'); }
+export async function addFood(entry: FoodEntry): Promise<void> { await (await getDB()).put('food', entry); }
+export async function getFood(): Promise<FoodEntry[]> { return (await getDB()).getAll('food'); }
+export async function addWater(entry: WaterEntry): Promise<void> { await (await getDB()).put('water', entry); }
+export async function getWater(): Promise<WaterEntry[]> { return (await getDB()).getAll('water'); }
+export async function addNors(session: NorsSession): Promise<void> { await (await getDB()).put('nors', session); }
+export async function getNorsSessions(): Promise<NorsSession[]> { return (await getDB()).getAll('nors'); }
 export async function clearAllData(): Promise<void> {
-  const d = await getDB();
-  const tx = d.transaction(['entries', 'batches', 'sleep', 'mood', 'food', 'water', 'nors'], 'readwrite');
-  await Promise.all([
-    tx.objectStore('entries').clear(),
-    tx.objectStore('batches').clear(),
-    tx.objectStore('sleep').clear(),
-    tx.objectStore('mood').clear(),
-    tx.objectStore('food').clear(),
-    tx.objectStore('water').clear(),
-    tx.objectStore('nors').clear()
-  ]);
+  const database = await getDB();
+  const names: StoreName[] = ['entries', 'batches', 'sleep', 'mood', 'food', 'water', 'nors', 'outbox', 'batchMovements', 'entrySync'];
+  const tx = database.transaction(names, 'readwrite');
+  await Promise.all(names.map((name) => tx.objectStore(name).clear()));
   await tx.done;
 }
