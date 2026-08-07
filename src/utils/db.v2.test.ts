@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Batch } from '../types';
-import { closeDB, createEntryTransaction, getBatchMovements, getDB, getEntries, getEntrySync, getOutboxOperations, reverseEntryTransaction, updateEntryDetailsTransaction } from './db';
+import { acknowledgeOutboxOperation, closeDB, createEntryTransaction, failOutboxOperation, getBatchMovements, getDB, getDueOutboxOperations, getEntries, getEntrySync, getOutboxOperations, reverseEntryTransaction, updateEntryDetailsTransaction } from './db';
 import { prepareRecordCommand } from '../services/recordPersistence';
 
 const batch: Batch = { id: 'b1', substanceId: 'meph', name: '№014', totalWeight: 400, weightUnit: 'мг', solutionVolume: 20, volumeUnit: 'мл', concentration: 20, createdAt: 1, active: true, remaining: 260 };
@@ -76,5 +76,35 @@ describe('IndexedDB v2 persistence', () => {
     expect((await db.get('entries', 'e1'))?.reversedAt).toEqual(expect.any(Number));
     expect((await getEntries()).find((entry) => entry.id === 'e1')).toBeUndefined();
     expect(await reverseEntryTransaction(reverse)).toBe('duplicate');
+  });
+
+  it('acknowledges accepted operations and removes them from outbox', async () => {
+    const db = await getDB();
+    const command = prepareRecordCommand({ substanceId: 'meph', methodId: 'oral', amountInput: '10', amountUnit: 'мг', occurredAt: Date.now(), alone: true }, null, { entryId: 'e1', operationId: 'o1' });
+    await createEntryTransaction(command);
+    await acknowledgeOutboxOperation({ operationId: 'o1', entityId: 'e1', status: 'accepted', revision: 1, serverTime: '2026-08-06T00:00:00.000Z' });
+    expect(await db.get('outbox', 'o1')).toBeUndefined();
+    expect(await getEntrySync('e1')).toMatchObject({ state: 'synced', revision: 1, lastSyncedAt: '2026-08-06T00:00:00.000Z' });
+  });
+
+  it('retains rejected operations and blocks later operations for the same entry', async () => {
+    const db = await getDB();
+    const command = prepareRecordCommand({ substanceId: 'meph', methodId: 'oral', amountInput: '10', amountUnit: 'мг', occurredAt: Date.now(), alone: true }, null, { entryId: 'e1', operationId: 'o1' });
+    await createEntryTransaction(command);
+    await updateEntryDetailsTransaction('e1', 1000, 'note');
+    await acknowledgeOutboxOperation({ operationId: 'o1', entityId: 'e1', status: 'rejected', serverTime: '2026-08-06T00:00:00.000Z', errorCode: 'VALIDATION' });
+    expect(await db.get('outbox', 'o1')).toMatchObject({ lastErrorCode: 'VALIDATION' });
+    expect(await getEntrySync('e1')).toMatchObject({ state: 'pending' });
+    expect(await getDueOutboxOperations('2026-08-07T00:00:00.000Z')).toEqual([]);
+  });
+
+  it('backs off failed operations without deleting local data', async () => {
+    const db = await getDB();
+    const command = prepareRecordCommand({ substanceId: 'meph', methodId: 'oral', amountInput: '10', amountUnit: 'мг', occurredAt: Date.now(), alone: true }, null, { entryId: 'e1', operationId: 'o1' });
+    await createEntryTransaction(command);
+    await failOutboxOperation('o1', 'NETWORK_ERROR', '2026-08-07T00:00:00.000Z');
+    expect(await db.get('entries', 'e1')).toBeTruthy();
+    expect(await db.get('outbox', 'o1')).toMatchObject({ attempts: 1, lastErrorCode: 'NETWORK_ERROR' });
+    expect(await getEntrySync('e1')).toMatchObject({ state: 'failed', errorCode: 'NETWORK_ERROR' });
   });
 });

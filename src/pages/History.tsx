@@ -35,7 +35,12 @@ export function History() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    const refresh = () => { void load(); };
+    window.addEventListener('usnee:sync-changed', refresh);
+    return () => window.removeEventListener('usnee:sync-changed', refresh);
+  }, [load]);
 
   const openEdit = (entry: ConsumptionEntry) => {
     setEditing(entry); setEditTime(toLocalDateTime(entry.timestamp)); setEditNotes(entry.notes ?? '');
@@ -65,7 +70,7 @@ export function History() {
     return <div className="space-y-3">{entries.map((entry) => {
       const sync = syncById[entry.id];
       const tone = sync?.state === 'failed' ? 'failed' : sync?.state === 'synced' ? 'synced' : sync?.state === 'conflicted' ? 'warning' : sync ? 'pending' : 'offline';
-      const label = sync?.state === 'failed' ? 'Ошибка отправки' : sync?.state === 'synced' ? 'Синхронизировано' : sync?.state === 'conflicted' ? 'Конфликт' : sync ? 'Ждёт отправки' : 'Только на устройстве';
+      const label = sync?.state === 'failed' ? 'Ошибка отправки' : sync?.state === 'synced' ? 'Синхронизировано' : sync?.state === 'conflicted' ? 'Конфликт' : sync?.state === 'syncing' ? 'Отправляется' : sync ? 'Ждёт отправки' : 'Только на устройстве';
       const substance = entry.substanceName || SUBSTANCES.find((item) => item.id === entry.substanceId)?.name || entry.substanceId;
       return <Surface key={entry.id} variant="interactive" className="p-4">
    <div className="flex items-start justify-between gap-3"><button type="button" onClick={() => setSelected(entry)} className="min-w-0 flex-1 text-left focus-visible:ring-2 focus-visible:ring-usnee-focus"><p className="text-title-md">{substance}</p><p className="mt-1 text-body-sm text-usnee-text2">{entry.dose} {entry.doseUnit} · {entry.methodName || entry.methodId}</p><p className="mt-2 text-caption text-usnee-text3">{formatDateTime(entry.timestamp)}</p></button><StatusBadge tone={tone}>{label}</StatusBadge></div>

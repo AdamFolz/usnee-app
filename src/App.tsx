@@ -18,6 +18,7 @@ import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
 import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
+import { useOutboxSync } from './hooks/useOutboxSync';
 
 function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -26,6 +27,7 @@ function App() {
   const settings = useAppStore((s) => s.settings);
   const showOnboarding = useAppStore((s) => s.showOnboarding);
   const dismissOnboarding = useAppStore((s) => s.dismissOnboarding);
+  useOutboxSync(dbReady && !showOnboarding && (!settings.pinHash || unlocked));
 
   useEffect(() => {
     const unsubscribeViewport = subscribeTelegramViewport();

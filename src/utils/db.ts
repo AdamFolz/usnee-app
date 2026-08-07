@@ -86,6 +86,7 @@ export async function createEntryTransaction(command: CreateEntryTransactionComm
   await tx.objectStore('outbox').add(command.operation);
   await tx.objectStore('entrySync').put(command.sync);
   await tx.done;
+  window.dispatchEvent(new Event('usnee:outbox-changed'));
   return 'created';
 }
 
@@ -117,10 +118,87 @@ export async function reverseEntryTransaction(command: ReverseEntryCommand): Pro
   await tx.objectStore('outbox').add(command.reverseOperation);
   await tx.objectStore('entrySync').put({ ...originalSync, state: 'pending', reversedAt, reverseOperationId: command.reverseOperation.operationId });
   await tx.done;
+  window.dispatchEvent(new Event('usnee:outbox-changed'));
   return 'reversed';
 }
 
 export async function getOutboxOperations(): Promise<OutboxOperation[]> { return (await getDB()).getAll('outbox'); }
+
+export async function getDueOutboxOperations(now: string): Promise<OutboxOperation[]> {
+  const kindOrder: Record<OutboxOperation['kind'], number> = { create: 0, update: 1, delete: 2, reverse: 3 };
+  const ordered = (await getOutboxOperations())
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || kindOrder[a.kind] - kindOrder[b.kind]);
+  const headByEntity = new Map<string, OutboxOperation>();
+  for (const operation of ordered) {
+    const key = `${operation.entityType}:${operation.entityId}`;
+    if (!headByEntity.has(key)) headByEntity.set(key, operation);
+  }
+  return [...headByEntity.values()]
+    .filter((operation) => !operation.nextAttemptAt || operation.nextAttemptAt <= now)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || kindOrder[a.kind] - kindOrder[b.kind]);
+}
+
+export async function claimOutboxOperation(operationId: string): Promise<void> {
+  const database = await getDB();
+  const operation = await database.get('outbox', operationId);
+  if (!operation) return;
+  const sync = operation.entityType === 'entry' ? await database.get('entrySync', operation.entityId) : undefined;
+  const tx = database.transaction(['outbox', 'entrySync'], 'readwrite');
+  await tx.objectStore('outbox').put({ ...operation, lastErrorCode: undefined });
+  if (sync && sync.operationId === operationId) {
+    await tx.objectStore('entrySync').put({ ...sync, state: 'syncing', errorCode: undefined });
+  }
+  await tx.done;
+}
+
+export async function acknowledgeOutboxOperation(acknowledgement: import('../contracts/sync').SyncAcknowledgement): Promise<void> {
+  const database = await getDB();
+  const operation = await database.get('outbox', acknowledgement.operationId);
+  if (!operation || operation.entityId !== acknowledgement.entityId) throw new Error('OUTBOX_ACK_MISMATCH');
+  const sync = operation.entityType === 'entry' ? await database.get('entrySync', operation.entityId) : undefined;
+  const tx = database.transaction(['outbox', 'entrySync'], 'readwrite');
+  const accepted = acknowledgement.status === 'accepted' || acknowledgement.status === 'duplicate';
+  if (accepted) {
+    await tx.objectStore('outbox').delete(operation.operationId);
+  } else {
+    await tx.objectStore('outbox').put({
+      ...operation,
+      lastErrorCode: acknowledgement.errorCode ?? acknowledgement.status.toUpperCase(),
+      nextAttemptAt: '9999-12-31T23:59:59.999Z'
+    });
+  }
+  if (sync && sync.operationId === operation.operationId) {
+    const state = acknowledgement.status === 'conflict'
+      ? 'conflicted'
+      : acknowledgement.status === 'rejected'
+        ? 'failed'
+        : 'synced';
+    await tx.objectStore('entrySync').put({
+      ...sync,
+      state,
+      revision: acknowledgement.revision ?? sync.revision,
+      lastSyncedAt: state === 'synced' ? acknowledgement.serverTime : sync.lastSyncedAt,
+      errorCode: acknowledgement.errorCode ?? (accepted ? undefined : acknowledgement.status.toUpperCase())
+    });
+  }
+  await tx.done;
+  window.dispatchEvent(new Event('usnee:sync-changed'));
+}
+
+export async function failOutboxOperation(operationId: string, errorCode: string, nextAttemptAt: string): Promise<void> {
+  const database = await getDB();
+  const operation = await database.get('outbox', operationId);
+  if (!operation) return;
+  const sync = operation.entityType === 'entry' ? await database.get('entrySync', operation.entityId) : undefined;
+  const tx = database.transaction(['outbox', 'entrySync'], 'readwrite');
+  await tx.objectStore('outbox').put({ ...operation, attempts: operation.attempts + 1, lastErrorCode: errorCode, nextAttemptAt });
+  if (sync && sync.operationId === operationId) {
+    await tx.objectStore('entrySync').put({ ...sync, state: 'failed', errorCode });
+  }
+  await tx.done;
+  window.dispatchEvent(new Event('usnee:sync-changed'));
+}
+
 export async function getEntrySync(id: string): Promise<EntrySyncRecord | undefined> { return (await getDB()).get('entrySync', id); }
 export async function getEntrySyncRecords(): Promise<EntrySyncRecord[]> { return (await getDB()).getAll('entrySync'); }
 export async function getBatchMovements(batchId: string): Promise<BatchMovement[]> { return (await getDB()).getAllFromIndex('batchMovements', 'by-batch-id', batchId); }
@@ -155,6 +233,7 @@ export async function updateEntryDetailsTransaction(entryId: string, timestamp: 
     revision: existingSync?.revision ?? 0
   });
   await tx.done;
+  window.dispatchEvent(new Event('usnee:outbox-changed'));
   return updated;
 }
 export async function addEntry(entry: ConsumptionEntry): Promise<void> { await (await getDB()).put('entries', entry); }
