@@ -27,24 +27,24 @@ beforeEach(() => {
 describe('History', () => {
   it('sorts newest first and shows honest statuses', async () => {
     render(<History />);
-    await screen.findByText('2 записей');
+    await screen.findByText('2 записи');
     const buttons = screen.getAllByRole('button', { name: /Мефедрон/ });
     expect(buttons[0]).toHaveTextContent('02 янв.');
     expect(buttons[1]).toHaveTextContent('01 янв.');
-    expect(screen.getByText('Ждёт отправки')).toBeInTheDocument();
+    expect(screen.getByText('На устройстве')).toBeInTheDocument();
     expect(screen.getByText('Только на устройстве')).toBeInTheDocument();
   });
 
   it('opens entry details', async () => {
     render(<History />);
-    await screen.findByText('2 записей');
+    await screen.findByText('2 записи');
     await userEvent.click(screen.getAllByRole('button', { name: /Открыть/ })[0]);
     expect(screen.getByRole('dialog', { name: 'Запись' })).toBeInTheDocument();
   });
 
   it('edits time and note through atomic update', async () => {
     render(<History />);
-    await screen.findByText('2 записей');
+    await screen.findByText('2 записи');
     await userEvent.click(screen.getAllByRole('button', { name: /Изменить/ })[0]);
     fireEvent.change(screen.getByLabelText('Время'), { target: { value: '2026-01-03T12:00' } });
     fireEvent.change(screen.getByLabelText('Заметка'), { target: { value: 'тест' } });
@@ -54,7 +54,7 @@ describe('History', () => {
 
   it('disables destructive action for legacy entries and reverses new entries', async () => {
     render(<History />);
-    await screen.findByText('2 записей');
+    await screen.findByText('2 записи');
     const removes = screen.getAllByRole('button', { name: /Удалить/ });
     expect(removes[1]).toBeDisabled();
     await userEvent.click(removes[0]);

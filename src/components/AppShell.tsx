@@ -34,11 +34,11 @@ export function AppShell({ children }: AppShellProps) {
         className={cx(
           'min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-[calc(1rem+var(--safe-area-left))] pr-[calc(1rem+var(--safe-area-right))] pt-[calc(1rem+var(--content-safe-area-top))]',
           immersive
-            ? 'pb-[calc(1rem+var(--content-safe-area-bottom))]'
+            ? 'flex flex-col pb-[calc(1rem+var(--content-safe-area-bottom))]'
             : 'pb-[calc(6.5rem+var(--safe-area-bottom))]'
         )}
       >
-        <div className="mx-auto w-full max-w-lg">{children}</div>
+        <div className={cx('mx-auto w-full max-w-lg', immersive && 'flex min-h-0 flex-1 flex-col')}>{children}</div>
       </main>
       <PanicButton />
       <SosButton />

@@ -57,7 +57,7 @@ describe('Home', () => {
   it('renders no-batch and no-entry empty states', () => {
     homeState.data = { ...homeState.data, entries: [], activeBatch: null };
     renderHome();
-    expect(screen.getByText('Активной партии нет')).toBeInTheDocument();
+    expect(screen.getByText('Партии пока нет')).toBeInTheDocument();
     expect(screen.getByText('Записей пока нет')).toBeInTheDocument();
   });
 

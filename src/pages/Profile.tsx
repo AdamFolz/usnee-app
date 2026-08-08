@@ -13,8 +13,9 @@ import {
 } from 'recharts';
 import {
   Moon, Sun, Star, Utensils, Droplets, Timer, Calendar, Award,
-  TrendingUp, Check, X, Plus, Minus, Activity
+  TrendingUp, Check, X, Plus, Minus, Activity, Settings
 } from 'lucide-react';
+import { formatCountRu, SLEEP_FORMS } from '../utils/pluralize';
 
 interface CleanDay {
   dayStart: number;
@@ -73,7 +74,7 @@ export default function Profile() {
       const unlocked = new Set<string>();
       if (e.length >= 1) unlocked.add('first');
       if (e.some((x) => new Date(x.timestamp).getHours() === 3)) unlocked.add('night_owl');
-      if (e.some((x) => x.alone)) unlocked.add('lone_wolf');
+      if (e.filter((x) => x.alone).length >= 3) unlocked.add('lone_wolf');
       const uniqueSubs = new Set(e.map((x) => x.substanceId)).size;
       if (uniqueSubs >= 5) unlocked.add('chemist');
       if (e.some((x) => (x.pulse || 0) >= 140)) unlocked.add('pulse_racer');
@@ -301,10 +302,24 @@ export default function Profile() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
-      <h1 className="text-2xl font-bold text-usnee-text">Самоконтроль</h1>
+      <div className="space-y-6 pb-8">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-usnee-text">Самоконтроль</h1>
+            <p className="mt-1 text-sm text-usnee-text2">Профиль · сон, настроение, лимиты</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            className="big-tap inline-flex min-h-12 items-center gap-2 rounded-xl border border-usnee-border bg-usnee-surface px-3 py-2 text-sm font-semibold text-usnee-text transition-all active:scale-95"
+            aria-label="Настройки"
+          >
+            <Settings className="h-4 w-4" aria-hidden="true" />
+            Настройки
+          </button>
+        </div>
 
-      {/* Трекер сна */}
+        {/* Трекер сна */}
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-usnee-text2">
           <Moon className="h-4 w-4" /> Трекер сна
@@ -334,7 +349,7 @@ export default function Profile() {
                 <Moon className="h-4 w-4" /> Я ложусь спать
               </button>
               <div className="flex items-center justify-between text-xs text-usnee-text2">
-                <span>За неделю: {sleepStats.count} снов</span>
+                <span>За неделю: {formatCountRu(sleepStats.count, SLEEP_FORMS)}</span>
                 <span>Среднее: {sleepStats.avg > 0 ? `${sleepStats.avg}ч` : '—'}</span>
               </div>
               {sleepList.length > 0 && (

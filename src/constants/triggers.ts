@@ -14,14 +14,14 @@ export const TRIGGERS: Trigger[] = [
 ];
 
 export const ACHIEVEMENTS = [
-  { id: 'first', name: 'Первый раз', description: 'Сделал первую запись. Добро пожаловать в клуб.', condition: 'entries >= 1' },
-  { id: 'night_owl', name: 'Ночная сова', description: 'Записал употребление в 3 ночи. Сон — для слабаков.', condition: 'entry_at_3am' },
-  { id: 'lone_wolf', name: 'Одинокий волк', description: '69% фатальных случаев — в одиночку. Ты в рискованной категории.', condition: 'alone_entry' },
-  { id: 'chemist', name: 'Самый химик', description: 'Попробовал 5 разных веществ. Курорт.', condition: 'unique_substances >= 5' },
-  { id: 'pulse_racer', name: 'Гонщик пульса', description: 'Пульс 140+ после стимуляторов. Сердце — чемпион.', condition: 'pulse >= 140' },
-  { id: 'fentanyl_slayer', name: 'Убийца фентанила', description: 'Протестировал на фентанил — отрицательно. Живём ещё один день.', condition: 'fentanyl_negative' },
-  { id: 'missed_shot', name: 'Художник', description: 'Промахнулся в вену. Красивый синяк обеспечен.', condition: 'missed_shot' },
-  { id: 'week_bender', name: 'Недельный запой', description: '7 дней подряд. Ты — легенда. Или нет.', condition: 'streak >= 7' },
-  { id: 'clean_7', name: 'Семь дней чистоты', description: 'Неделя без употребления. Толерантность падает, осторожнее.', condition: 'clean_streak >= 7' },
-  { id: 'hydrated', name: 'Гидратация', description: 'Выпил воды после 3 записей подряд. Молодец, хоть что-то делаешь правильно.', condition: 'water_3_entries' }
+  { id: 'first', name: 'Первая запись', description: 'Первая запись сохранена на устройстве.', condition: 'entries >= 1' },
+  { id: 'night_owl', name: 'Ночная запись', description: 'Есть запись около 3:00. Следите за сном и восстановлением.', condition: 'entry_at_3am' },
+  { id: 'lone_wolf', name: 'Запись в одиночку', description: 'Отмечено употребление в одиночку. В рискованной ситуации лучше не оставаться одному.', condition: 'alone_entry' },
+  { id: 'chemist', name: 'Несколько веществ', description: 'В истории есть 5 разных веществ.', condition: 'unique_substances >= 5' },
+  { id: 'pulse_racer', name: 'Высокий пульс', description: 'Зафиксирован пульс 140+. При ухудшении самочувствия обращайтесь за помощью.', condition: 'pulse >= 140' },
+  { id: 'fentanyl_slayer', name: 'Тест на фентанил', description: 'Отмечен отрицательный тест на фентанил.', condition: 'fentanyl_negative' },
+  { id: 'missed_shot', name: 'Промах отмечен', description: 'Зафиксирован промах. Следите за местом инъекции и стерильностью.', condition: 'missed_shot' },
+  { id: 'week_bender', name: 'Неделя подряд', description: 'Записи 7 дней подряд. Имеет смысл пересмотреть нагрузку и паузы.', condition: 'streak >= 7' },
+  { id: 'clean_7', name: 'Семь дней без', description: 'Неделя без записей употребления. После паузы толерантность ниже — начинайте осторожнее.', condition: 'clean_streak >= 7' },
+  { id: 'hydrated', name: 'Вода', description: 'Отмечено питьё воды при активных записях.', condition: 'water_3_entries' }
 ];

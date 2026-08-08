@@ -21,6 +21,7 @@ import {
   Zap
 } from 'lucide-react';
 import { getEntriesBetween } from '../utils/db';
+import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { SUBSTANCES } from '../constants/substances';
 import { METHODS } from '../constants/methods';
 import { TRIGGERS } from '../constants/triggers';
@@ -240,7 +241,7 @@ function Calendar() {
             <p className="text-sm text-usnee-text2">
               {entries.length === 0
                 ? 'Месяц чистый. Или ты просто забыл записывать?'
-                : `В этом месяце ${entries.length} записей. ${
+                : `${formatCountRu(entries.length, RECORD_FORMS)} за этот месяц. ${
                     entries.length > 15 ? 'Импрессивно.' : 'Умеренно.'
                   }`}
             </p>
@@ -260,7 +261,7 @@ function Calendar() {
                 </h3>
                 <p className="text-xs text-usnee-text2">
                   {selectedDayEntries.length > 0
-                    ? `${selectedDayEntries.length} записей — ${getDayLabel(selectedDay)}`
+                    ? `${formatCountRu(selectedDayEntries.length, RECORD_FORMS)} — ${getDayLabel(selectedDay)}`
                     : 'Трезвый день. Красава.'}
                 </p>
               </div>

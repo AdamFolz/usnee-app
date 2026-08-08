@@ -39,13 +39,13 @@ export default function Partials() {
 
   const handleCreate = async () => {
     if (!substanceId || !mass || !volume) {
-      setCreateError('Заполни все поля, химик.');
+      setCreateError('Заполните вещество, массу и объём.');
       return;
     }
     const massNum = Number(mass);
     const volNum = Number(volume);
     if (massNum <= 0 || volNum <= 0) {
-      setCreateError('Масса и объём должны быть больше нуля. Даже если хочется верить в чудо.');
+      setCreateError('Масса и объём должны быть больше нуля.');
       return;
     }
     const massMg = massUnit === 'г' ? massNum * 1000 : massNum;
@@ -81,19 +81,22 @@ export default function Partials() {
   };
 
   const closeBatch = async (batch: Batch) => {
+    if (!window.confirm('Закрыть эту партию? Её можно будет увидеть в истории, но она перестанет быть активной.')) return;
     await updateBatch({ ...batch, active: false });
     await load();
   };
 
   const handleUseFromBatch = () => {
     if (!activeBatch) return;
-    const dose = Math.round(calcMl * activeBatch.concentration * 100) / 100;
+    // Prefill Quick Record in volume (мл) for inject path; mass still shown via concentration.
+    const amountMl = Math.round(calcMl * 100) / 100;
     navigate('/add', {
       state: {
         batchId: activeBatch.id,
         substanceId: activeBatch.substanceId,
-        dose,
-        doseUnit: 'мг'
+        methodId: 'inject',
+        amountInput: String(amountMl),
+        amountUnit: 'мл'
       }
     });
   };
@@ -149,7 +152,7 @@ export default function Partials() {
           </div>
         ) : (
           <div className="rounded-xl bg-usnee-surface p-4 text-center">
-            <p className="text-sm text-usnee-text2">Нет активной партии. Не повод останавливаться, но повод создать.</p>
+            <p className="text-sm text-usnee-text2">Активной партии нет. Создайте партию, чтобы считать остаток — или запишите без неё.</p>
             <button
               onClick={() => setShowCreate(true)}
               className="big-tap mt-3 inline-flex items-center gap-2 rounded-xl bg-usnee-accent px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95"
@@ -302,7 +305,7 @@ export default function Partials() {
         <div className="space-y-2">
           {batches.length === 0 ? (
             <p className="rounded-xl bg-usnee-surface p-4 text-center text-sm text-usnee-text2">
-              История чиста как слеза. Пока что.
+              Здесь появятся созданные партии.
             </p>
           ) : (
             batches.map((batch) => {

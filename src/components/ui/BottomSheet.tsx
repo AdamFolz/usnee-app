@@ -75,7 +75,10 @@ export function BottomSheet({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end justify-center" role="presentation">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center pb-[var(--safe-area-bottom,0px)]"
+      role="presentation"
+    >
       <button
         type="button"
         className="absolute inset-0 h-full w-full cursor-default bg-black/70 backdrop-blur-sm"
@@ -90,12 +93,12 @@ export function BottomSheet({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cx(
-          'animate-sheet-in relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-hero border border-usnee-borderStrong bg-usnee-surface shadow-card',
+          'animate-sheet-in relative z-10 flex max-h-[min(88dvh,calc(100dvh-var(--safe-area-top,0px)-var(--safe-area-bottom,0px)-3rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-hero border border-usnee-borderStrong bg-usnee-surface shadow-card',
           className
         )}
       >
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-usnee-borderStrong" aria-hidden="true" />
-        <div className="flex items-start gap-4 px-5 pb-4 pt-3">
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-usnee-borderStrong" aria-hidden="true" />
+        <div className="flex shrink-0 items-start gap-4 px-5 pb-3 pt-3">
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className="font-display text-title-xl font-bold text-usnee-text">
               {title}
@@ -110,9 +113,9 @@ export function BottomSheet({
             <X className="h-5 w-5" aria-hidden="true" />
           </IconButton>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">{children}</div>
         {footer && (
-          <div className="border-t border-usnee-border bg-usnee-surface2 px-5 pb-[calc(1rem+var(--safe-area-bottom))] pt-4">
+          <div className="shrink-0 border-t border-usnee-border bg-usnee-surface2 px-5 pb-[calc(1rem+var(--safe-area-bottom,0px))] pt-4">
             {footer}
           </div>
         )}

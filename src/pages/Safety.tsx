@@ -636,7 +636,7 @@ export default function Safety() {
           </button>
           {openSections.samaritan && (
             <p className="text-sm text-usnee-text-secondary mt-3">
-              В большинстве стран закон защищает того, кто вызывает скорую при передозировке. Не бойся звонить. Полиция редко приезжает на передозировки, а если приезжает — Good Samaritan Laws (или аналоги) защищают от преследования за вызов помощи. Жизнь дороже бумажки.
+              В ряде стран есть нормы, защищающие людей, которые вызывают скорую при передозировке. Уточните правила в своём регионе. Если кто-то в опасности — вызывайте экстренную службу. Жизнь важнее.
             </p>
           )}
         </div>
@@ -677,7 +677,7 @@ export default function Safety() {
             <Volume2 className="w-10 h-10 text-usnee-accent mx-auto mb-3" />
             <h3 className="text-xl font-bold mb-2">Ты в порядке?</h3>
             <p className="text-sm text-usnee-text-secondary mb-4">
-              NORS-таймер. Если не ответишь — активируем экстренный протокол.
+              NORS-таймер работает только пока приложение открыто. Он не вызывает помощь автоматически.
             </p>
             <button
               onClick={checkInNors}

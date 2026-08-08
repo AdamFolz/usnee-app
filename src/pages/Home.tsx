@@ -52,10 +52,11 @@ export default function Home() {
     [data.activeBatch]
   );
 
-  if (data.status === 'loading') return <HomeSkeleton />;
+  // Skeleton only on cold first load — keep previous snapshot on revisit (no blank flash).
+  if (data.status === 'loading' && !data.hasLoadedOnce) return <HomeSkeleton />;
 
   return (
-    <div className="flex flex-col gap-5 pb-4">
+    <div className="flex flex-col gap-5 pb-8">
       <HomeHeader
         now={now}
         status={<SyncStatus online={online} state="local-only" />}
@@ -77,6 +78,7 @@ export default function Home() {
         batch={batchPresentation?.ok ? batchPresentation.value : null}
         malformed={Boolean(data.errors.batch) || batchPresentation?.ok === false}
         onOpenBatch={() => navigate('/partials')}
+        onRecordWithoutBatch={() => navigate('/add')}
       />
 
       <Button size="lg" className="w-full" onClick={() => navigate('/add')}>

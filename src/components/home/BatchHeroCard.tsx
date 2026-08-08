@@ -8,9 +8,16 @@ export interface BatchHeroCardProps {
   batch?: BatchHeroViewModel | null;
   malformed?: boolean;
   onOpenBatch: () => void;
+  onRecordWithoutBatch?: () => void;
 }
 
-export function BatchHeroCard({ loading = false, batch = null, malformed = false, onOpenBatch }: BatchHeroCardProps) {
+export function BatchHeroCard({
+  loading = false,
+  batch = null,
+  malformed = false,
+  onOpenBatch,
+  onRecordWithoutBatch
+}: BatchHeroCardProps) {
   if (loading) return <div role="status" aria-label="Загрузка партии" className="h-60 animate-pulse rounded-hero bg-usnee-surface motion-reduce:animate-none" />;
   if (malformed) return (
     <Surface variant="danger" className="p-5">
@@ -23,9 +30,14 @@ export function BatchHeroCard({ loading = false, batch = null, malformed = false
   if (!batch) return (
     <Surface variant="glass" className="p-5 text-center">
       <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-usnee-glass"><FlaskConical className="h-6 w-6 text-usnee-brand" aria-hidden="true" /></div>
-      <h2 className="mt-3 text-title-lg">Активной партии нет</h2>
-      <p className="mt-2 text-body-sm text-usnee-text2">Создайте или выберите партию, чтобы видеть остаток и концентрацию.</p>
-      <Button className="mt-4 w-full" onClick={onOpenBatch}><Plus className="h-4 w-4" aria-hidden="true" />Управление партиями</Button>
+      <h2 className="mt-3 text-title-lg">Партии пока нет</h2>
+      <p className="mt-2 text-body-sm text-usnee-text2">
+        Создайте партию, чтобы считать остаток и концентрацию. Запись без партии тоже возможна.
+      </p>
+      <Button className="mt-4 w-full" onClick={onOpenBatch}><Plus className="h-4 w-4" aria-hidden="true" />Создать партию</Button>
+      {onRecordWithoutBatch && (
+        <Button variant="ghost" className="mt-2 w-full" onClick={onRecordWithoutBatch}>Записать без партии</Button>
+      )}
     </Surface>
   );
   return (

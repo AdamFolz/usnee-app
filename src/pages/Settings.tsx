@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { clearAllData, getEntries, addEntry } from '../utils/db';
 import { hashPin, encryptData, decryptData } from '../utils/crypto';
+import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { SUBSTANCES } from '../constants/substances';
 import {
   Shield,
@@ -242,7 +243,7 @@ export default function Settings() {
                     await addEntry({ ...entry, createdAt: Date.now(), updatedAt: Date.now() });
                   }
                   await refreshEntries();
-                  window.alert(`Загружено записей: ${parsed.entries.length}`);
+                  window.alert(`Загружено: ${formatCountRu(parsed.entries.length, RECORD_FORMS)}`);
                 } catch (err) {
                   window.alert('Ошибка импорта: ' + (err as Error).message);
                 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Batch, ConsumptionEntry, NorsSession, SleepEntry } from '../types';
 import { getActiveBatch, getEntries, getNorsSessions, getSleep } from '../utils/db';
 
@@ -16,10 +16,18 @@ export interface HomeDataState {
   activeSleep: SleepEntry | null;
   activeCheckIn: NorsSession | null;
   errors: HomeDataErrors;
+  /** False until the first load settles — used to avoid blank flash on revisit. */
+  hasLoadedOnce: boolean;
 }
 
 const initialState: HomeDataState = {
-  status: 'loading', entries: [], activeBatch: null, activeSleep: null, activeCheckIn: null, errors: {}
+  status: 'loading',
+  entries: [],
+  activeBatch: null,
+  activeSleep: null,
+  activeCheckIn: null,
+  errors: {},
+  hasLoadedOnce: false
 };
 
 function message(reason: unknown): string {
@@ -29,11 +37,16 @@ function message(reason: unknown): string {
 export function useHomeData() {
   const [state, setState] = useState<HomeDataState>(initialState);
   const [request, setRequest] = useState(0);
+  const snapshotRef = useRef<HomeDataState>(initialState);
   const reload = useCallback(() => setRequest((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
-    setState((current) => ({ ...current, status: 'loading', errors: {} }));
+    const keepSnapshot = snapshotRef.current.hasLoadedOnce;
+
+    if (!keepSnapshot) {
+      setState((current) => ({ ...current, status: 'loading', errors: {} }));
+    }
 
     Promise.allSettled([getEntries(), getActiveBatch(), getSleep(), getNorsSessions()]).then((results) => {
       if (!active) return;
@@ -44,14 +57,17 @@ export function useHomeData() {
       if (sleepResult.status === 'rejected') errors.sleep = message(sleepResult.reason);
       if (checkInResult.status === 'rejected') errors.checkIn = message(checkInResult.reason);
       const errorCount = Object.keys(errors).length;
-      setState({
+      const next: HomeDataState = {
         status: errorCount === 4 ? 'error' : errorCount ? 'partial-error' : 'ready',
-        entries: entriesResult.status === 'fulfilled' ? [...entriesResult.value].sort((a, b) => b.timestamp - a.timestamp) : [],
-        activeBatch: batchResult.status === 'fulfilled' ? batchResult.value ?? null : null,
-        activeSleep: sleepResult.status === 'fulfilled' ? sleepResult.value.find((item) => !item.endTime) ?? null : null,
-        activeCheckIn: checkInResult.status === 'fulfilled' ? checkInResult.value.find((item) => item.status === 'active') ?? null : null,
-        errors
-      });
+        entries: entriesResult.status === 'fulfilled' ? [...entriesResult.value].sort((a, b) => b.timestamp - a.timestamp) : keepSnapshot ? snapshotRef.current.entries : [],
+        activeBatch: batchResult.status === 'fulfilled' ? batchResult.value ?? null : keepSnapshot ? snapshotRef.current.activeBatch : null,
+        activeSleep: sleepResult.status === 'fulfilled' ? sleepResult.value.find((item) => !item.endTime) ?? null : keepSnapshot ? snapshotRef.current.activeSleep : null,
+        activeCheckIn: checkInResult.status === 'fulfilled' ? checkInResult.value.find((item) => item.status === 'active') ?? null : keepSnapshot ? snapshotRef.current.activeCheckIn : null,
+        errors,
+        hasLoadedOnce: true
+      };
+      snapshotRef.current = next;
+      setState(next);
     });
 
     return () => { active = false; };

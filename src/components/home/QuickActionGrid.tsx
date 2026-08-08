@@ -3,7 +3,7 @@ import { cx, Surface } from '../ui';
 
 export interface QuickActionGridProps { onRecord: () => void; onBatch: () => void; onAnalytics: () => void; onSafety: () => void; }
 const actions = [
-  ['Записать', Plus, 'record'], ['Партия', FlaskConical, 'batch'], ['Аналитика', BarChart3, 'analytics'], ['Safety Hub', ShieldCheck, 'safety']
+  ['Записать', Plus, 'record'], ['Партия', FlaskConical, 'batch'], ['Аналитика', BarChart3, 'analytics'], ['Безопасность', ShieldCheck, 'safety']
 ] as const;
 export function QuickActionGrid(props: QuickActionGridProps) {
   const callbacks = { record: props.onRecord, batch: props.onBatch, analytics: props.onAnalytics, safety: props.onSafety };

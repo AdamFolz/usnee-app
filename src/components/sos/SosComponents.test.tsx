@@ -110,7 +110,7 @@ describe('SosSheet', () => {
     expect(screen.getByRole('link', { name: /экстренную службу/ })).toBeInTheDocument();
     expect(screen.getByText('Что делать прямо сейчас')).toBeInTheDocument();
     expect(screen.getByText('Локальный таймер проверки')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Открыть Safety Hub' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Открыть безопасность' })).toBeInTheDocument();
   });
 
   it('hides trusted contact action when no contact configured and shows it when set', () => {
@@ -126,7 +126,7 @@ describe('SosSheet', () => {
   it('calls onOpenSafetyHub and never renders forbidden promises', async () => {
     const openHub = vi.fn();
     render(<SosSheet open onClose={() => {}} onOpenSafetyHub={openHub} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Открыть Safety Hub' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Открыть безопасность' }));
     expect(openHub).toHaveBeenCalled();
     for (const claim of FORBIDDEN_CLAIMS) {
       expect(screen.queryByText(new RegExp(claim, 'i'))).not.toBeInTheDocument();
