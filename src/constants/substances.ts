@@ -25,6 +25,8 @@ export const SUBSTANCES: Substance[] = [
   { id: 'mxe', name: 'MXE', category: 'dissociatives', aliases: [], durationHours: 4, peakHours: 1.5, halfLifeHours: 4, color: '#9b5de5' },
   { id: 'ghb', name: 'GHB', category: 'dissociatives', aliases: ['г', 'жидкий экстази'], durationHours: 3, peakHours: 0.5, halfLifeHours: 1, color: '#9b5de5' },
   { id: 'n2o', name: 'Закись азота', category: 'dissociatives', aliases: ['веселящий газ', 'н2о', 'n2o'], durationHours: 0.1, peakHours: 0.05, color: '#9b5de5' },
+  { id: 'salvia', name: 'Salvia Divinorum', category: 'dissociatives', aliases: ['сальвия', 'шалфей предсказателей'], durationHours: 0.3, peakHours: 0.1, color: '#9b5de5' },
+  { id: 'bdo', name: '1,4-Бутандиол', category: 'dissociatives', aliases: ['bdo', 'бдо'], durationHours: 3, peakHours: 0.5, halfLifeHours: 1, color: '#9b5de5' },
   // Бензодиазепины
   { id: 'xan', name: 'Ксанакс', category: 'benzodiazepines', aliases: ['ксан', 'xan'], durationHours: 6, peakHours: 1, halfLifeHours: 11, color: '#457b9d' },
   { id: 'val', name: 'Валиум', category: 'benzodiazepines', aliases: ['диазепам'], durationHours: 8, peakHours: 1.5, halfLifeHours: 48, color: '#457b9d' },
@@ -32,6 +34,15 @@ export const SUBSTANCES: Substance[] = [
   { id: 'clon', name: 'Клоназепам', category: 'benzodiazepines', aliases: ['клон'], durationHours: 12, peakHours: 2, halfLifeHours: 34, color: '#457b9d' },
   { id: 'lor', name: 'Лоразепам', category: 'benzodiazepines', aliases: ['лора'], durationHours: 8, peakHours: 1.5, halfLifeHours: 14, color: '#457b9d' },
   { id: 'mid', name: 'Мидазолам', category: 'benzodiazepines', aliases: ['мида'], durationHours: 2, peakHours: 0.5, halfLifeHours: 2, color: '#457b9d' },
+  // Психоделики (классические — 5-HT2A-агонисты + phenethylamines)
+  { id: 'lsd', name: 'LSD', category: 'psychedelics', aliases: ['лсд', 'лизергид', 'кислота', 'марки'], durationHours: 10, peakHours: 3, halfLifeHours: 5, color: '#ff006e' },
+  { id: 'psilocybin', name: 'Псилоцибин', category: 'psychedelics', aliases: ['грибы', 'псилоцибе'], durationHours: 6, peakHours: 2, halfLifeHours: 3, color: '#ff006e' },
+  { id: 'dmt', name: 'DMT', category: 'psychedelics', aliases: ['дмт', 'димeтилтриптамин'], durationHours: 0.3, peakHours: 0.1, color: '#ff006e' },
+  { id: 'mescaline', name: 'Мескалин', category: 'psychedelics', aliases: ['пейот', 'сан-педро'], durationHours: 10, peakHours: 3, halfLifeHours: 6, color: '#ff006e' },
+  { id: '2cb', name: '2C-B', category: 'psychedelics', aliases: ['2сб', '2c-b'], durationHours: 6, peakHours: 2, halfLifeHours: 2, color: '#ff006e' },
+  { id: '25inbome', name: '25I-NBOMe', category: 'psychedelics', aliases: ['n-bome', '25i'], durationHours: 10, peakHours: 3, color: '#ff006e' },
+  { id: 'doi', name: 'DOI', category: 'psychedelics', aliases: ['дoi'], durationHours: 18, peakHours: 4, color: '#ff006e' },
+  { id: 'ayahuasca', name: 'Аяуаска', category: 'psychedelics', aliases: ['аяваска', 'яхе'], durationHours: 8, peakHours: 2, color: '#ff006e' },
   // Опиоиды
   { id: 'her', name: 'Героин', category: 'opioids', aliases: ['гера', 'доза', 'хмур'], durationHours: 4, peakHours: 1, halfLifeHours: 0.5, color: '#e63946' },
   { id: 'metad', name: 'Метадон', category: 'opioids', aliases: [], durationHours: 24, peakHours: 4, halfLifeHours: 24, color: '#e63946' },
@@ -55,13 +66,14 @@ export const CATEGORY_LABELS: Record<string, string> = {
   cannabinoids: 'Каннабиноиды',
   dissociatives: 'Диссоциативы',
   benzodiazepines: 'Бензодиазепины',
-  opioids: 'Опиоиды',
+  psychedelics: 'Психоделики',
   pharmacy: 'Аптечные препараты',
+  opioids: 'Опиоиды',
   alcohol: 'Алкоголь',
   custom: 'Свой вариант'
 };
 
 export const CATEGORY_ORDER: string[] = [
   'euphorics', 'stimulants', 'cannabinoids', 'dissociatives',
-  'benzodiazepines', 'pharmacy', 'opioids', 'alcohol', 'custom'
+  'benzodiazepines', 'psychedelics', 'pharmacy', 'opioids', 'alcohol', 'custom'
 ];

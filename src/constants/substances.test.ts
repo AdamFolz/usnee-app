@@ -32,6 +32,20 @@ describe('substances catalog', () => {
     expect(CATEGORY_LABELS.pharmacy).toBe('Аптечные препараты');
   });
 
+  it('includes the classic psychedelics added in the second catalog pass', () => {
+    for (const id of ['lsd', 'psilocybin', 'dmt', 'mescaline', '2cb', '25inbome', 'doi', 'ayahuasca']) {
+      const s = SUBSTANCES.find((x) => x.id === id);
+      expect(s, `lost ${id}`).toBeDefined();
+      expect(s?.category).toBe('psychedelics');
+    }
+    expect(CATEGORY_LABELS.psychedelics).toBe('Психоделики');
+  });
+
+  it('keeps Salvia and BDO classified as dissociatives (not psychedelics)', () => {
+    expect(SUBSTANCES.find((s) => s.id === 'salvia')?.category).toBe('dissociatives');
+    expect(SUBSTANCES.find((s) => s.id === 'bdo')?.category).toBe('dissociatives');
+  });
+
   it('keeps existing entries that were already in the catalog', () => {
     // Regression guard: prior catalog names must still be present.
     for (const id of ['meph', 'mdma', 'meth', 'her', 'fent', 'alc', 'ket']) {

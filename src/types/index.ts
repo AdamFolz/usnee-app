@@ -15,6 +15,7 @@ export type SubstanceCategory =
   | 'cannabinoids'
   | 'dissociatives'
   | 'benzodiazepines'
+  | 'psychedelics'
   | 'pharmacy'
   | 'opioids'
   | 'alcohol'
