@@ -1,3 +1,45 @@
 import { CheckCircle2, Home, Plus, Undo2 } from 'lucide-react';
 import { Button, InlineNotice } from '../ui';
-export function RecordResult({ undoing, onHome, onAnother, onUndo }: { undoing: boolean; onHome: () => void; onAnother: () => void; onUndo: () => void }) { return <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center"><div className="grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15"><CheckCircle2 className="h-10 w-10 text-usnee-success" /></div><div><h1 className="text-title-xl">Сохранено на устройстве</h1><p className="mt-2 text-body-sm text-usnee-text2">Операция сохранена локально и ждёт отправки.</p></div><InlineNotice tone="pending" title="Ждёт отправки">Синхронизация появится после подключения серверного транспорта.</InlineNotice><div className="flex w-full flex-col gap-2"><Button variant="danger" loading={undoing} onClick={onUndo}><Undo2 className="h-4 w-4" />Отменить запись</Button><Button variant="secondary" onClick={onAnother}><Plus className="h-4 w-4" />Записать ещё</Button><Button onClick={onHome}><Home className="h-4 w-4" />На главную</Button></div></div>; }
+
+export function RecordResult({
+  undoing,
+  onHome,
+  onAnother,
+  onUndo
+}: {
+  undoing: boolean;
+  onHome: () => void;
+  onAnother: () => void;
+  onUndo: () => void;
+}) {
+  return (
+    <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
+      <div className="grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15">
+        <CheckCircle2 className="h-10 w-10 text-usnee-success" />
+      </div>
+      <div>
+        <h1 className="text-title-xl">Сохранено на устройстве</h1>
+        <p className="mt-2 text-body-sm text-usnee-text2">
+          Запись доступна в Истории и Аналитике. Отправка на сервер появится позже.
+        </p>
+      </div>
+      <InlineNotice tone="pending" title="На устройстве">
+        Синхронизация появится, когда будет подключён серверный транспорт.
+      </InlineNotice>
+      <div className="flex w-full flex-col gap-2">
+        <Button variant="danger" loading={undoing} onClick={onUndo}>
+          <Undo2 className="h-4 w-4" />
+          Отменить запись
+        </Button>
+        <Button variant="secondary" onClick={onAnother}>
+          <Plus className="h-4 w-4" />
+          Записать ещё
+        </Button>
+        <Button onClick={onHome}>
+          <Home className="h-4 w-4" />
+          На главную
+        </Button>
+      </div>
+    </div>
+  );
+}

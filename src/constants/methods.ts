@@ -1,5 +1,18 @@
 import { ConsumptionMethod } from '../types';
 
+// Per-route site options so we don't show "Вена локтя" for intramuscular
+// injections. Each route gets a coherent list of anatomical zones.
+const ROUTE_SITES: Record<string, string[]> = {
+  'в/в (внутривенно)': ['Вена локтя', 'Вена кисти', 'Вена стопы', 'Другое'],
+  'в/м (внутримышечно)': ['Бедро', 'Ягодица', 'Дельта (плечо)', 'Другое'],
+  'п/к (подкожно)': ['Живот', 'Бедро', 'Рука', 'Другое']
+};
+
+export function getSiteOptionsForRoute(route: string | undefined): string[] | undefined {
+  if (!route) return undefined;
+  return ROUTE_SITES[route];
+}
+
 export const METHODS: ConsumptionMethod[] = [
   {
     id: 'inject',
@@ -8,7 +21,7 @@ export const METHODS: ConsumptionMethod[] = [
     abbreviations: ['в/в', 'в/м', 'п/к'],
     fields: [
       { key: 'route', label: 'Способ', type: 'select', options: ['в/в (внутривенно)', 'в/м (внутримышечно)', 'п/к (подкожно)'], optional: false },
-      { key: 'site', label: 'Место', type: 'select', options: ['Вена локтя', 'Вена кисти', 'Бедро', 'Шея', 'Другое'], optional: true },
+      { key: 'site', label: 'Место', type: 'select', options: ROUTE_SITES['в/в (внутривенно)'], optional: true, dependsOn: { key: 'route', map: ROUTE_SITES } },
       { key: 'volume', label: 'Объём', type: 'number', unit: 'мл', placeholder: '0.8', optional: false },
       { key: 'missed', label: 'Промах (missed shot)', type: 'boolean', optional: true }
     ]

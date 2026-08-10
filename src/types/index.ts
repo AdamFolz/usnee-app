@@ -35,6 +35,17 @@ export interface MethodField {
   placeholder?: string;
   unit?: string;
   optional?: boolean;
+  /**
+   * When set, `options` are resolved from `map` based on the current value
+   * of the referenced field. Used for context-dependent option lists, e.g.
+   * injection sites that depend on the chosen route (в/в / в/м / п/к).
+   */
+  dependsOn?: {
+    key: string;
+    map: Record<string, string[]>;
+    /** Optional fallback options when the referenced field is empty. */
+    fallback?: string[];
+  };
 }
 
 export interface Trigger {

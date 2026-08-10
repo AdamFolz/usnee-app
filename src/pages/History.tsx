@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Clock3, Eye, FileText, Pencil, Trash2 } from 'lucide-react';
+import { Clock3, Pencil, Trash2 } from 'lucide-react';
 import type { EntrySyncRecord } from '../contracts';
 import type { ConsumptionEntry } from '../types';
 import { getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
@@ -8,6 +8,7 @@ import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { reverseEntryById } from '../services/entryActions';
 import { SUBSTANCES } from '../constants/substances';
 import { BottomSheet, Button, Dialog, InlineNotice, StatusBadge, Surface, TopBar } from '../components/ui';
+import { RecordSummary } from '../components/record';
 
 function toLocalDateTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -131,25 +132,22 @@ export function History() {
             entry.substanceId;
           return (
             <Surface key={entry.id} variant="interactive" className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelected(entry)}
-                  className="min-w-0 flex-1 text-left focus-visible:ring-2 focus-visible:ring-usnee-focus"
-                >
+              <button
+                type="button"
+                onClick={() => setSelected(entry)}
+                className="flex min-w-0 w-full items-start justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus"
+                aria-label={`Открыть запись: ${substance}`}
+              >
+                <div className="min-w-0 flex-1">
                   <p className="text-title-md">{substance}</p>
                   <p className="mt-1 text-body-sm text-usnee-text2">
                     {entry.dose} {entry.doseUnit} · {entry.methodName || entry.methodId}
                   </p>
                   <p className="mt-2 text-caption text-usnee-text3">{formatDateTime(entry.timestamp)}</p>
-                </button>
+                </div>
                 <StatusBadge tone={tone}>{label}</StatusBadge>
-              </div>
+              </button>
               <div className="mt-3 flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setSelected(entry)}>
-                  <Eye className="h-4 w-4" />
-                  Открыть
-                </Button>
                 <Button variant="ghost" size="sm" onClick={() => openEdit(entry)}>
                   <Pencil className="h-4 w-4" />
                   Изменить
@@ -184,19 +182,9 @@ export function History() {
       {content}
       <BottomSheet open={Boolean(selected)} onClose={() => setSelected(null)} title="Запись">
         {selected && (
-          <Surface className="space-y-3 p-4">
-            <p className="text-title-lg">{selected.substanceName || selected.substanceId}</p>
-            <p>
-              {selected.dose} {selected.doseUnit} · {selected.methodName || selected.methodId}
-            </p>
-            <p className="text-body-sm text-usnee-text2">{formatDateTime(selected.timestamp)}</p>
-            {selected.notes && (
-              <p className="flex gap-2 text-body-sm">
-                <FileText className="h-4 w-4" />
-                {selected.notes}
-              </p>
-            )}
-          </Surface>
+          <div className="space-y-3">
+            <RecordSummary entry={selected} />
+          </div>
         )}
       </BottomSheet>
       <BottomSheet

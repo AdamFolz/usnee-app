@@ -319,7 +319,7 @@ export default function Safety() {
             <div>
               <h2 className="font-bold text-lg text-red-100">NORS / Never Use Alone</h2>
               <p className="text-red-200/80 text-sm mt-1">
-                69% фатальных передозировок — в одиночку. Не будь статистикой.
+                Большинство фатальных передозировок происходит в одиночку — рядом нет никого, кто позвонит в скорую. Не будь один во время действия.
               </p>
             </div>
           </div>

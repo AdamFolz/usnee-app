@@ -367,6 +367,21 @@ export default function AdvancedRecordForm() {
     }
 
     if (field.type === 'select') {
+      // Resolve options either from a dependsOn map (e.g. injection sites
+      // depend on the chosen route) or from the static options array.
+      const resolvedOptions = field.dependsOn
+        ? (field.dependsOn.map[String(methodDetails[field.dependsOn.key] ?? '')] ??
+            field.dependsOn.fallback ??
+            field.options ??
+            [])
+        : field.options ?? [];
+      const dependencyHint = field.dependsOn
+        ? (() => {
+            const chosenRoute = methodDetails[field.dependsOn.key];
+            if (!chosenRoute) return 'Сначала выберите способ';
+            return null;
+          })()
+        : null;
       return (
         <div key={field.key} className={baseWrap}>
           <div className="mb-2 text-body-sm font-medium text-usnee-text">
@@ -374,7 +389,7 @@ export default function AdvancedRecordForm() {
             {!field.optional && <span className="ml-1 text-usnee-danger" aria-hidden="true">*</span>}
           </div>
           <div className="flex flex-wrap gap-2">
-            {field.options?.map((opt) => {
+            {resolvedOptions.map((opt) => {
               const active = value === opt;
               return (
                 <button
@@ -390,6 +405,9 @@ export default function AdvancedRecordForm() {
               );
             })}
           </div>
+          {dependencyHint && (
+            <p className="mt-2 text-caption text-usnee-text3">{dependencyHint}</p>
+          )}
         </div>
       );
     }

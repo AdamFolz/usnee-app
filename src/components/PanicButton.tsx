@@ -44,9 +44,10 @@ export function PanicButton() {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onLostPointerCapture={clearHold}
-      className={`fixed right-3 top-3 z-50 flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-full transition-all active:scale-90 ${
+      className={`fixed right-3 z-50 flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-full transition-all active:scale-90 ${
         holding ? 'scale-110 bg-usnee-danger' : 'bg-usnee-surface2'
       }`}
+      style={{ top: 'calc(var(--content-safe-area-top, 0px) + 0.5rem)' }}
       aria-label="Паника: удерживайте 2 секунды для выхода"
     >
       <ShieldAlert className="h-5 w-5 text-usnee-danger" aria-hidden="true" />
