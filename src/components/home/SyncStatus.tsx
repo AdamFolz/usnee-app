@@ -11,7 +11,11 @@ export interface SyncStatusProps {
 
 const labels: Record<SyncState, string> = {
   'local-only': 'Сохранено на устройстве',
-  pending: 'Ждёт отправки',
+  // We deliberately surface "На устройстве" for pending too: without a
+  // configured sync transport (VITE_API_BASE_URL + Telegram initData) the
+  // outbox will never flush, so "Ждёт отправки" would be a lie. The other
+  // labels remain honest because each requires a real transport event.
+  pending: 'На устройстве',
   syncing: 'Синхронизация…',
   synced: 'Синхронизировано',
   failed: 'Не удалось синхронизировать',

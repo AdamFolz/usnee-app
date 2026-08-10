@@ -308,7 +308,7 @@ export default function Safety() {
           <Shield className="w-6 h-6 text-usnee-accent" />
           Безопасность
         </h1>
-        <p className="text-usnee-text-secondary text-sm">Этот раздел буквально спасает жизни. Не игнорь.</p>
+        <p className="text-usnee-text-secondary text-sm">Инструкции для опасных ситуаций и быстрый доступ к экстренным вызовам. Здесь только то, что работает локально на устройстве.</p>
       </div>
 
       <div className="px-4 space-y-4">
