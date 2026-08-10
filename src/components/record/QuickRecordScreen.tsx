@@ -12,6 +12,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { registerTelegramBackHandler } from '../../integrations/telegram';
 import { BottomSheet, Button, Dialog, InlineNotice, Surface, TopBar } from '../ui';
 import { AmountDisplay } from './AmountDisplay';
+import { MethodGuidance } from './MethodGuidance';
 import { ChoiceChip } from './ChoiceChip';
 import { NumericKeypad } from './NumericKeypad';
 import { RecordResult } from './RecordResult';
@@ -248,6 +249,7 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
           batch={batch}
           error={saveError || (current.amountInput && !amount.valid ? amount.error : undefined)}
         />
+        <MethodGuidance methodId={current.methodId} />
         <input
           id="record-amount"
           aria-label="Количество"
