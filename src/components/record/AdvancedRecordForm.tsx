@@ -40,10 +40,10 @@ import {
   PreparedRecordCommand,
   reversePreparedRecord
 } from '../../services/recordPersistence';
-import { resolveRecordAmountFields, selectCompatibleBatch } from '../../domain/record';
+import { buildLastRecordContext, resolveRecordAmountFields, selectCompatibleBatch } from '../../domain/record';
 import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
 import { SUBSTANCES, CATEGORY_LABELS, CATEGORY_ORDER } from '../../constants/substances';
-import { METHODS, METHOD_ABBREVIATIONS } from '../../constants/methods';
+import { METHODS, METHOD_ABBREVIATIONS, getRouteForSite } from '../../constants/methods';
 import { TRIGGERS } from '../../constants/triggers';
 import { Button, InlineNotice, Surface, TopBar } from '../ui';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -155,6 +155,8 @@ export default function AdvancedRecordForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const refreshEntries = useAppStore((s) => s.refreshEntries);
+  const lastRecordContext = useAppStore((s) => s.lastRecordContext);
+  const setLastRecordContext = useAppStore((s) => s.setLastRecordContext);
   const online = useOnlineStatus();
 
   // Core required fields (kept compact so a user can save in ~3 taps)
@@ -212,14 +214,24 @@ export default function AdvancedRecordForm() {
 
   useEffect(() => {
     const route = location.state;
-    if (!route || typeof route !== 'object') return;
-    const next = route as {
-      substanceId?: string;
-      methodId?: string;
-      amountInput?: string;
-      amountUnit?: string;
-      batchId?: string;
-    };
+    const hasRoute = Boolean(route && typeof route === 'object');
+    const next = hasRoute
+      ? route as {
+          substanceId?: string;
+          methodId?: string;
+          amountInput?: string;
+          amountUnit?: string;
+          batchId?: string;
+        }
+      : lastRecordContext
+        ? {
+            substanceId: lastRecordContext.substanceId,
+            methodId: lastRecordContext.methodId,
+            amountUnit: lastRecordContext.amountUnit,
+            batchId: lastRecordContext.batchId
+          }
+        : null;
+    if (!next) return;
     if (next.batchId) setRequestedBatchId(next.batchId);
     if (next.substanceId) {
       const substance = SUBSTANCES.find((item) => item.id === next.substanceId);
@@ -229,7 +241,7 @@ export default function AdvancedRecordForm() {
       }
     }
     if (next.methodId) setSelectedMethodId(next.methodId);
-    if (next.amountInput) {
+    if (hasRoute && next.amountInput) {
       const methodId = next.methodId ?? selectedMethodId;
       if (methodId === 'inject' || next.amountUnit === 'мл') {
         const volume = Number(next.amountInput);
@@ -246,8 +258,15 @@ export default function AdvancedRecordForm() {
           }));
         }
       }
+    } else if (!hasRoute && lastRecordContext?.injectionSite) {
+      const inferredRoute = getRouteForSite(lastRecordContext.injectionSite);
+      setMethodDetails((prev) => ({
+        ...prev,
+        ...(inferredRoute ? { route: inferredRoute } : {}),
+        site: lastRecordContext.injectionSite
+      }));
     }
-  }, [location.state]);
+  }, [location.state, lastRecordContext]);
 
   const isDoseMissing = () => {
     if (!selectedMethod) return false;
@@ -346,6 +365,16 @@ export default function AdvancedRecordForm() {
       }
       setSavedCommand(command);
       setSaveError('');
+      setLastRecordContext(buildLastRecordContext({
+        substanceId: command.entry.substanceId,
+        substanceName: command.entry.substanceName,
+        methodId: command.entry.methodId,
+        methodName: command.entry.methodName,
+        amountUnit: command.entry.doseUnit,
+        batchId: command.batchId,
+        methodDetails: command.entry.methodDetails,
+        injectionSite: command.entry.injectionSite
+      }));
     } catch (error) {
       setSaveError(persistErrorMessage(error));
     } finally {
@@ -376,11 +405,8 @@ export default function AdvancedRecordForm() {
   const handleAddNote = () => navigate('/');
   const handleGoHome = () => navigate('/');
   const handleRepeat = () => {
-    setSelectedCategory(null);
-    setSelectedSubstanceId(null);
-    setCustomSubstanceName('');
-    setSelectedMethodId(null);
-    setMethodDetails({});
+    const { volume: _volume, dose: _dose, ...keptDetails } = methodDetails;
+    setMethodDetails(keptDetails);
     setTriggerId(null);
     setCustomTrigger('');
     setPulse('');
@@ -388,12 +414,12 @@ export default function AdvancedRecordForm() {
     setMissedShot(false);
     setFentanylTestResult(null);
     setNotes('');
-    setAlone(true);
     setTimestamp(getLocalDatetimeInputValue());
     setSavedCommand(null);
     setPendingDuplicate(null);
     setHighlightMissing(false);
     setSubmitAttempted(false);
+    setSaveError('');
     requestAnimationFrame(() => formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }));
   };
 
@@ -490,6 +516,7 @@ export default function AdvancedRecordForm() {
                   key={opt}
                   type="button"
                   onClick={() => setMethodDetails((prev) => ({ ...prev, [field.key]: opt }))}
+                  aria-pressed={active}
                   className={`rounded-lg px-3 py-2 text-body-sm font-medium transition-transform active:scale-95 ${
                     active ? 'bg-usnee-accent text-white' : 'bg-usnee-surface text-usnee-text'
                   }`}

@@ -3,7 +3,7 @@ import type { EntrySyncRecord } from '../contracts/persistence';
 import type { CreateEntryOperation, OutboxOperation } from '../contracts/sync';
 import type { Batch, ConsumptionEntry } from '../types';
 import type { QuickRecordDraft } from '../domain/record';
-import { parseRecordAmount, validateRecordDraft } from '../domain/record';
+import { parseRecordAmount, readInjectionSite, validateRecordDraft } from '../domain/record';
 import { createEntryTransaction, reverseEntryTransaction } from '../utils/db';
 import { createUuid } from '../utils/ids';
 
@@ -29,7 +29,7 @@ export function prepareRecordCommand(draft: QuickRecordDraft, batch?: Batch | nu
     id: entryId, substanceId: draft.substanceId!, substanceName: draft.substanceName,
     methodId: draft.methodId!, methodName: draft.methodName, timestamp: draft.occurredAt,
     dose: amount.value!, doseUnit: draft.amountUnit, methodDetails: draft.methodDetails ?? {},
-    notes: draft.notes, batchId: batch?.id, alone: draft.alone, createdAt: now, updatedAt: now
+    notes: draft.notes, batchId: batch?.id, injectionSite: readInjectionSite(draft.methodDetails), alone: draft.alone, createdAt: now, updatedAt: now
   };
   let movement: BatchMovement | undefined;
   if (batch) {

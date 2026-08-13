@@ -11,6 +11,13 @@ describe('record command builder', () => {
     expect(command.operation.payload.amount.calculatedMassMg).toBe(20);
     expect(command.movement?.deltaMassMg).toBe(-20); expect(command.nextBatchRemaining).toBe(240);
   });
+  it('copies optional injectionSite from method details', () => {
+    const command = prepareRecordCommand({
+      substanceId: 'meph', methodId: 'inject', amountInput: '1', amountUnit: 'мл',
+      occurredAt: 1000, alone: true, methodDetails: { site: 'Вена локтя' }
+    }, null, { entryId: 'e1', operationId: 'o1' });
+    expect(command.entry.injectionSite).toBe('Вена локтя');
+  });
   it('creates no movement without batch', () => { const command = prepareRecordCommand({ substanceId: 'meph', methodId: 'oral', amountInput: '10', amountUnit: 'мг', occurredAt: Date.now(), alone: false }, null, { entryId: 'e1', operationId: 'o1' }); expect(command.movement).toBeUndefined(); expect(command.operation.payload.batchId).toBeUndefined(); });
   it('rejects a batch consume when mass cannot be calculated', () => {
     expect(() => prepareRecordCommand({ substanceId: 'meph', methodId: 'inject', amountInput: '1', amountUnit: 'хиты', occurredAt: Date.now(), alone: true }, batch)).toThrow('Не удалось рассчитать расход партии');

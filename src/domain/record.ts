@@ -1,4 +1,4 @@
-import type { Batch, ConsumptionEntry } from '../types';
+import type { Batch, ConsumptionEntry, LastRecordContext } from '../types';
 
 export interface QuickRecordDraft {
   substanceId: string | null;
@@ -66,6 +66,33 @@ export function selectCompatibleBatch(
   if (!batch || !substanceId || !batch.active || batch.substanceId !== substanceId) return null;
   if (requestedBatchId && requestedBatchId !== batch.id) return null;
   return batch;
+}
+
+export function readInjectionSite(methodDetails?: Record<string, unknown>, fallback?: string): string | undefined {
+  if (typeof methodDetails?.site === 'string' && methodDetails.site.trim()) return methodDetails.site;
+  if (fallback?.trim()) return fallback;
+  return undefined;
+}
+
+export function buildLastRecordContext(input: {
+  substanceId: string;
+  substanceName?: string;
+  methodId: string;
+  methodName?: string;
+  amountUnit: string;
+  batchId?: string;
+  methodDetails?: Record<string, unknown>;
+  injectionSite?: string;
+}): LastRecordContext {
+  return {
+    substanceId: input.substanceId,
+    substanceName: input.substanceName,
+    methodId: input.methodId,
+    methodName: input.methodName,
+    amountUnit: input.amountUnit,
+    batchId: input.batchId,
+    injectionSite: readInjectionSite(input.methodDetails, input.injectionSite)
+  };
 }
 
 export function validateRecordDraft(draft: QuickRecordDraft, batch?: Batch | null): string[] {

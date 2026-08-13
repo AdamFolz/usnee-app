@@ -1,13 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LastRecordContext } from '../types';
 import AddEntry from './AddEntry';
+
+const store = vi.hoisted(() => ({
+  refreshEntries: vi.fn().mockResolvedValue(undefined),
+  lastRecordContext: null as LastRecordContext | null,
+  setLastRecordContext: vi.fn()
+}));
 
 vi.mock('../hooks/useOnlineStatus', () => ({ useOnlineStatus: () => true }));
 vi.mock('../stores/appStore', () => ({
-  useAppStore: (selector: (state: { refreshEntries: () => Promise<void> }) => unknown) =>
-    selector({ refreshEntries: vi.fn().mockResolvedValue(undefined) })
+  useAppStore: (selector: (state: typeof store) => unknown) => selector(store)
 }));
 vi.mock('../services/recordPersistence', () => ({
   prepareRecordCommand: vi.fn(),
@@ -17,6 +23,11 @@ vi.mock('../services/recordPersistence', () => ({
 vi.mock('../utils/db', () => ({ getEntries: vi.fn().mockResolvedValue([]), getActiveBatch: vi.fn().mockResolvedValue(undefined) }));
 
 describe('AddEntry route', () => {
+  beforeEach(() => {
+    store.lastRecordContext = null;
+    store.setLastRecordContext.mockClear();
+  });
+
   it('opens the unified Advanced Record form by default', () => {
     render(
       <MemoryRouter>
@@ -55,5 +66,24 @@ describe('AddEntry route', () => {
     expect(save).toBeEnabled(); // click reveals what's missing
     await userEvent.click(save);
     expect(await screen.findByText('Не хватает данных')).toBeInTheDocument();
+  });
+
+  it('restores last substance, method and injection site', async () => {
+    store.lastRecordContext = {
+      substanceId: 'meph',
+      substanceName: 'Мефедрон',
+      methodId: 'inject',
+      methodName: 'Инъекция',
+      injectionSite: 'Вена локтя',
+      amountUnit: 'мл'
+    };
+    render(
+      <MemoryRouter>
+        <AddEntry />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole('button', { name: /Мефедрон/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Инъекция/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Вена локтя' })).toHaveAttribute('aria-pressed', 'true');
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ConsumptionEntry, Batch } from '../types';
-import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, resolveRecordAmountFields, selectCompatibleBatch, validateRecordDraft } from './record';
+import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, buildLastRecordContext, resolveRecordAmountFields, selectCompatibleBatch, validateRecordDraft } from './record';
 
 const draft: QuickRecordDraft = { substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'inject', methodName: 'Инъекция', amountInput: '1', amountUnit: 'мл', occurredAt: Date.now(), alone: true, batchId: 'b1' };
 const batch: Batch = { id: 'b1', substanceId: 'meph', name: '№014', totalWeight: 400, weightUnit: 'мг', solutionVolume: 20, volumeUnit: 'мл', concentration: 20, createdAt: 1, active: true, remaining: 260 };
@@ -32,5 +32,24 @@ describe('record domain', () => {
   it('ignores different methods and old entries', () => {
     expect(findRecentDuplicate([{ ...entry, methodId: 'oral' }], draft)).toBeNull();
     expect(findRecentDuplicate([{ ...entry, timestamp: draft.occurredAt - 2 * 60 * 60_000 }], draft)).toBeNull();
+  });
+  it('builds last record context from site details without requiring a schema bump', () => {
+    expect(buildLastRecordContext({
+      substanceId: 'meph',
+      substanceName: 'Мефедрон',
+      methodId: 'inject',
+      methodName: 'Инъекция',
+      amountUnit: 'мл',
+      batchId: 'b1',
+      methodDetails: { site: 'Вена локтя' }
+    })).toEqual({
+      substanceId: 'meph',
+      substanceName: 'Мефедрон',
+      methodId: 'inject',
+      methodName: 'Инъекция',
+      amountUnit: 'мл',
+      batchId: 'b1',
+      injectionSite: 'Вена локтя'
+    });
   });
 });

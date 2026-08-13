@@ -75,6 +75,7 @@ export interface ConsumptionEntry {
   missedShot?: boolean;
   fentanylTestResult?: 'positive' | 'negative' | 'inconclusive' | null;
   batchId?: string;
+  injectionSite?: string;
   location?: string;
   alone: boolean;
   latitude?: number;
@@ -82,6 +83,16 @@ export interface ConsumptionEntry {
   createdAt: number;
   updatedAt: number;
   reversedAt?: number;
+}
+
+export interface LastRecordContext {
+  substanceId: string;
+  substanceName?: string;
+  methodId: string;
+  methodName?: string;
+  injectionSite?: string;
+  batchId?: string;
+  amountUnit: string;
 }
 
 export interface Batch {

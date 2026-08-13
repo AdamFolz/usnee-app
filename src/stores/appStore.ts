@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserSettings, AppScreen, ConsumptionEntry, TimerState } from '../types';
+import { UserSettings, AppScreen, ConsumptionEntry, TimerState, LastRecordContext } from '../types';
 import { getLastEntry, getEntries } from '../utils/db';
 
 interface AppState {
@@ -20,6 +20,8 @@ interface AppState {
   lastEntry: ConsumptionEntry | null;
   todayCount: number;
   refreshEntries: () => Promise<void>;
+  lastRecordContext: LastRecordContext | null;
+  setLastRecordContext: (context: LastRecordContext) => void;
 
   // Timers
   timers: TimerState[];
@@ -59,6 +61,8 @@ export const useAppStore = create<AppState>()(
 
       lastEntry: null,
       todayCount: 0,
+      lastRecordContext: null,
+      setLastRecordContext: (context) => set({ lastRecordContext: context }),
       refreshEntries: async () => {
         const last = await getLastEntry();
         const all = await getEntries();
@@ -92,7 +96,8 @@ export const useAppStore = create<AppState>()(
       name: 'usnee-app-store',
       partialize: (state) => ({
         settings: state.settings,
-        showOnboarding: state.showOnboarding
+        showOnboarding: state.showOnboarding,
+        lastRecordContext: state.lastRecordContext
       })
     }
   )

@@ -7,6 +7,7 @@ import { useQuickRecordDefaults } from '../../hooks/useQuickRecordDefaults';
 import { prepareRecordCommand, persistPreparedRecord, PreparedRecordCommand, reversePreparedRecord } from '../../services/recordPersistence';
 import { useAppStore } from '../../stores/appStore';
 import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
+import { buildLastRecordContext } from '../../domain/record';
 import { METHODS } from '../../constants/methods';
 import { SUBSTANCES } from '../../constants/substances';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -44,6 +45,7 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
   const defaults = useQuickRecordDefaults();
   const online = useOnlineStatus();
   const refreshEntries = useAppStore((state) => state.refreshEntries);
+  const setLastRecordContext = useAppStore((state) => state.setLastRecordContext);
   const [draft, setDraft] = useState<QuickRecordDraft | null>(null);
   const [picker, setPicker] = useState<'substance' | 'method' | null>(null);
   const [review, setReview] = useState(false);
@@ -145,6 +147,16 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
       if (prepared.batchId && prepared.nextBatchRemaining !== undefined) {
         applyHomeBatchRemaining(prepared.batchId, prepared.nextBatchRemaining);
       }
+      setLastRecordContext(buildLastRecordContext({
+        substanceId: prepared.entry.substanceId,
+        substanceName: prepared.entry.substanceName,
+        methodId: prepared.entry.methodId,
+        methodName: prepared.entry.methodName,
+        amountUnit: prepared.entry.doseUnit,
+        batchId: prepared.batchId,
+        methodDetails: prepared.entry.methodDetails,
+        injectionSite: prepared.entry.injectionSite
+      }));
       setSavedCommand(prepared);
       setReview(false);
       setLeaveOpen(false);

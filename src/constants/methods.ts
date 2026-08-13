@@ -13,6 +13,11 @@ export function getSiteOptionsForRoute(route: string | undefined): string[] | un
   return ROUTE_SITES[route];
 }
 
+export function getRouteForSite(site: string | undefined): string | undefined {
+  if (!site) return undefined;
+  return Object.entries(ROUTE_SITES).find(([, sites]) => sites.includes(site))?.[0];
+}
+
 export const METHODS: ConsumptionMethod[] = [
   {
     id: 'inject',

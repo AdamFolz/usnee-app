@@ -25,7 +25,8 @@ vi.mock('../../hooks/useQuickRecordDefaults', () => ({
 }));
 vi.mock('../../hooks/useOnlineStatus', () => ({ useOnlineStatus: () => true }));
 vi.mock('../../stores/appStore', () => ({
-  useAppStore: (selector: (state: { refreshEntries: () => Promise<void> }) => unknown) => selector({ refreshEntries: vi.fn().mockResolvedValue(undefined) })
+  useAppStore: (selector: (state: { refreshEntries: () => Promise<void>; setLastRecordContext: (value: unknown) => void }) => unknown) =>
+    selector({ refreshEntries: vi.fn().mockResolvedValue(undefined), setLastRecordContext: vi.fn() })
 }));
 vi.mock('../../services/recordPersistence', () => ({
   prepareRecordCommand: vi.fn((draft: QuickRecordDraft) => ({
