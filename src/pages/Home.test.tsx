@@ -41,10 +41,19 @@ beforeEach(() => {
 
 describe('Home', () => {
   it('renders loading without false empty states', () => {
-    homeState.data = { ...homeState.data, status: 'loading', hasLoadedOnce: false };
+    homeState.data = { ...homeState.data, status: 'loading', hasLoadedOnce: false, entries: [], activeBatch: null };
     renderHome();
     expect(screen.getByRole('status', { name: 'Загрузка главного экрана' })).toBeInTheDocument();
     expect(screen.queryByText('Активной партии нет')).not.toBeInTheDocument();
+    expect(screen.queryByText('Пока нет записей')).not.toBeInTheDocument();
+  });
+
+  it('renders existing entries even while the first load flag is still false', () => {
+    homeState.data = { ...homeState.data, status: 'loading', hasLoadedOnce: false };
+    renderHome();
+    expect(screen.queryByRole('status', { name: 'Загрузка главного экрана' })).not.toBeInTheDocument();
+    expect(screen.getByText('Мефедрон')).toBeInTheDocument();
+    expect(screen.getByText('Сводка')).toBeInTheDocument();
     expect(screen.queryByText('Пока нет записей')).not.toBeInTheDocument();
   });
 
@@ -116,5 +125,12 @@ describe('Home', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
     expect(reload).toHaveBeenCalled();
     expect(screen.getByText('USNEE')).toBeInTheDocument();
+  });
+
+  it('keeps the last entry visible when a later entries read fails', () => {
+    homeState.data = { ...homeState.data, status: 'partial-error', errors: { entries: 'unavailable' } };
+    renderHome();
+    expect(screen.getByText('Мефедрон')).toBeInTheDocument();
+    expect(screen.queryByText('История временно недоступна')).not.toBeInTheDocument();
   });
 });

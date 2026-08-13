@@ -41,22 +41,35 @@ export default function Home() {
     if (data.status !== 'loading' && !data.errors.entries) void refreshEntries();
   }, [data.status, data.errors.entries, refreshEntries]);
 
-  const lastEntry = data.entries[0] ?? null;
+  const entries = Array.isArray(data.entries) ? data.entries : [];
+  const lastEntry = entries[0] ?? null;
   const todayCount = useMemo(() => {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
-    return data.entries.filter((entry) => entry.timestamp >= start.getTime() && entry.timestamp <= now).length;
-  }, [data.entries, now]);
+    return entries.filter((entry) => entry.timestamp >= start.getTime() && entry.timestamp <= now).length;
+  }, [entries, now]);
   const batchPresentation = useMemo(
     () => data.activeBatch ? adaptLegacyBatch(data.activeBatch) : null,
     [data.activeBatch]
   );
 
-  // Skeleton only on cold first load — keep previous snapshot on revisit (no blank flash).
-  if (data.status === 'loading' && !data.hasLoadedOnce) return <HomeSkeleton />;
-
-  const showFirstRecordEmpty = !data.errors.entries && data.entries.length === 0;
+  const hasEntries = entries.length > 0;
+  // Cold skeleton only when there is nothing to show yet. Existing records must stay visible.
+  const showColdSkeleton = data.status === 'loading' && !data.hasLoadedOnce && !hasEntries;
+  const showFirstRecordEmpty = data.hasLoadedOnce && !data.errors.entries && !hasEntries;
   const goRecord = () => navigate('/add');
+
+  if (showColdSkeleton) {
+    return (
+      <div className="flex flex-col gap-5 pb-8">
+        <HomeHeader
+          now={now}
+          status={<SyncStatus online={online} state="local-only" />}
+        />
+        <HomeSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 pb-8">
@@ -121,25 +134,25 @@ export default function Home() {
           <h2 id="home-summary" className="text-title-md">Сводка</h2>
           <div className="grid grid-cols-2 gap-3">
             <IntervalCard lastTimestamp={lastEntry?.timestamp} now={now} />
-            <WeeklySummaryCard entries={data.entries} todayCount={todayCount} now={now} />
+            <WeeklySummaryCard entries={entries} todayCount={todayCount} now={now} />
           </div>
         </section>
       )}
 
-      {data.errors.entries ? (
+      {lastEntry ? (
+        <LastEntryCard
+          entry={lastEntry}
+          substanceName={getSubstanceName(lastEntry.substanceId)}
+          onOpenHistory={() => navigate('/history')}
+          onCreate={goRecord}
+        />
+      ) : data.errors.entries ? (
         <InlineNotice tone="danger" title="История временно недоступна">
           Последняя запись не отображается, чтобы не показывать устаревшие сведения.
           {data.status !== 'error' && (
             <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
           )}
         </InlineNotice>
-      ) : !showFirstRecordEmpty ? (
-        <LastEntryCard
-          entry={lastEntry}
-          substanceName={getSubstanceName(lastEntry?.substanceId)}
-          onOpenHistory={() => navigate('/history')}
-          onCreate={goRecord}
-        />
       ) : null}
 
       <ActiveLocalStates

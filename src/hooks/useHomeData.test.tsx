@@ -65,4 +65,13 @@ describe('useHomeData', () => {
     await waitFor(() => expect(mockedEntries).toHaveBeenCalledTimes(2));
     second.unmount();
   });
+
+  it('treats a non-array entries payload as empty instead of getting stuck in loading', async () => {
+    mockedEntries.mockResolvedValue(undefined as never);
+    mockedSleep.mockResolvedValue(undefined as never);
+    const { result } = renderHook(() => useHomeData());
+    await waitFor(() => expect(result.current.hasLoadedOnce).toBe(true));
+    expect(result.current.status).toBe('ready');
+    expect(result.current.entries).toEqual([]);
+  });
 });

@@ -41,6 +41,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : 'Не удалось прочитать локальные данные';
 }
 
+function asList<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
 export function applyHomeBatchRemaining(batchId: string, remaining: number): void {
   if (!cachedSnapshot?.activeBatch || cachedSnapshot.activeBatch.id !== batchId) return;
   cachedSnapshot = {
@@ -64,7 +68,6 @@ export function useHomeData() {
     }
 
     Promise.allSettled([getEntries(), getActiveBatch(), getSleep(), getNorsSessions()]).then((results) => {
-      if (!active) return;
       const [entriesResult, batchResult, sleepResult, checkInResult] = results;
       const errors: HomeDataErrors = {};
       if (entriesResult.status === 'rejected') errors.entries = message(entriesResult.reason);
@@ -74,15 +77,18 @@ export function useHomeData() {
       const errorCount = Object.keys(errors).length;
       const next: HomeDataState = {
         status: errorCount === 4 ? 'error' : errorCount ? 'partial-error' : 'ready',
-        entries: entriesResult.status === 'fulfilled' ? [...entriesResult.value].sort((a, b) => b.timestamp - a.timestamp) : keepSnapshot ? snapshotRef.current.entries : [],
+        entries: entriesResult.status === 'fulfilled'
+          ? [...asList<ConsumptionEntry>(entriesResult.value)].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+          : keepSnapshot ? snapshotRef.current.entries : [],
         activeBatch: batchResult.status === 'fulfilled' ? batchResult.value ?? null : keepSnapshot ? snapshotRef.current.activeBatch : null,
-        activeSleep: sleepResult.status === 'fulfilled' ? sleepResult.value.find((item) => !item.endTime) ?? null : keepSnapshot ? snapshotRef.current.activeSleep : null,
-        activeCheckIn: checkInResult.status === 'fulfilled' ? checkInResult.value.find((item) => item.status === 'active') ?? null : keepSnapshot ? snapshotRef.current.activeCheckIn : null,
+        activeSleep: sleepResult.status === 'fulfilled' ? asList<SleepEntry>(sleepResult.value).find((item) => !item.endTime) ?? null : keepSnapshot ? snapshotRef.current.activeSleep : null,
+        activeCheckIn: checkInResult.status === 'fulfilled' ? asList<NorsSession>(checkInResult.value).find((item) => item.status === 'active') ?? null : keepSnapshot ? snapshotRef.current.activeCheckIn : null,
         errors,
         hasLoadedOnce: true
       };
       snapshotRef.current = next;
       cachedSnapshot = next;
+      if (!active) return;
       setState(next);
     });
 
