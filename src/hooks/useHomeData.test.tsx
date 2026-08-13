@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getActiveBatch, getEntries, getNorsSessions, getSleep } from '../utils/db';
-import { useHomeData } from './useHomeData';
+import { resetHomeDataCache, useHomeData } from './useHomeData';
 
 vi.mock('../utils/db', () => ({
   getEntries: vi.fn(),
@@ -17,6 +17,7 @@ const mockedCheckIn = vi.mocked(getNorsSessions);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetHomeDataCache();
   mockedEntries.mockResolvedValue([]);
   mockedBatch.mockResolvedValue(undefined);
   mockedSleep.mockResolvedValue([]);
@@ -49,5 +50,19 @@ describe('useHomeData', () => {
     act(() => result.current.reload());
     await waitFor(() => expect(mockedEntries).toHaveBeenCalledTimes(2));
     expect(mockedBatch).toHaveBeenCalledTimes(2);
+  });
+
+  it('reuses the last snapshot on remount instead of returning to a blank load', async () => {
+    mockedEntries.mockResolvedValue([
+      { id: 'new', substanceId: 'meph', methodId: 'iv', timestamp: 20, dose: 1, doseUnit: 'мг', methodDetails: {}, alone: false, createdAt: 20, updatedAt: 20 }
+    ]);
+    const first = renderHook(() => useHomeData());
+    await waitFor(() => expect(first.result.current.status).toBe('ready'));
+    first.unmount();
+    const second = renderHook(() => useHomeData());
+    expect(second.result.current.hasLoadedOnce).toBe(true);
+    expect(second.result.current.entries.map((entry) => entry.id)).toEqual(['new']);
+    await waitFor(() => expect(mockedEntries).toHaveBeenCalledTimes(2));
+    second.unmount();
   });
 });

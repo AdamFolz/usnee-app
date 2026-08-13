@@ -30,14 +30,21 @@ const initialState: HomeDataState = {
   hasLoadedOnce: false
 };
 
+/** Survives Home remounts so revisit does not flash a blank skeleton. */
+let cachedSnapshot: HomeDataState | null = null;
+
+export function resetHomeDataCache(): void {
+  cachedSnapshot = null;
+}
+
 function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : 'Не удалось прочитать локальные данные';
 }
 
 export function useHomeData() {
-  const [state, setState] = useState<HomeDataState>(initialState);
+  const [state, setState] = useState<HomeDataState>(() => cachedSnapshot ?? initialState);
   const [request, setRequest] = useState(0);
-  const snapshotRef = useRef<HomeDataState>(initialState);
+  const snapshotRef = useRef<HomeDataState>(cachedSnapshot ?? initialState);
   const reload = useCallback(() => setRequest((value) => value + 1), []);
 
   useEffect(() => {
@@ -67,6 +74,7 @@ export function useHomeData() {
         hasLoadedOnce: true
       };
       snapshotRef.current = next;
+      cachedSnapshot = next;
       setState(next);
     });
 

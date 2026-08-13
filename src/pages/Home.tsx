@@ -12,7 +12,7 @@ import {
   SyncStatus,
   WeeklySummaryCard
 } from '../components/home';
-import { Button, InlineNotice } from '../components/ui';
+import { Button, InlineNotice, Surface } from '../components/ui';
 import { SUBSTANCES } from '../constants/substances';
 import { useHomeData } from '../hooks/useHomeData';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
@@ -55,6 +55,9 @@ export default function Home() {
   // Skeleton only on cold first load — keep previous snapshot on revisit (no blank flash).
   if (data.status === 'loading' && !data.hasLoadedOnce) return <HomeSkeleton />;
 
+  const showFirstRecordEmpty = !data.errors.entries && data.entries.length === 0;
+  const goRecord = () => navigate('/add');
+
   return (
     <div className="flex flex-col gap-5 pb-8">
       <HomeHeader
@@ -74,44 +77,70 @@ export default function Home() {
         </InlineNotice>
       )}
 
-      <BatchHeroCard
-        batch={batchPresentation?.ok ? batchPresentation.value : null}
-        malformed={Boolean(data.errors.batch) || batchPresentation?.ok === false}
-        onOpenBatch={() => navigate('/partials')}
-        onRecordWithoutBatch={() => navigate('/add')}
-      />
+      {(data.activeBatch || data.errors.batch || batchPresentation?.ok === false) && (
+        <BatchHeroCard
+          batch={batchPresentation?.ok ? batchPresentation.value : null}
+          malformed={Boolean(data.errors.batch) || batchPresentation?.ok === false}
+          onOpenBatch={() => navigate('/partials')}
+          onRecordWithoutBatch={goRecord}
+        />
+      )}
 
-      <Button size="lg" className="w-full" onClick={() => navigate('/add')}>
-        <Plus className="h-5 w-5" aria-hidden="true" /> Записать
-      </Button>
+      {showFirstRecordEmpty ? (
+        <Surface className="p-5 text-center">
+          <h2 className="text-title-lg">Пока нет записей</h2>
+          <p className="mt-2 text-body-sm text-usnee-text2">
+            Сохраните первую запись на этом устройстве. Сеть для этого не нужна.
+          </p>
+          <Button size="lg" className="mt-4 w-full" onClick={goRecord}>
+            <Plus className="h-5 w-5" aria-hidden="true" /> Сделать первую запись
+          </Button>
+          {!data.activeBatch && (
+            <Button variant="ghost" className="mt-2 w-full" onClick={() => navigate('/partials')}>
+              Создать партию
+            </Button>
+          )}
+        </Surface>
+      ) : (
+        <Button size="lg" className="w-full" onClick={goRecord}>
+          <Plus className="h-5 w-5" aria-hidden="true" /> Записать
+        </Button>
+      )}
 
-      <QuickActionGrid
-        onRecord={() => navigate('/add')}
-        onBatch={() => navigate('/partials')}
-        onAnalytics={() => navigate('/stats')}
-        onSafety={() => navigate('/safety')}
-      />
+      {!showFirstRecordEmpty && (
+        <QuickActionGrid
+          onRecord={goRecord}
+          onBatch={() => navigate('/partials')}
+          onAnalytics={() => navigate('/stats')}
+          onSafety={() => navigate('/safety')}
+        />
+      )}
 
-      <section aria-labelledby="home-summary" className="space-y-3">
-        <h2 id="home-summary" className="text-title-md">Сводка</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <IntervalCard lastTimestamp={lastEntry?.timestamp} now={now} />
-          <WeeklySummaryCard entries={data.entries} todayCount={todayCount} now={now} />
-        </div>
-      </section>
+      {!showFirstRecordEmpty && (
+        <section aria-labelledby="home-summary" className="space-y-3">
+          <h2 id="home-summary" className="text-title-md">Сводка</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <IntervalCard lastTimestamp={lastEntry?.timestamp} now={now} />
+            <WeeklySummaryCard entries={data.entries} todayCount={todayCount} now={now} />
+          </div>
+        </section>
+      )}
 
       {data.errors.entries ? (
         <InlineNotice tone="danger" title="История временно недоступна">
           Последняя запись не отображается, чтобы не показывать устаревшие сведения.
+          {data.status !== 'error' && (
+            <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
+          )}
         </InlineNotice>
-      ) : (
+      ) : !showFirstRecordEmpty ? (
         <LastEntryCard
           entry={lastEntry}
           substanceName={getSubstanceName(lastEntry?.substanceId)}
           onOpenHistory={() => navigate('/history')}
-          onCreate={() => navigate('/add')}
+          onCreate={goRecord}
         />
-      )}
+      ) : null}
 
       <ActiveLocalStates
         timers={timers}

@@ -35,16 +35,24 @@ beforeEach(() => {
   homeState.store.refreshEntries.mockClear();
   homeState.data = {
     status: 'ready', entries: [entry], activeBatch: batch, activeSleep: null, activeCheckIn: null,
-    errors: {}, reload: vi.fn()
+    errors: {}, reload: vi.fn(), hasLoadedOnce: true
   };
 });
 
 describe('Home', () => {
   it('renders loading without false empty states', () => {
-    homeState.data = { ...homeState.data, status: 'loading' };
+    homeState.data = { ...homeState.data, status: 'loading', hasLoadedOnce: false };
     renderHome();
     expect(screen.getByRole('status', { name: 'Загрузка главного экрана' })).toBeInTheDocument();
     expect(screen.queryByText('Активной партии нет')).not.toBeInTheDocument();
+    expect(screen.queryByText('Пока нет записей')).not.toBeInTheDocument();
+  });
+
+  it('keeps the previous home frame while a later reload is in flight', () => {
+    homeState.data = { ...homeState.data, status: 'loading', hasLoadedOnce: true };
+    renderHome();
+    expect(screen.queryByRole('status', { name: 'Загрузка главного экрана' })).not.toBeInTheDocument();
+    expect(screen.getByText('Мефедрон')).toBeInTheDocument();
   });
 
   it('renders real solution balance in ml and mg with the last entry', () => {
@@ -54,11 +62,21 @@ describe('Home', () => {
     expect(screen.getByText('Мефедрон')).toBeInTheDocument();
   });
 
-  it('renders no-batch and no-entry empty states', () => {
+  it('renders a clean first-record empty state', () => {
     homeState.data = { ...homeState.data, entries: [], activeBatch: null };
     renderHome();
-    expect(screen.getByText('Партии пока нет')).toBeInTheDocument();
-    expect(screen.getByText('Записей пока нет')).toBeInTheDocument();
+    expect(screen.getByText('Пока нет записей')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Сделать первую запись/ })).toBeInTheDocument();
+    expect(screen.queryByText('Партии пока нет')).not.toBeInTheDocument();
+    expect(screen.queryByText('Записей пока нет')).not.toBeInTheDocument();
+    expect(screen.queryByText('Сводка')).not.toBeInTheDocument();
+  });
+
+  it('keeps an active batch visible on the first-record empty state', () => {
+    homeState.data = { ...homeState.data, entries: [] };
+    renderHome();
+    expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent?.trim() === '13 мл')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Сделать первую запись/ })).toBeInTheDocument();
   });
 
   it('renders offline and low-batch states', () => {
@@ -81,5 +99,22 @@ describe('Home', () => {
     renderHome();
     expect(screen.getByText('Часть локальных данных недоступна')).toBeInTheDocument();
     expect(screen.getByText(/≈ 260 мг/)).toBeInTheDocument();
+  });
+
+  it('shows a full load error with retry and keeps the home frame', async () => {
+    const reload = vi.fn();
+    homeState.data = {
+      ...homeState.data,
+      status: 'error',
+      entries: [],
+      activeBatch: null,
+      errors: { entries: 'fail', batch: 'fail', sleep: 'fail', checkIn: 'fail' },
+      reload
+    };
+    renderHome();
+    expect(screen.getByText('Не удалось загрузить локальные данные')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(reload).toHaveBeenCalled();
+    expect(screen.getByText('USNEE')).toBeInTheDocument();
   });
 });
