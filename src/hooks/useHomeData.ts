@@ -41,6 +41,14 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : 'Не удалось прочитать локальные данные';
 }
 
+export function applyHomeBatchRemaining(batchId: string, remaining: number): void {
+  if (!cachedSnapshot?.activeBatch || cachedSnapshot.activeBatch.id !== batchId) return;
+  cachedSnapshot = {
+    ...cachedSnapshot,
+    activeBatch: { ...cachedSnapshot.activeBatch, remaining }
+  };
+}
+
 export function useHomeData() {
   const [state, setState] = useState<HomeDataState>(() => cachedSnapshot ?? initialState);
   const [request, setRequest] = useState(0);

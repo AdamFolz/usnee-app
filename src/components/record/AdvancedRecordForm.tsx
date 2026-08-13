@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Zap,
@@ -32,14 +32,16 @@ import {
   Undo2
 } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
-import { ConsumptionEntry, MethodField } from '../../types';
-import { getEntries } from '../../utils/db';
+import { Batch, ConsumptionEntry, MethodField } from '../../types';
+import { getActiveBatch, getEntries } from '../../utils/db';
 import {
   persistPreparedRecord,
   prepareRecordCommand,
   PreparedRecordCommand,
   reversePreparedRecord
 } from '../../services/recordPersistence';
+import { resolveRecordAmountFields, selectCompatibleBatch } from '../../domain/record';
+import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
 import { SUBSTANCES, CATEGORY_LABELS, CATEGORY_ORDER } from '../../constants/substances';
 import { METHODS, METHOD_ABBREVIATIONS } from '../../constants/methods';
 import { TRIGGERS } from '../../constants/triggers';
@@ -140,8 +142,18 @@ function Section({ title, description, children }: SectionProps) {
   );
 }
 
+function persistErrorMessage(error: unknown): string {
+  const code = error instanceof Error ? error.message : '';
+  if (code === 'BATCH_INSUFFICIENT') return 'В партии недостаточно остатка';
+  if (code === 'BATCH_CHANGED') return 'Остаток партии изменился. Обновите экран и попробуйте снова.';
+  if (code === 'BATCH_UNAVAILABLE') return 'Активная партия недоступна';
+  if (code === 'BATCH_INCOMPATIBLE') return 'Партия не подходит для выбранного вещества';
+  return error instanceof Error ? error.message : 'Не удалось сохранить на устройстве';
+}
+
 export default function AdvancedRecordForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const refreshEntries = useAppStore((s) => s.refreshEntries);
   const online = useOnlineStatus();
 
@@ -151,6 +163,9 @@ export default function AdvancedRecordForm() {
   const [customSubstanceName, setCustomSubstanceName] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
   const [methodDetails, setMethodDetails] = useState<Record<string, unknown>>({});
+  const [activeBatch, setActiveBatch] = useState<Batch | null>(null);
+  const [requestedBatchId, setRequestedBatchId] = useState<string | undefined>(undefined);
+  const [saveError, setSaveError] = useState('');
 
   // Optional enrichment (triggers, vitals, safety meta)
   const [triggerId, setTriggerId] = useState<string | null>(null);
@@ -180,6 +195,59 @@ export default function AdvancedRecordForm() {
   const selectedMethod = useMemo(() => METHODS.find((m) => m.id === selectedMethodId), [selectedMethodId]);
   const selectedSubstance = useMemo(() => SUBSTANCES.find((s) => s.id === selectedSubstanceId), [selectedSubstanceId]);
   const selectedTrigger = useMemo(() => TRIGGERS.find((t) => t.id === triggerId), [triggerId]);
+  const compatibleBatch = useMemo(
+    () => selectCompatibleBatch(activeBatch, selectedSubstanceId, requestedBatchId),
+    [activeBatch, selectedSubstanceId, requestedBatchId]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    getActiveBatch().then((batch) => {
+      if (mounted) setActiveBatch(batch ?? null);
+    }).catch(() => {
+      if (mounted) setActiveBatch(null);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const route = location.state;
+    if (!route || typeof route !== 'object') return;
+    const next = route as {
+      substanceId?: string;
+      methodId?: string;
+      amountInput?: string;
+      amountUnit?: string;
+      batchId?: string;
+    };
+    if (next.batchId) setRequestedBatchId(next.batchId);
+    if (next.substanceId) {
+      const substance = SUBSTANCES.find((item) => item.id === next.substanceId);
+      if (substance) {
+        setSelectedCategory(substance.category);
+        setSelectedSubstanceId(substance.id);
+      }
+    }
+    if (next.methodId) setSelectedMethodId(next.methodId);
+    if (next.amountInput) {
+      const methodId = next.methodId ?? selectedMethodId;
+      if (methodId === 'inject' || next.amountUnit === 'мл') {
+        const volume = Number(next.amountInput);
+        if (Number.isFinite(volume) && volume > 0) {
+          setMethodDetails((prev) => ({ ...prev, volume }));
+        }
+      } else {
+        const dose = Number(next.amountInput);
+        if (Number.isFinite(dose) && dose > 0) {
+          setMethodDetails((prev) => ({
+            ...prev,
+            dose,
+            ...(next.amountUnit ? { doseUnit: next.amountUnit } : {})
+          }));
+        }
+      }
+    }
+  }, [location.state]);
 
   const isDoseMissing = () => {
     if (!selectedMethod) return false;
@@ -226,30 +294,36 @@ export default function AdvancedRecordForm() {
 
     const substanceName = selectedSubstance?.name || customSubstanceName || 'Неизвестно';
     const methodName = selectedMethod!.name;
-
-    // Determine dose + doseUnit from methodDetails
-    let dose = 0;
-    let doseUnit = '';
-    if (selectedMethod!.id === 'inject') {
-      dose = Number(methodDetails.volume || 0);
-      doseUnit = 'мл';
-    } else {
-      dose = Number(methodDetails.dose || 0);
-      doseUnit = String(methodDetails.doseUnit || 'мг');
+    const { amountInput, amountUnit } = resolveRecordAmountFields(selectedMethod!.id, methodDetails);
+    let batch = compatibleBatch;
+    try {
+      const latest = await getActiveBatch();
+      setActiveBatch(latest ?? null);
+      batch = selectCompatibleBatch(latest, substanceId, requestedBatchId);
+    } catch {
+      batch = compatibleBatch;
     }
 
-    const command = prepareRecordCommand({
-      substanceId,
-      substanceName,
-      methodId: selectedMethod!.id,
-      methodName,
-      amountInput: String(dose),
-      amountUnit: doseUnit,
-      occurredAt: new Date(timestamp).getTime(),
-      alone,
-      notes: notes || undefined,
-      methodDetails: { ...methodDetails }
-    });
+    let command: PreparedRecordCommand;
+    try {
+      command = prepareRecordCommand({
+        substanceId,
+        substanceName,
+        methodId: selectedMethod!.id,
+        methodName,
+        amountInput,
+        amountUnit,
+        occurredAt: new Date(timestamp).getTime(),
+        alone,
+        notes: notes || undefined,
+        methodDetails: { ...methodDetails },
+        batchId: batch?.id
+      }, batch);
+    } catch (error) {
+      setSaveError(persistErrorMessage(error));
+      setSaving(false);
+      return;
+    }
     command.entry = {
       ...command.entry,
       triggerId: triggerId || undefined,
@@ -264,7 +338,16 @@ export default function AdvancedRecordForm() {
     try {
       await persistPreparedRecord(command);
       await refreshEntries();
+      if (command.batchId && command.nextBatchRemaining !== undefined) {
+        applyHomeBatchRemaining(command.batchId, command.nextBatchRemaining);
+        setActiveBatch((current) => current && current.id === command.batchId
+          ? { ...current, remaining: command.nextBatchRemaining! }
+          : current);
+      }
       setSavedCommand(command);
+      setSaveError('');
+    } catch (error) {
+      setSaveError(persistErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -272,8 +355,19 @@ export default function AdvancedRecordForm() {
 
   const handleUndo = async () => {
     if (savedCommand) {
-      await reversePreparedRecord(savedCommand);
-      await refreshEntries();
+      try {
+        await reversePreparedRecord(savedCommand);
+        await refreshEntries();
+        if (savedCommand.batchId && savedCommand.expectedBatchRemaining !== undefined) {
+          applyHomeBatchRemaining(savedCommand.batchId, savedCommand.expectedBatchRemaining);
+          setActiveBatch((current) => current && current.id === savedCommand.batchId
+            ? { ...current, remaining: savedCommand.expectedBatchRemaining! }
+            : current);
+        }
+      } catch (error) {
+        setSaveError(persistErrorMessage(error));
+        return;
+      }
     }
     setSavedCommand(null);
     setPendingDuplicate(null);
@@ -530,6 +624,16 @@ export default function AdvancedRecordForm() {
 
         {duplicateNotice}
         {missingNotice}
+        {saveError && (
+          <InlineNotice tone="danger" title="Не удалось сохранить запись">
+            {saveError}
+          </InlineNotice>
+        )}
+        {compatibleBatch && !savedCommand && (
+          <InlineNotice tone="info" title={`Партия «${compatibleBatch.name}»`}>
+            Остаток {compatibleBatch.remaining} мг будет уменьшен вместе с записью.
+          </InlineNotice>
+        )}
 
         <Section title="Что употребляем?" description="Категория и вещество">
           <div className="grid grid-cols-3 gap-2">

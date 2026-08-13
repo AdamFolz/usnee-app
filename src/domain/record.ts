@@ -37,7 +37,35 @@ export function parseRecordAmount(input: string, unit: string, concentrationMgMl
   if (unit === 'г') calculatedMassMg = value * 1000;
   else if (unit === 'мг') calculatedMassMg = value;
   else if (unit === 'мл' && concentrationMgMl && concentrationMgMl > 0) calculatedMassMg = value * concentrationMgMl;
+  if (calculatedMassMg !== undefined && (!Number.isFinite(calculatedMassMg) || calculatedMassMg <= 0)) {
+    return { valid: false, error: 'Не удалось рассчитать расход. Проверьте количество и единицы.' };
+  }
   return { valid: true, value, normalized, calculatedMassMg };
+}
+
+export function resolveRecordAmountFields(
+  methodId: string,
+  methodDetails: Record<string, unknown>
+): { amountInput: string; amountUnit: string } {
+  if (methodId === 'inject') {
+    const volume = methodDetails.volume;
+    return { amountInput: volume === undefined || volume === null ? '' : String(volume), amountUnit: 'мл' };
+  }
+  const dose = methodDetails.dose;
+  return {
+    amountInput: dose === undefined || dose === null ? '' : String(dose),
+    amountUnit: String(methodDetails.doseUnit ?? 'мг')
+  };
+}
+
+export function selectCompatibleBatch(
+  batch: Batch | null | undefined,
+  substanceId: string | null,
+  requestedBatchId?: string
+): Batch | null {
+  if (!batch || !substanceId || !batch.active || batch.substanceId !== substanceId) return null;
+  if (requestedBatchId && requestedBatchId !== batch.id) return null;
+  return batch;
 }
 
 export function validateRecordDraft(draft: QuickRecordDraft, batch?: Batch | null): string[] {
@@ -50,7 +78,11 @@ export function validateRecordDraft(draft: QuickRecordDraft, batch?: Batch | nul
   if (batch) {
     if (!batch.active || batch.substanceId !== draft.substanceId) errors.push('Партия не подходит для выбранного вещества');
     if (!Number.isFinite(batch.concentration) || batch.concentration <= 0 || batch.remaining < 0) errors.push('Данные партии повреждены');
-    if (amount.calculatedMassMg !== undefined && amount.calculatedMassMg > batch.remaining) errors.push('В партии недостаточно остатка');
+    if (amount.calculatedMassMg === undefined || !Number.isFinite(amount.calculatedMassMg) || amount.calculatedMassMg <= 0) {
+      errors.push('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+    } else if (amount.calculatedMassMg > batch.remaining) {
+      errors.push('В партии недостаточно остатка');
+    }
   }
   return [...new Set(errors)];
 }

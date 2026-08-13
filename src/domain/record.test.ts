@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ConsumptionEntry, Batch } from '../types';
-import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, validateRecordDraft } from './record';
+import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, resolveRecordAmountFields, selectCompatibleBatch, validateRecordDraft } from './record';
 
 const draft: QuickRecordDraft = { substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'inject', methodName: 'Инъекция', amountInput: '1', amountUnit: 'мл', occurredAt: Date.now(), alone: true, batchId: 'b1' };
 const batch: Batch = { id: 'b1', substanceId: 'meph', name: '№014', totalWeight: 400, weightUnit: 'мг', solutionVolume: 20, volumeUnit: 'мл', concentration: 20, createdAt: 1, active: true, remaining: 260 };
@@ -15,6 +15,15 @@ describe('record domain', () => {
   });
   it('does not invent conversion for unknown units', () => expect(parseRecordAmount('2', 'хиты').calculatedMassMg).toBeUndefined());
   it('validates compatible balance', () => expect(validateRecordDraft(draft, batch)).toEqual([]));
+  it('rejects unknown units when a batch must be consumed', () => {
+    expect(validateRecordDraft({ ...draft, amountUnit: 'хиты', amountInput: '2' }, batch)).toContain('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+  });
+  it('maps inject volume and only accepts a matching active batch', () => {
+    expect(resolveRecordAmountFields('inject', { volume: 0.8 })).toEqual({ amountInput: '0.8', amountUnit: 'мл' });
+    expect(selectCompatibleBatch(batch, 'meph')?.id).toBe('b1');
+    expect(selectCompatibleBatch(batch, 'mdma')).toBeNull();
+    expect(selectCompatibleBatch({ ...batch, active: false }, 'meph')).toBeNull();
+  });
   it('rejects insufficient and incompatible batches', () => {
     expect(validateRecordDraft({ ...draft, amountInput: '20' }, batch)).toContain('В партии недостаточно остатка');
     expect(validateRecordDraft(draft, { ...batch, substanceId: 'mdma' })).toContain('Партия не подходит для выбранного вещества');

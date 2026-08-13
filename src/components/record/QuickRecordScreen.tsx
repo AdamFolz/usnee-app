@@ -6,6 +6,7 @@ import { findRecentDuplicate, parseRecordAmount, validateRecordDraft } from '../
 import { useQuickRecordDefaults } from '../../hooks/useQuickRecordDefaults';
 import { prepareRecordCommand, persistPreparedRecord, PreparedRecordCommand, reversePreparedRecord } from '../../services/recordPersistence';
 import { useAppStore } from '../../stores/appStore';
+import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
 import { METHODS } from '../../constants/methods';
 import { SUBSTANCES } from '../../constants/substances';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -141,6 +142,9 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
       commandRef.current = prepared;
       await persistPreparedRecord(prepared);
       await refreshEntries();
+      if (prepared.batchId && prepared.nextBatchRemaining !== undefined) {
+        applyHomeBatchRemaining(prepared.batchId, prepared.nextBatchRemaining);
+      }
       setSavedCommand(prepared);
       setReview(false);
       setLeaveOpen(false);
@@ -157,6 +161,9 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
     try {
       await reversePreparedRecord(savedCommand);
       await refreshEntries();
+      if (savedCommand.batchId && savedCommand.expectedBatchRemaining !== undefined) {
+        applyHomeBatchRemaining(savedCommand.batchId, savedCommand.expectedBatchRemaining);
+      }
       navigate('/');
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Не удалось отменить запись');

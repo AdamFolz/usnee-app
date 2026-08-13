@@ -14,7 +14,7 @@ vi.mock('../services/recordPersistence', () => ({
   persistPreparedRecord: vi.fn(),
   reversePreparedRecord: vi.fn()
 }));
-vi.mock('../utils/db', () => ({ getEntries: vi.fn().mockResolvedValue([]) }));
+vi.mock('../utils/db', () => ({ getEntries: vi.fn().mockResolvedValue([]), getActiveBatch: vi.fn().mockResolvedValue(undefined) }));
 
 describe('AddEntry route', () => {
   it('opens the unified Advanced Record form by default', () => {

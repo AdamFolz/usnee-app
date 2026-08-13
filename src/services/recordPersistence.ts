@@ -33,9 +33,13 @@ export function prepareRecordCommand(draft: QuickRecordDraft, batch?: Batch | nu
   };
   let movement: BatchMovement | undefined;
   if (batch) {
+    const consumedMass = amount.calculatedMassMg;
+    if (consumedMass === undefined || !Number.isFinite(consumedMass) || consumedMass <= 0) {
+      throw new Error('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+    }
     movement = {
       id: ids?.movementId ?? createUuid(), operationId, batchId: batch.id, entryId,
-      kind: 'consume', deltaMassMg: -(amount.calculatedMassMg ?? 0),
+      kind: 'consume', deltaMassMg: -consumedMass,
       deltaVolumeMl: draft.amountUnit === 'мл' ? -amount.value! : undefined, createdAt: isoNow, revision: 0
     };
   }
@@ -52,7 +56,7 @@ export function prepareRecordCommand(draft: QuickRecordDraft, batch?: Batch | nu
   return {
     entry, operation, sync: { entityId: entryId, operationId, createOperationId: operationId, state: 'pending', revision: 0 }, movement,
     batchId: batch?.id, expectedBatchRemaining: batch?.remaining,
-    nextBatchRemaining: batch ? batch.remaining - (amount.calculatedMassMg ?? 0) : undefined
+    nextBatchRemaining: batch && amount.calculatedMassMg !== undefined ? batch.remaining - amount.calculatedMassMg : undefined
   };
 }
 
