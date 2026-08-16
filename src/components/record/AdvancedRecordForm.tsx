@@ -1001,7 +1001,7 @@ export default function AdvancedRecordForm() {
       {/* Sticky CTA with safe-area inset. Sits inside the flex column so it
           always stays above the scroll area and above the iOS keyboard (the
           AppShell immersive container reduces height when keyboard opens). */}
-      <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg/95 px-1 pb-[calc(0.75rem+var(--content-safe-area-bottom,0px))] pt-3 backdrop-blur-md">
+      <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg px-1 pb-[calc(0.75rem+var(--content-safe-area-bottom,0px))] pt-3">
         <Button
           ref={saveButtonRef}
           size="lg"

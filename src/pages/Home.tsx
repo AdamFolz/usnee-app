@@ -103,7 +103,7 @@ export default function Home() {
         <Surface className="p-5 text-center">
           <h2 className="text-title-lg">Пока нет записей</h2>
           <p className="mt-2 text-body-sm text-usnee-text2">
-            Сохраните первую запись на этом устройстве. Сеть для этого не нужна.
+            Начни с короткой записи — она сохранится только на этом устройстве. Сеть не нужна.
           </p>
           <Button size="lg" className="mt-4 w-full" onClick={goRecord}>
             <Plus className="h-5 w-5" aria-hidden="true" /> Сделать первую запись
@@ -116,7 +116,7 @@ export default function Home() {
         </Surface>
       ) : (
         <Button size="lg" className="w-full" onClick={goRecord}>
-          <Plus className="h-5 w-5" aria-hidden="true" /> Записать
+          <Plus className="h-5 w-5" aria-hidden="true" /> Новая запись
         </Button>
       )}
 

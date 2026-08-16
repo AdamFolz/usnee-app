@@ -323,7 +323,7 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
         </Button>
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg/95 px-1 pb-[calc(0.75rem+var(--safe-area-bottom,0px))] pt-3 backdrop-blur-md">
+      <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg px-1 pb-[calc(0.75rem+var(--safe-area-bottom,0px))] pt-3">
         <Button size="lg" className="w-full" disabled={errors.length > 0} onClick={() => setReview(true)}>
           <Save className="h-5 w-5" />
           Проверить запись

@@ -19,11 +19,12 @@ html {
 body {
   margin: 0;
   overflow: hidden;
-  background: var(--gradient-screen);
+  background: var(--color-bg-base);
   color: var(--color-text-primary);
   font-family: var(--font-ui);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  line-height: 1.45;
 }
 
 *,
@@ -44,6 +45,16 @@ a,
 }
 
 button,
+a {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button:disabled {
+  transform: none !important;
+}
+
+button,
 input,
 select,
 textarea {
@@ -53,10 +64,7 @@ textarea {
 .app-shell {
   height: var(--tg-viewport-height, 100dvh);
   min-height: min(var(--tg-viewport-stable-height, 100dvh), 100dvh);
-  background:
-    radial-gradient(circle at 15% -5%, rgb(139 92 246 / 20%), transparent 32%),
-    radial-gradient(circle at 95% 0%, rgb(96 165 250 / 12%), transparent 28%),
-    var(--gradient-screen);
+  background: var(--color-bg-base);
 }
 
 .tabular-nums {
@@ -76,11 +84,42 @@ textarea {
   animation: slideUp var(--motion-sheet) var(--easing-ui) forwards;
 }
 
+@keyframes routeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-route-in { animation: routeIn var(--motion-normal) var(--easing-ui) both; }
+.animate-slide-in-right { animation: slideInRight var(--motion-sheet) var(--easing-ui) both; }
+.animate-slide-in-left { animation: slideInLeft var(--motion-sheet) var(--easing-ui) both; }
+.animate-stagger-in { animation: staggerIn 420ms var(--easing-ui) both; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+
 .glass {
   background: color-mix(in srgb, var(--color-surface-1) 84%, transparent);
   border-color: var(--color-border-default);
-  backdrop-filter: blur(var(--blur-glass));
-  -webkit-backdrop-filter: blur(var(--blur-glass));
+
 }
 
 .big-tap {

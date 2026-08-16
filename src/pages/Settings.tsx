@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
 import { clearAllData, getEntries, addEntry } from '../utils/db';
 import { hashPin, encryptData, decryptData } from '../utils/crypto';
@@ -17,8 +18,11 @@ import {
   Unlock,
   Phone
 } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
+import { Button, Surface } from '../components/ui';
 
 export default function Settings() {
+  const navigate = useNavigate();
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const refreshEntries = useAppStore((s) => s.refreshEntries);
@@ -153,6 +157,12 @@ export default function Settings() {
   return (
     <div className="space-y-6 pb-8">
       <h1 className="text-2xl font-bold text-usnee-text">Настройки</h1>
+
+      <Surface variant="glass" className="flex items-center gap-3 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-usnee-brand/15 text-usnee-brand"><BookOpen className="h-5 w-5" /></div>
+        <div className="min-w-0 flex-1"><p className="text-title-md">Не знаешь, с чего начать?</p><p className="mt-1 text-body-sm text-usnee-text2">Пройди короткое обучение по приложению.</p></div>
+        <Button variant="ghost" iconOnly aria-label="Открыть обучение" onClick={() => navigate('/learn')}><ChevronRight className="h-5 w-5" /></Button>
+      </Surface>
 
       {/* Безопасность */}
       <section className="space-y-3">

@@ -21,7 +21,7 @@ export function TopBar({ title, eyebrow, onBack, action, className }: TopBarProp
       )}
       <div className="min-w-0 flex-1">
         {eyebrow && <p className="text-label uppercase text-usnee-text3">{eyebrow}</p>}
-        <h1 className="truncate font-display text-title-xl font-bold text-usnee-text">{title}</h1>
+        <h1 className="truncate font-display text-title-xl font-extrabold text-usnee-text">{title}</h1>
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </header>

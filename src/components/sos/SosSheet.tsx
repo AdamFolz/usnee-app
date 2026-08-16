@@ -36,7 +36,7 @@ export function SosSheet({ open, onClose, trustedContact, onOpenSafetyHub }: Sos
         <button
           type="button"
           onClick={onOpenSafetyHub}
-          className="flex min-h-12 w-full items-center justify-center rounded-md border border-usnee-border bg-usnee-glass px-5 py-3 text-sm font-semibold text-usnee-text backdrop-blur-glass transition-colors duration-normal ease-ui hover:bg-usnee-glassStrong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg"
+          className="flex min-h-12 w-full items-center justify-center rounded-md border border-usnee-border bg-usnee-surface px-5 py-3 text-sm font-semibold text-usnee-text transition-colors duration-normal ease-ui hover:bg-usnee-surface2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg"
         >
           Открыть безопасность
         </button>

@@ -28,7 +28,7 @@ export function SosButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-3 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-danger-gradient text-white shadow-sos transition-transform duration-normal ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg active:scale-90 motion-reduce:transform-none"
+        className="fixed right-3 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-usnee-danger text-white shadow-sos transition-transform duration-normal ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg active:scale-90 motion-reduce:transform-none"
         style={{ bottom: 'calc(5rem + var(--safe-area-bottom, 0px))' }}
         aria-label="SOS — экстренные действия"
         aria-haspopup="dialog"

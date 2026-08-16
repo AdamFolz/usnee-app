@@ -42,7 +42,7 @@ export function BatchHeroCard({
   );
   return (
     <button type="button" onClick={onOpenBatch} className="group w-full rounded-hero text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus">
-      <div className="relative overflow-hidden rounded-hero bg-brand-gradient p-5 shadow-hero transition-transform duration-normal group-active:scale-[.99] motion-reduce:transform-none">
+      <div className="relative overflow-hidden rounded-hero bg-usnee-brand p-5 shadow-hero transition-transform duration-normal group-active:scale-[.99] motion-reduce:transform-none">
         <div className="flex items-start justify-between gap-3">
           <div><p className="text-label uppercase text-white/70">Остаток партии</p><h2 className="mt-1 truncate text-title-lg text-white">{batch.name}</h2></div>
           {batch.level !== 'normal' && <StatusBadge tone={batch.level === 'critical' ? 'failed' : 'warning'}>{batch.level === 'critical' ? 'Критический остаток' : 'Заканчивается'}</StatusBadge>}

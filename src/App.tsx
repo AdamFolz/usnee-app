@@ -17,6 +17,8 @@ import { Safety } from './pages/Safety';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
+import Progress from './pages/Progress';
+import Learn from './pages/Learn';
 import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
 import { useOutboxSync } from './hooks/useOutboxSync';
 
@@ -85,6 +87,8 @@ function App() {
           <Route path="/add" element={<AddEntry />} />
           <Route path="/history" element={<History />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/learn" element={<Learn />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/safety" element={<Safety />} />
           <Route path="/settings" element={<Settings />} />

@@ -26,7 +26,7 @@ export function EmergencyCallAction({ number = DEFAULT_EMERGENCY_NUMBER }: Emerg
       <a
         href={`tel:${cleanNumber}`}
         onClick={() => setAttempted(true)}
-        className="flex min-h-14 w-full items-center justify-center gap-2 rounded-md border border-transparent bg-danger-gradient px-6 py-3 text-base font-bold text-white shadow-sos transition-transform duration-normal ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg active:scale-[.97] motion-reduce:transform-none"
+        className="flex min-h-14 w-full items-center justify-center gap-2 rounded-md border border-transparent bg-usnee-danger px-6 py-3 text-base font-bold text-white shadow-sos transition-transform duration-normal ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus focus-visible:ring-offset-2 focus-visible:ring-offset-usnee-bg active:scale-[.97] motion-reduce:transform-none"
       >
         <Phone className="h-5 w-5" aria-hidden="true" />
         Позвонить в экстренную службу · {cleanNumber}

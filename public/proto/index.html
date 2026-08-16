@@ -75,7 +75,7 @@
   .nav{
     position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + var(--safe-b));
     padding-bottom:var(--safe-b);
-    background:linear-gradient(to top,var(--page) 62%,rgba(15,13,11,.86));
+    background:var(--page);
     border-top:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-around;z-index:20
   }
@@ -90,21 +90,26 @@
 
   /* ---------- buttons ---------- */
   .btn{width:100%;min-height:54px;border:0;border-radius:var(--r-m);font-family:var(--f-ui);font-size:16px;font-weight:600;
-    color:#170E0E;background:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s}
+    color:#170E0E;background:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s;text-decoration:none;cursor:pointer}
   .btn:active{transform:scale(.985)}
   .btn.ghost{background:transparent;color:var(--ink2);border:1px solid var(--line);font-weight:500}
   .btn.quiet{background:var(--paper2);color:var(--ink)}
   .btn.sm{min-height:44px;font-size:14px}
+  button:focus-visible,[role="button"]:focus-visible,a:focus-visible{outline:2px solid var(--ochre);outline-offset:3px}
+  .topbar{display:flex;align-items:center;min-height:44px;margin-bottom:4px}
+  .back{background:none;border:0;color:var(--ink2);font:500 14px var(--f-ui);padding:10px 8px 10px 0;min-height:44px}
+  .action-card{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}
+  .danger{color:var(--accent)}
 
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:var(--r-m);
-    padding:11px 14px;font-size:15px;font-family:var(--f-ui);min-height:46px;display:flex;align-items:center;gap:8px}
+    padding:11px 14px;font-size:15px;font-family:var(--f-ui);min-height:46px;display:flex;align-items:center;gap:8px;cursor:pointer}
   .chip .h{font-family:var(--f-num);font-size:12px;color:var(--ink3)}
   .chip.on{border-color:var(--accent);background:rgba(201,79,79,.10)}
   .chip.on .h{color:var(--accent)}
 
   .seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:3px;gap:3px}
-  .seg button{flex:1;min-height:42px;border:0;background:none;color:var(--ink2);font-family:var(--f-ui);font-size:14px;border-radius:9px}
+  .seg button{flex:1;min-height:42px;border:0;background:none;color:var(--ink2);font-family:var(--f-ui);font-size:14px;border-radius:9px;white-space:nowrap}
   .seg button.on{background:var(--paper3);color:var(--ink)}
 
   .stepper{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:10px 12px}
@@ -134,7 +139,7 @@
   .safety{background:#1A0E0E}
   .safety .scroll{padding-top:calc(var(--safe-t) + 14px)}
   .sos-h{font-family:var(--f-head);font-size:26px;color:#FFE7E7}
-  .check{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,180,180,.12);align-items:flex-start}
+  .check{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,180,180,.12);align-items:flex-start;cursor:pointer}
   .check i{width:22px;height:22px;border-radius:7px;border:1px solid rgba(255,180,180,.35);flex:none;margin-top:1px}
   .check.done i{background:var(--accent);border-color:var(--accent)}
   .check p{font-size:15px;color:#F3DADA}
@@ -166,6 +171,52 @@
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   .hint{position:fixed;top:calc(var(--safe-t) + 6px);right:10px;z-index:50;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);background:rgba(22,19,16,.8);border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+
+  /* ---------- switch ---------- */
+  .sw{width:46px;height:28px;border-radius:14px;background:var(--paper3);border:1px solid var(--line);position:relative;flex:none;transition:background .18s;cursor:pointer}
+  .sw::after{content:'';position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--ink3);transition:transform .18s,background .18s}
+  .sw.on{background:rgba(201,79,79,.22);border-color:var(--accent-dim)}
+  .sw.on::after{transform:translateX(18px);background:var(--accent)}
+
+  /* ---------- profile ---------- */
+  .ava{border-radius:50%;background:var(--paper3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--f-head);color:var(--ink);flex:none;width:56px;height:56px;font-size:22px}
+  .prow{display:flex;gap:14px;align-items:center;margin-top:14px}
+
+  /* ---------- onboarding ---------- */
+  .ob{height:100%;flex-direction:column;padding-top:var(--safe-t)}
+  .ob-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .ob-track::-webkit-scrollbar{display:none}
+  .ob-page{min-width:100%;box-sizing:border-box;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;padding:0 30px}
+  .ob-mark{font-family:var(--f-head);font-size:60px;line-height:1;color:var(--accent);opacity:.9}
+  .ob-mark svg{width:52px;height:52px;stroke:var(--accent);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+  .ob-page h1{font-size:29px;margin-top:20px}
+  .ob-page p{font-size:16px;color:var(--ink2);margin-top:14px;max-width:300px}
+  .ob-foot{padding:0 30px calc(24px + var(--safe-b))}
+  .ob-dots{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+  .ob-dots i{width:7px;height:7px;border-radius:50%;background:var(--paper3);transition:background .2s,width .2s}
+  .ob-dots i.on{background:var(--accent);width:20px;border-radius:4px}
+
+  /* ---------- pin ---------- */
+  .pin{height:100%;flex-direction:column;align-items:center;padding:calc(var(--safe-t) + 10px) 26px calc(22px + var(--safe-b))}
+  .pin-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .pin-dots{display:flex;gap:16px;margin-top:26px}
+  .pin-dots i{width:13px;height:13px;border-radius:50%;border:1px solid var(--ink3);transition:background .12s,border-color .12s}
+  .pin-dots i.f{background:var(--accent);border-color:var(--accent)}
+  .pin-dots.err i{border-color:var(--accent)}
+  @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-8px)}40%,60%{transform:translateX(8px)}}
+  .pin-dots.shake{animation:shake .4s}
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:300px}
+  .key{height:62px;border-radius:var(--r-m);border:1px solid var(--line);background:var(--paper);color:var(--ink);font-family:var(--f-num);font-size:25px;font-weight:500}
+  .key:active{background:var(--paper3);transform:scale(.97)}
+  .key.act{font-family:var(--f-ui);font-size:14px;color:var(--ink2);background:none;border-color:var(--line2)}
+
+  /* ---------- states ---------- */
+  .fill-center{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 18px;box-sizing:border-box}
+  .empty-mark{font-family:var(--f-head);font-size:56px;line-height:1;color:var(--ink3);opacity:.55}
+  .sk{background:var(--paper2);border-radius:6px;position:relative;overflow:hidden}
+  .sk::after{content:'';position:absolute;top:0;bottom:0;width:34%;left:-40%;background:rgba(239,232,219,.06);animation:sh 1.3s infinite}
+  @keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  .skrow{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line2)}
 </style>
 </head>
 <body>
@@ -177,7 +228,10 @@
     <div class="scroll">
       <div class="daterow">
         <div><div class="cap">Пятница</div><h1 style="margin-top:4px">16 августа</h1></div>
-        <div class="num sm dim">день 12</div>
+        <button data-go="profile" style="background:none;border:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:inherit">
+          <span class="num sm dim">день 12</span>
+          <span class="ava" style="width:38px;height:38px;font-size:16px">М</span>
+        </button>
       </div>
 
       <div class="lead">
@@ -352,15 +406,16 @@
   <!-- ============ ЭКСТРЕННО ============ -->
   <section class="screen safety" id="s-safety">
     <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
       <div class="cap" style="color:#C98C8C">Экстренная страница</div>
       <h1 class="sos-h" style="margin-top:6px">Плохо? Давай по шагам.</h1>
       <p class="sm" style="color:#D8B9B9;margin-top:8px">Ничего не надо решать сразу. Просто иди сверху вниз.</p>
 
       <div style="margin-top:20px">
-        <div class="check done"><i></i><p>Сядь или ляг на бок. Не оставайся один.</p></div>
-        <div class="check"><i></i><p>Вода — маленькими глотками. Не кофе, не алкоголь.</p></div>
-        <div class="check"><i></i><p>Напиши тому, кто рядом. Кнопка ниже.</p></div>
-        <div class="check"><i></i><p>Если рвота, судороги, не можешь разбудить — <b>112</b>.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Сядь или ляг на бок. По возможности не оставайся один.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Если можешь глотать — вода маленькими глотками. Не кофе, не алкоголь.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Напиши тому, кто рядом. Кнопка ниже.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Если рвота, судороги, не можешь разбудить — <b>112</b>.</p></div>
       </div>
 
       <div class="card" style="background:rgba(255,120,120,.06);border-color:rgba(255,150,150,.16);margin-top:22px;text-align:center">
@@ -369,8 +424,8 @@
       </div>
 
       <div style="margin-top:18px">
-        <button class="btn">Позвонить 112</button>
-        <button class="btn quiet sm" style="margin-top:10px">Написать Кате</button>
+        <a class="btn" href="tel:112" aria-label="Позвонить в экстренную службу 112">Позвонить 112</a>
+        <button class="btn quiet sm" style="margin-top:10px" data-action="contact">Написать Кате</button>
         <button class="btn ghost sm" style="margin-top:10px" data-go="diary">Мне уже лучше</button>
       </div>
     </div>
@@ -379,6 +434,7 @@
   <!-- ============ ПОДРОБНОСТИ (Add Entry) ============ -->
   <section class="screen" id="s-entry">
     <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
       <div class="cap">Подробная запись</div>
       <h1 style="margin-top:6px">Трава · 0,3 г</h1>
       <p class="sm muted" style="margin-top:6px">Всё необязательно. Можно закрыть — черновик сохранится.</p>
@@ -411,6 +467,129 @@
 
       <div style="margin-top:20px">
         <button class="btn" id="save2">Сохранить запись</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section class="screen ob" id="s-onboarding">
+    <div class="ob-track" id="ob-track">
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 3v18"/></svg></div>
+        <h1>Тетрадь, а не надзиратель</h1>
+        <p>USNEE — личный дневник. Записывай, что было, без оценок и нравоучений. Хочешь меньше — увидишь это в цифрах сам.</p>
+      </div>
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></svg></div>
+        <h1>Остаётся у тебя</h1>
+        <p>Записи хранятся на этом устройстве. Их не видит ни бот, ни сервер, ни другие люди. Можно закрыть вход PIN-кодом.</p>
+      </div>
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h1>Запись — за пару касаний</h1>
+        <p>Выбрал вещество, поправил дозу — готово, время встанет само. Подробности (зачем, с кем, партия) — по желанию, не обязательны.</p>
+      </div>
+    </div>
+    <div class="ob-foot">
+      <div class="ob-dots" id="ob-dots"><i class="on"></i><i></i><i></i></div>
+      <button class="btn" id="ob-next">Дальше</button>
+      <button class="btn ghost" data-go="pin" style="margin-top:10px">Пропустить</button>
+    </div>
+  </section>
+
+  <!-- ============ PIN ============ -->
+  <section class="screen pin" id="s-pin">
+    <div class="topbar" style="width:100%"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+    <div class="pin-top">
+      <div class="cap" id="pin-cap">Придумай PIN</div>
+      <h1 id="pin-title" style="margin-top:8px">Четыре цифры</h1>
+      <p class="sm muted" id="pin-sub" style="margin-top:8px;max-width:260px">Он будет закрывать вход в дневник. Запомни его — восстановить нельзя.</p>
+      <div class="pin-dots" id="pin-dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="keys" id="keys">
+      <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+      <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+      <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+      <button class="key act" id="pin-forgot">Забыл</button><button class="key">0</button><button class="key act" id="pin-del">⌫</button>
+    </div>
+  </section>
+
+  <!-- ============ PROFILE ============ -->
+  <section class="screen" id="s-profile">
+    <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+      <div class="daterow"><div><div class="cap">Профиль</div><h1 style="margin-top:4px">Марк</h1></div></div>
+      <div class="prow">
+        <span class="ava">М</span>
+        <div><div class="serif" style="font-size:17px">на связи 12 дней</div><div class="num sm dim">48 записей · 3 партии</div></div>
+      </div>
+
+      <div class="cap" style="margin-top:26px">Приватность</div>
+      <div class="card" style="margin-top:8px">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Вход по PIN</span><span class="sw on" data-toggle role="switch" aria-checked="true" tabindex="0" aria-label="Вход по PIN"></span></div>
+      </div>
+      <div class="card">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Скрыть суммы в списке</span><span class="sw" data-toggle role="switch" aria-checked="false" tabindex="0" aria-label="Скрыть суммы в списке"></span></div>
+      </div>
+      <div class="card" data-go="pin">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Сменить PIN</span><span class="sm" style="color:var(--accent)">изменить</span></div>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Если станет плохо</div>
+      <div class="card action-card" role="button" tabindex="0" data-action="contact">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Близкий контакт</span><span class="num sm dim">Катя</span></div>
+        <p class="sm muted" style="margin-top:6px">Кому «Помощь» предложит написать. Номер хранится только у тебя.</p>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Единицы</div>
+      <div class="card">
+        <div class="seg" style="margin-top:2px"><button class="on">граммы</button><button>миллиграммы</button></div>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Данные</div>
+      <button class="card action-card" data-action="export"><div class="rowsplit"><span class="serif" style="font-size:16px">Выгрузить в файл</span><span class="sm" style="color:var(--accent)">экспорт</span></div></button>
+      <button class="card action-card" data-action="delete"><div class="rowsplit"><span class="serif danger" style="font-size:16px">Стереть всё</span><span class="sm danger">удалить</span></div></button>
+
+      <div class="cap" style="margin-top:22px">Ещё</div>
+      <div class="card" data-go="onboarding"><div class="rowsplit"><span class="serif" style="font-size:16px">Показать вступление снова</span><span class="sm dim">›</span></div></div>
+      <p class="sm muted" style="text-align:center;margin:22px 0 6px">USNEE · дневник · v2 · без облака</p>
+    </div>
+  </section>
+
+  <!-- ============ STATE: EMPTY ============ -->
+  <section class="screen" id="s-empty">
+    <div class="scroll">
+      <div class="daterow"><div><div class="cap">Пятница</div><h1 style="margin-top:4px">16 августа</h1></div><span class="num sm dim">день 1</span></div>
+      <div class="fill-center">
+        <div class="empty-mark">«»</div>
+        <h1 style="font-size:24px;margin-top:16px">Пока пусто</h1>
+        <p class="serif it" style="color:var(--ink2);margin-top:10px;max-width:280px">Первая страница дневника всегда чистая. Запиши, когда что-то было — я запомню за тебя.</p>
+        <button class="btn" data-go="record" style="margin-top:22px;max-width:240px">Сделать первую запись</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATE: LOADING ============ -->
+  <section class="screen" id="s-loading">
+    <div class="scroll">
+      <div class="daterow"><div><div class="cap sk" style="width:70px;height:11px">&nbsp;</div><div class="sk" style="width:150px;height:26px;margin-top:8px">&nbsp;</div></div><div class="sk" style="width:46px;height:14px">&nbsp;</div></div>
+      <div class="sk" style="width:100%;height:52px;border-radius:12px;margin-top:20px">&nbsp;</div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:60%;height:15px">&nbsp;</div><div class="sk" style="width:38%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:50%;height:15px">&nbsp;</div><div class="sk" style="width:30%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:66%;height:15px">&nbsp;</div><div class="sk" style="width:42%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <p class="sm muted" style="text-align:center;margin-top:26px">Открываю дневник…</p>
+    </div>
+  </section>
+
+  <!-- ============ STATE: ERROR ============ -->
+  <section class="screen" id="s-error">
+    <div class="scroll">
+      <div class="fill-center">
+        <div class="empty-mark" style="color:var(--accent);opacity:.85">!</div>
+        <h1 style="font-size:24px;margin-top:16px">Не смог открыть дневник</h1>
+        <p class="serif it" style="color:var(--ink2);margin-top:10px;max-width:290px">Что-то сбилось при чтении. Твои записи на месте — они на этом устройстве и никуда не делись.</p>
+        <button class="btn" data-go="loading" style="margin-top:22px;max-width:240px">Попробовать снова</button>
+        <button class="btn ghost" data-go="safety" style="margin-top:10px;max-width:240px">Мне нужна помощь</button>
       </div>
     </div>
   </section>
@@ -470,27 +649,48 @@
   }
 
   var root = ['diary','journal','record','stats','safety'];
+  var noNav = ['onboarding','pin'];
   var cur = 'diary', history = [];
 
   function show(id, push){
     if (push !== false && id !== cur) history.push(cur);
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
     var el = document.getElementById('s-' + id);
+    if (!el) return;
     el.classList.add('on');
-    el.querySelector('.scroll').scrollTop = 0;
-    el.querySelector('.scroll').classList.remove('fade'); void el.offsetWidth; el.querySelector('.scroll').classList.add('fade');
+    var sc = el.querySelector('.scroll');
+    if (sc) { sc.scrollTop = 0; sc.classList.remove('fade'); void el.offsetWidth; sc.classList.add('fade'); }
     cur = id;
     document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.go === id && !b.classList.contains('rec')); });
-    document.getElementById('nav').style.display = (id === 'safety' || id === 'entry') ? 'none' : 'flex';
+    document.getElementById('nav').style.display = (id === 'safety' || id === 'entry' || noNav.indexOf(id) >= 0) ? 'none' : 'flex';
     if (tg && tg.BackButton) { root.indexOf(id) === 0 ? tg.BackButton.hide() : tg.BackButton.show(); }
+    if (id === 'onboarding') resetOb();
+    if (id === 'pin') resetPin();
   }
   if (tg && tg.BackButton) tg.BackButton.onClick(function(){ var p = history.pop() || 'diary'; hap('light'); show(p, false); });
 
   document.addEventListener('click', function(e){
+    var back = e.target.closest('[data-back]');
+    if (back) { e.preventDefault(); hap('light'); show(history.pop() || 'diary', false); return; }
     var go = e.target.closest('[data-go]');
     if (go) { e.preventDefault(); hap('light'); show(go.dataset.go); return; }
     var op = e.target.closest('[data-open]');
     if (op) { openSheet(op.dataset.open); return; }
+    var action = e.target.closest('[data-action]');
+    if (action) {
+      var type = action.dataset.action;
+      if (type === 'contact') { hap('light'); toastQuiet('Открываю сообщение Кате…'); }
+      if (type === 'export') { hap('ok'); toastQuiet('Файл подготовлен. В прототипе скачивание не включено.'); }
+      if (type === 'delete') {
+        if (window.confirm('Стереть все записи? Это действие нельзя отменить.')) { hap('warn'); toastQuiet('Записи удалены.'); }
+      }
+      return;
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="checkbox"]')) { e.preventDefault(); e.target.click(); }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="switch"]')) { e.preventDefault(); e.target.click(); }
   });
 
   // --- record screen state
@@ -548,9 +748,75 @@
   veil.onclick = closeSheet;
   sheet.addEventListener('click', function(e){ if (e.target.closest('.item')) { hap(e.target.id === 'del' ? 'warn' : 'sel'); closeSheet(); } });
 
+  // --- onboarding
+  var obTrack = document.getElementById('ob-track');
+  function obIndex(){ return obTrack ? Math.round(obTrack.scrollLeft / obTrack.clientWidth) : 0; }
+  function obSync(){
+    var i = obIndex();
+    document.querySelectorAll('#ob-dots i').forEach(function(d, n){ d.classList.toggle('on', n === i); });
+    document.getElementById('ob-next').textContent = (i >= 2) ? 'Начать' : 'Дальше';
+  }
+  function resetOb(){ if (obTrack) obTrack.scrollLeft = 0; obSync(); }
+  if (obTrack) obTrack.addEventListener('scroll', obSync);
+  document.getElementById('ob-next').onclick = function(){
+    var i = obIndex(); hap('light');
+    if (i >= 2) { show('pin'); }
+    else obTrack.scrollTo({ left: (i+1) * obTrack.clientWidth, behavior: 'smooth' });
+  };
+
+  // --- pin
+  var pinStage = 'set', pinFirst = '', pinBuf = '';
+  var pinDots = document.getElementById('pin-dots');
+  function paintPin(){
+    pinDots.querySelectorAll('i').forEach(function(d, n){ d.classList.toggle('f', n < pinBuf.length); });
+  }
+  function pinText(cap, title, sub){
+    document.getElementById('pin-cap').textContent = cap;
+    document.getElementById('pin-title').textContent = title;
+    document.getElementById('pin-sub').textContent = sub;
+  }
+  function resetPin(){ pinStage = 'set'; pinFirst = ''; pinBuf = ''; paintPin();
+    pinText('Придумай PIN', 'Четыре цифры', 'Он будет закрывать вход в дневник. Запомни его — восстановить нельзя.'); }
+  function pinErr(){ pinDots.classList.add('shake','err'); hap('warn');
+    setTimeout(function(){ pinDots.classList.remove('shake','err'); pinBuf=''; paintPin(); }, 450); }
+  function pinPush(d){
+    if (pinBuf.length >= 4) return;
+    pinBuf += d; hap('sel'); paintPin();
+    if (pinBuf.length < 4) return;
+    setTimeout(function(){
+      if (pinStage === 'set') {
+        pinFirst = pinBuf; pinBuf = ''; pinStage = 'confirm'; paintPin();
+        pinText('Повтори PIN', 'Ещё раз', 'Введи те же четыре цифры, чтобы не ошибиться.');
+      } else if (pinStage === 'confirm') {
+        if (pinBuf === pinFirst) { hap('ok'); show('diary', false); }
+        else { pinErr(); pinStage = 'set'; pinFirst = '';
+          pinText('Не совпало', 'Начнём заново', 'Цифры разошлись. Придумай PIN ещё раз.'); }
+      }
+    }, 120);
+  }
+  document.getElementById('keys').addEventListener('click', function(e){
+    var k = e.target.closest('.key'); if (!k || k.classList.contains('act')) return;
+    pinPush(k.textContent.trim());
+  });
+  document.getElementById('pin-del').onclick = function(){ pinBuf = pinBuf.slice(0, -1); hap('light'); paintPin(); };
+  document.getElementById('pin-forgot').onclick = function(){ hap('warn');
+    pinText('PIN не восстановить', 'Только сброс', 'Мы не храним PIN и не можем его подсказать. Сбросить можно лишь вместе со всеми записями — это не отменить.'); }
+
+  document.addEventListener('click', function(e){
+    var check = e.target.closest('[role="checkbox"]');
+    if (check) { var next = check.getAttribute('aria-checked') !== 'true'; check.setAttribute('aria-checked', String(next)); check.classList.toggle('done', next); hap('sel'); }
+  });
+
+  // --- profile toggles
+  document.addEventListener('click', function(e){
+    var sw = e.target.closest('[data-toggle]');
+    if (sw) { var next = !sw.classList.contains('on'); sw.classList.toggle('on', next); sw.setAttribute('aria-checked', String(next)); hap('sel'); }
+  });
+
   render();
+  var valid = root.concat(['entry','onboarding','pin','profile','empty','loading','error']);
   var q = ((location.search + location.hash).match(/[?&#]s=([a-z]+)/) || [])[1];
-  show(root.indexOf(q) >= 0 || q === 'entry' ? q : 'diary', false);
+  show(valid.indexOf(q) >= 0 ? q : 'diary', false);
 })();
 </script>
 </body>

@@ -40,7 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       >
         {toasts.map((toast) => (
           <div key={toast.id} className="pointer-events-auto relative animate-toast-in">
-            <InlineNotice tone={toast.tone} title={toast.title} className="bg-usnee-surface/95 pr-12 shadow-card backdrop-blur-glass">
+            <InlineNotice tone={toast.tone} title={toast.title} className="bg-usnee-surface pr-12 shadow-card">
               {toast.detail}
             </InlineNotice>
             <button

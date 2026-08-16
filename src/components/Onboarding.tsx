@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, SkipForward, Shield, Zap, Lock, Eye } from 'lucide-react';
+import { ChevronRight, SkipForward, Shield, Zap, Lock, Eye, Check, Sparkles } from 'lucide-react';
 
 interface OnboardingProps {
   onDone: () => void;
@@ -9,7 +9,7 @@ const slides = [
   {
     icon: Eye,
     title: 'USNEE. Без осуждения, только факты.',
-    text: 'Приложение для тех, кто предпочитает информированность самообману. Записывай, отслеживай, оставайся в живых. Никакого морализаторства — только данные и здравый смысл.'
+    text: 'Приложение для тех, кому важны ясность и контроль. Записывай наблюдения и смотри на факты без морализаторства — спокойно и в своём темпе.'
   },
   {
     icon: Zap,
@@ -19,12 +19,12 @@ const slides = [
   {
     icon: Shield,
     title: 'Безопасность',
-    text: 'NORS-таймер, признаки передозировки, инструкция по налоксону, экстренные вызовы. Всё работает локально на устройстве, без отправки данных куда-либо.'
+    text: 'NORS-таймер, признаки опасного состояния и экстренные контакты. Это справочные инструменты, а не замена медицинской помощи.'
   },
   {
     icon: Lock,
     title: 'Приватность',
-    text: 'Данные сначала сохраняются на вашем устройстве. PIN и паник-кнопка помогают быстро закрыть приложение. Синхронизация с сервером — отдельный шаг, когда транспорт подключён.'
+    text: 'Данные сначала сохраняются на вашем устройстве. PIN помогает ограничить доступ к приложению. Если синхронизация доступна, её состояние будет показано отдельно.'
   }
 ];
 
@@ -47,12 +47,16 @@ export default function Onboarding({ onDone }: OnboardingProps) {
   };
 
   const SlideIcon = slides[current].icon;
+  const progress = ((current + 1) / slides.length) * 100;
 
   return (
     <div className="flex h-full flex-col bg-usnee-bg">
       {/* Skip button */}
-      <div className="flex justify-end p-4">
+      <div className="flex items-center justify-between gap-4 p-4">
+        <div className="flex items-center gap-2 text-caption uppercase tracking-[.12em] text-usnee-text3"><Sparkles className="h-3.5 w-3.5 text-usnee-accent" /> USNEE 101</div>
         <button
+          type="button"
+          aria-label="Пропустить знакомство"
           onClick={onDone}
           className="flex items-center gap-1 text-sm text-usnee-text2 transition-colors hover:text-usnee-text active:scale-95"
         >
@@ -61,16 +65,19 @@ export default function Onboarding({ onDone }: OnboardingProps) {
         </button>
       </div>
 
-      {/* Slide content with simple transition */}
+      <div className="px-6"><div className="h-1.5 overflow-hidden rounded-full bg-usnee-surface2"><div className="h-full rounded-full bg-usnee-accent transition-[width] duration-500" style={{ width: `${progress}%` }} /></div></div>
+
+      {/* Slide content with directional transition */}
       <div className="relative flex-1 overflow-hidden px-6">
         <div
           key={current}
           className={`flex h-full flex-col items-center justify-center gap-6 ${
-            direction === 'right' ? 'animate-slide-up' : 'animate-slide-up'
+            direction === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
           }`}
         >
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-usnee-surface">
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-[2rem] bg-usnee-brand shadow-hero animate-float">
             <SlideIcon className="h-10 w-10 text-usnee-accent" />
+            <div className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border-4 border-usnee-bg bg-usnee-success"><Check className="h-3.5 w-3.5 text-usnee-bg" /></div>
           </div>
           <h2 className="text-center text-2xl font-bold text-usnee-text">
             {slides[current].title}
@@ -85,6 +92,9 @@ export default function Onboarding({ onDone }: OnboardingProps) {
       <div className="flex justify-center gap-2 py-6">
         {slides.map((_, i) => (
           <button
+            type="button"
+            aria-label={`Шаг ${i + 1} из ${slides.length}${i === current ? ', текущий' : ''}`}
+            aria-current={i === current ? 'step' : undefined}
             key={i}
             onClick={() => {
               setDirection(i > current ? 'right' : 'left');
@@ -100,6 +110,7 @@ export default function Onboarding({ onDone }: OnboardingProps) {
       {/* Navigation */}
       <div className="flex items-center justify-between gap-4 px-6 pb-8">
         <button
+          type="button"
           onClick={goPrev}
           disabled={current === 0}
           className="min-h-[48px] rounded-xl px-4 text-sm font-medium text-usnee-text2 transition-all active:scale-95 disabled:opacity-0"

@@ -14,6 +14,7 @@ export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const immersive = location.pathname === '/add';
+  const routeKey = location.pathname;
 
   useEffect(() => {
     if (!immersive) return undefined;
@@ -38,7 +39,7 @@ export function AppShell({ children }: AppShellProps) {
             : 'pb-[calc(6.5rem+var(--safe-area-bottom))]'
         )}
       >
-        <div className={cx('mx-auto w-full max-w-lg', immersive && 'flex min-h-0 flex-1 flex-col')}>{children}</div>
+        <div key={routeKey} className={cx('mx-auto w-full max-w-lg animate-route-in', immersive && 'flex min-h-0 flex-1 flex-col')}>{children}</div>
       </main>
       <PanicButton />
       <SosButton />

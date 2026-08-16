@@ -31,7 +31,7 @@ export function Stats() {
 
   return (
     <div className="space-y-5">
-      <TopBar title="Статистика" eyebrow="ЛОКАЛЬНЫЕ ДАННЫЕ" />
+      <TopBar title="Сводка" eyebrow="ЛОКАЛЬНЫЕ ДАННЫЕ" />
       {error && <InlineNotice tone="danger" title="Ошибка">{error}</InlineNotice>}
       <div className="grid grid-cols-3 gap-2" aria-label="Период статистики">
         {periods.map((item) => (
@@ -40,7 +40,7 @@ export function Stats() {
             type="button"
             aria-pressed={period === item.id}
             onClick={() => setPeriod(item.id)}
-            className={`min-h-12 rounded-lg px-2 text-body-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-usnee-focus ${period === item.id ? 'bg-brand-gradient text-white' : 'bg-usnee-surface text-usnee-text2'}`}
+            className={`min-h-12 rounded-lg px-2 text-body-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-usnee-focus ${period === item.id ? 'bg-usnee-brand text-white' : 'bg-usnee-surface text-usnee-text2'}`}
           >
             {item.label}
           </button>

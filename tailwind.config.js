@@ -30,12 +30,7 @@ export default {
           info: 'var(--color-info)'
         }
       },
-      backgroundImage: {
-        'brand-gradient': 'var(--gradient-brand)',
-        'screen-gradient': 'var(--gradient-screen)',
-        'danger-gradient': 'var(--gradient-danger)',
-        'glass-gradient': 'var(--gradient-glass)'
-      },
+
       fontFamily: {
         sans: ['var(--font-ui)'],
         display: ['var(--font-display)']

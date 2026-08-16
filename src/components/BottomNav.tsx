@@ -6,7 +6,7 @@ const navItems = [
   { path: '/', icon: Home, label: 'Главная', end: true },
   { path: '/history', icon: History, label: 'История' },
   { path: '/add', icon: Plus, label: 'Запись', primary: true },
-  { path: '/stats', icon: BarChart3, label: 'Аналитика' },
+  { path: '/progress', icon: BarChart3, label: 'Прогресс' },
   { path: '/profile', icon: UserRound, label: 'Профиль' }
 ] as const;
 
@@ -16,7 +16,7 @@ export function BottomNav() {
       aria-label="Основная навигация"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-[calc(.75rem+var(--safe-area-left))] pr-[calc(.75rem+var(--safe-area-right))] pb-[calc(.75rem+var(--safe-area-bottom))]"
     >
-      <div className="pointer-events-auto mx-auto grid h-[4.5rem] max-w-lg grid-cols-5 items-center rounded-[1.625rem] border border-usnee-border bg-usnee-surface/90 px-1 shadow-card backdrop-blur-glass">
+      <div className="pointer-events-auto mx-auto grid h-[4.5rem] max-w-lg grid-cols-5 items-center rounded-[1.625rem] border border-usnee-border bg-usnee-surface px-1 shadow-card">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -34,7 +34,7 @@ export function BottomNav() {
               }
             >
               {'primary' in item && (
-                <span className="absolute grid h-14 w-14 place-items-center rounded-full border border-white/20 bg-brand-gradient shadow-hero transition-transform duration-normal group-active:scale-95">
+                <span className="absolute grid h-14 w-14 place-items-center rounded-full border border-white/20 bg-usnee-brand shadow-hero transition-transform duration-normal group-active:scale-95">
                   <Icon className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" />
                 </span>
               )}

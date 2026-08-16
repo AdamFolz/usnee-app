@@ -59,7 +59,7 @@ describe('History', () => {
     expect(removes[1]).toBeDisabled();
     await userEvent.click(removes[0]);
     const dialog = screen.getByRole('dialog', { name: 'Удалить запись?' });
-    await userEvent.click(dialog.querySelector('button.bg-danger-gradient') as HTMLButtonElement);
+    await userEvent.click(dialog.querySelector('button.bg-usnee-danger') as HTMLButtonElement);
     await waitFor(() => expect(mockedReverse).toHaveBeenCalledWith('new'));
   });
 });
