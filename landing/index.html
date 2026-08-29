@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0d1a" />
+  <meta name="description" content="USNEE — личный дневник подходов. Безопасно, офлайн-в первую очередь, с синхронизацией." />
+  <title>USNEE</title>
+  <style>
+    :root {
+      --color-bg-void: #070814;
+      --color-bg-base: #0b0d1a;
+      --color-surface-1: #14182a;
+      --color-surface-2: #1b2035;
+      --color-surface-3: #252b43;
+      --color-text-primary: #ffffff;
+      --color-text-secondary: #a7adc3;
+      --color-brand-primary: #9b7cff;
+      --color-brand-accent: #e078f4;
+      --font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-display: Manrope, Inter, system-ui, sans-serif;
+      --motion-normal: 200ms;
+      --motion-sheet: 280ms;
+      --easing-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      :root {
+        --motion-normal: 1ms;
+        --motion-sheet: 1ms;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background: var(--color-bg-void);
+      color: var(--color-text-primary);
+      font-family: var(--font-ui);
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* ===== PARTICLE FIELD (pseudo-3D via canvas) ===== */
+    #hero-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    /* ===== TOP NAV ===== */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: var(--space-4, 1rem) 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(11, 13, 26, 0.92),
+        rgba(11, 13, 26, 0.48)
+      );
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .top-nav .logo {
+      font-family: var(--font-display);
+      font-size: 1.375rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .top-nav .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .top-nav .nav-links a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color var(--motion-normal) var(--easing-ui);
+    }
+    .top-nav .nav-links a:hover,
+    .top-nav .nav-links a:focus-visible {
+      color: var(--color-text-primary);
+    }
+    .top-nav .nav-links a.active {
+      color: var(--color-brand-primary);
+    }
+    /* ===== PROGRESS BAR ===== */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: var(--color-brand-primary);
+      transform-origin: 0% 50%;
+      scale: 0 1;
+      transition: scale 0.05s linear;
+      z-index: 99;
+    }
+    /* ===== LAYOUT ===== */
+    main { position: relative; z-index: 1; }
+    section {
+      min-height: 100vh;
+      padding: 4rem 2rem 6rem;
+      max-width: 72rem;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(1.5rem);
+      transition: opacity var(--motion-sheet) var(--easing-ui),
+                  transform var(--motion-sheet) var(--easing-ui);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Stagger children when parent is revealed */
+    .reveal-stagger > *:not(:last-child) {
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 6vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .lead {
+      font-size: 1.125rem;
+      color: var(--color-text-secondary);
+      max-width: 42rem;
+    }
+    p { color: var(--color-text-secondary); }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    /* ===== GLASS SURFACE ===== */
+    .surface {
+      background:
+        linear-gradient(135deg,
+          rgba(255, 255, 255, 0.055) 0%,
+          rgba(255, 255, 255, 0.035) 100%
+        );
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1.125rem;
+      padding: 2rem;
+    }
+    /* ===== ACCENT LINE ===== */
+    .accent-line {
+      width: 2rem;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-brand-primary), var(--color-brand-accent));
+      border-radius: 1px;
+    }
+    .accent-line-vert {
+      width: 2px;
+      height: 2rem;
+      background: linear-gradient(180deg, var(--color-brand-primary), var(--color-brand-accent));
+      border-radius: 1px;
+    }
+    /* ===== FEATURE GRID ===== */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background:
+        linear-gradient(135deg,
+          rgba(255, 255, 255, 0.045) 0%,
+          rgba(255, 255, 255, 0.025) 100%
+        );
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 0.875rem;
+      padding: 1.5rem;
+      transition: border-color var(--motion-normal) var(--easing-ui);
+    }
+    .feature-card:hover { border-color: rgba(155, 124, 255, 0.35); }
+    .feature-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    /* ===== CTA ===== */
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
+      color: var(--color-bg-void);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform var(--motion-normal) var(--easing-ui),
+                  box-shadow var(--motion-normal) var(--easing-ui);
+    }
+    .cta-primary:hover,
+    .cta-primary:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 0 28px rgba(155, 124, 255, 0.45);
+    }
+    /* ===== FOOTER ===== */
+    footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Scroll progress indicator -->
+  <div class="scroll-progress" id="progressBar"></div>
+
+  <!-- 3D particle field -->
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+  <!-- Top navigation -->
+  <nav class="top-nav" role="navigation" aria-label="Главная навигация">
+    <div class="logo">USNEE</div>
+    <div class="nav-links">
+      <a href="#features" class="active">Возможности</a>
+      <a href="#security">Безопасность</a>
+      <a href="#download">Скачать</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <section style="padding-top: 6rem; min-height: 90vh; justify-content: center;">
+      <div class="reveal">
+        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
+        <h1 class="gradient-text">
+          Ваш личный дневник подходов — безопасно, офлайн‑в первую очередь.
+        </h1>
+        <p class="lead" style="margin-top: 1.5rem;">
+          USNEE объединяет запись, аналитику и защиту ваших данных в одном
+         -premium‑интерфейсе. Данные хранятся локально, а синхронизация — по
+          вашему выбору.
+        </p>
+      </div>
+      <div class="reveal" style="--i: 1; margin-top: 2rem;">
+        <a href="#download" class="cta-primary">
+          Начать работу
+        </a>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="reveal">
+        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
+        <h2>Возможности, созданные для вас</h2>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card reveal" style="--i: 0;">
+          <h3>Мгновенная запись</h3>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            Быстрая запись веществ и доз с защитой от дублей.
+          </p>
+        </div>
+        <div class="feature-card reveal" style="--i: 1;">
+          <h3>Аналитика в реальном времени</h3>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            Графики и статистика по подписям за считанные секунды.
+          </p>
+        </div>
+        <div class="feature-card reveal" style="--i: 2;">
+          <h3>Офлайн‑в первую очередь</h3>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            Работает без интернета. Локальная база данных IndexedDB.
+          </p>
+        </div>
+        <div class="feature-card reveal" style="--i: 3;">
+          <h3>Тёмная тема 2086</h3>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            Премиальный dark‑дизайн с микровзаимодействиями.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <div class="reveal">
+        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
+        <h2>Безопасность превыше всего</h2>
+        <p class="lead">
+          PIN‑защита, автоматическая блокировка и безопасное удаление
+          гарантируют, что ваши данные остаются под контролем.
+        </p>
+      </div>
+      <div class="surface reveal" style="--i: 0;">
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem;">
+          <li style="display: flex; gap: 1rem; align-items: flex-start;">
+            <span class="accent-line-vert" style="margin-top: 0.25rem;"></span>
+            <div>
+              <strong style="color: var(--color-text-primary);">PIN‑блокировка</strong>
+              <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
+                Четырёхзначный PIN с задержкой и автоматической очисткой
+                после нескольких неудачных попыток.
+              </p>
+            </div>
+          </li>
+          <li style="display: flex; gap: 1rem; align-items: flex-start;">
+            <span class="accent-line-vert" style="margin-top: 0.25rem;"></span>
+            <div>
+              <strong style="color: var(--color-text-primary);">Офлайн‑хранение</strong>
+              <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
+                Все записи сохраняются локально в IndexedDB вашего устройства.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section id="download">
+      <div class="reveal">
+        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
+        <h2>Готово к использованию</h2>
+        <p class="lead">
+          USNEE доступен как Telegram Mini App. Откройте приложение через
+          Telegram — никаких дополнительных установок.
+        </p>
+      </div>
+      <div class="reveal" style="--i: 0;">
+        <a href="https://t.me/usnee_bot/start" class="cta-primary">
+          Открыть в Telegram
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p style="margin-bottom: 0.5rem;">
+      USNEE © 2025. Все права защищены.
+    </p>
+    <p>
+      <a href="mailto:support@usnee.sex" style="color: var(--color-text-secondary); text-decoration: underline;">
+        support@usnee.sex
+      </a>
+    </p>
+  </footer>
+
+  <script>
+    // ===== 3D particle field (WebGL-free canvas, ~60fps) =====
+    (function () {
+      const canvas = document.getElementById('hero-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      let width, height;
+      const particles = [];
+      const count = 650;
+
+      function resize() {
+        width = canvas.offsetWidth;
+        height = canvas.offsetHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // init particles with pseudo-3D depth
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          z: Math.random() * 100, // depth 0..100
+          size: Math.random() * 1.6 + 0.4,
+          speed: Math.random() * 0.05 + 0.01
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // fade trail for motion blur effect
+        ctx.fillStyle = 'rgba(7, 8, 20, 0.18)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = '#9b7cff';
+
+        for (const p of particles) {
+          // drift by depth (parallax)
+          p.z -= p.speed;
+          if (p.z <= 0) {
+            p.z = 100;
+            p.x = Math.random() * width;
+            p.y = Math.random() * height;
+          }
+
+          // project 3D -> 2D with simple perspective
+          const scale = p.z / 100; // 0..1 — farther = smaller
+          const screenX = p.x + (p.x - width / 2) * (1 - scale) * 0.02;
+          const screenY = p.y + (p.y - height / 2) * (1 - scale) * 0.03;
+          const size = p.size * scale + 0.3;
+
+          // twinkle
+          const alpha = 0.35 + scale * 0.45;
+          ctx.fillStyle = 'rgba(155, 124, 255, ' + alpha + ')';
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    // ===== Scroll progress bar + reveal =====
+    (function () {
+      const progress = document.getElementById('progressBar');
+      const reveals = document.querySelectorAll('.reveal, .feature-card');
+
+      function onScroll() {
+        const total = document.body.scrollHeight - window.innerHeight;
+        const scrolled = window.scrollY;
+        const pct = total > 0 ? (scrolled / total) : 0;
+        progress.style.transform = 'scaleX(' + pct + ')';
+
+        reveals.forEach(r => {
+          const rect = r.getBoundingClientRect();
+          if (rect.top < window.innerHeight * 0.85) {
+            r.classList.add('visible');
+          }
+        });
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // reduced-motion: skip animations
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        reveals.forEach(r => r.classList.add('visible'));
+      }
+    })();
+
+    // ===== Smooth anchor + active link highlight =====
+    (function () {
+      const links = document.querySelectorAll('.top-nav .nav-links a');
+      const sections = Array.from(links).map(a => document.getElementById(a.getAttribute('href').slice(1)));
+
+      function setActive() {
+        let current = '';
+        sections.forEach((s, i) => {
+          if (!s) return;
+          const rect = s.getBoundingClientRect();
+          if (rect.top <= window.innerHeight / 2) {
+            current = links[i].getAttribute('href');
+          }
+        });
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === current));
+      }
+      window.addEventListener('scroll', setActive, { passive: true });
+    })();
+  </script>
+</body>
+</html>
