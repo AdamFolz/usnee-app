@@ -39,6 +39,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Copy landing into Pages artifact
+        run: |
+          mkdir -p dist/landing
+          cp landing/index.html dist/landing/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

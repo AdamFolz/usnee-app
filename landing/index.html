@@ -1,487 +1,1122 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b0d1a" />
-  <meta name="description" content="USNEE — личный дневник подходов. Безопасно, офлайн-в первую очередь, с синхронизацией." />
-  <title>USNEE</title>
-  <style>
-    :root {
-      --color-bg-void: #070814;
-      --color-bg-base: #0b0d1a;
-      --color-surface-1: #14182a;
-      --color-surface-2: #1b2035;
-      --color-surface-3: #252b43;
-      --color-text-primary: #ffffff;
-      --color-text-secondary: #a7adc3;
-      --color-brand-primary: #9b7cff;
-      --color-brand-accent: #e078f4;
-      --font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --font-display: Manrope, Inter, system-ui, sans-serif;
-      --motion-normal: 200ms;
-      --motion-sheet: 280ms;
-      --easing-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      :root {
-        --motion-normal: 1ms;
-        --motion-sheet: 1ms;
-      }
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      min-height: 100vh;
-      background: var(--color-bg-void);
-      color: var(--color-text-primary);
-      font-family: var(--font-ui);
-      line-height: 1.5;
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-    /* ===== PARTICLE FIELD (pseudo-3D via canvas) ===== */
-    #hero-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    /* ===== TOP NAV ===== */
-    .top-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      padding: var(--space-4, 1rem) 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: none;
-      background: linear-gradient(
-        to bottom,
-        rgba(11, 13, 26, 0.92),
-        rgba(11, 13, 26, 0.48)
-      );
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .top-nav .logo {
-      font-family: var(--font-display);
-      font-size: 1.375rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .top-nav .nav-links {
-      display: flex;
-      gap: 1.5rem;
-    }
-    .top-nav .nav-links a {
-      color: var(--color-text-secondary);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: color var(--motion-normal) var(--easing-ui);
-    }
-    .top-nav .nav-links a:hover,
-    .top-nav .nav-links a:focus-visible {
-      color: var(--color-text-primary);
-    }
-    .top-nav .nav-links a.active {
-      color: var(--color-brand-primary);
-    }
-    /* ===== PROGRESS BAR ===== */
-    .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 2px;
-      background: var(--color-brand-primary);
-      transform-origin: 0% 50%;
-      scale: 0 1;
-      transition: scale 0.05s linear;
-      z-index: 99;
-    }
-    /* ===== LAYOUT ===== */
-    main { position: relative; z-index: 1; }
-    section {
-      min-height: 100vh;
-      padding: 4rem 2rem 6rem;
-      max-width: 72rem;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2.5rem;
-    }
-    .reveal {
-      opacity: 0;
-      transform: translateY(1.5rem);
-      transition: opacity var(--motion-sheet) var(--easing-ui),
-                  transform var(--motion-sheet) var(--easing-ui);
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    /* Stagger children when parent is revealed */
-    .reveal-stagger > *:not(:last-child) {
-      transition-delay: calc(var(--i, 0) * 80ms);
-    }
-    h1 {
-      font-family: var(--font-display);
-      font-size: clamp(2.25rem, 6vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-    }
-    h2 {
-      font-family: var(--font-display);
-      font-size: clamp(1.5rem, 4vw, 2rem);
-      font-weight: 700;
-      line-height: 1.2;
-    }
-    .lead {
-      font-size: 1.125rem;
-      color: var(--color-text-secondary);
-      max-width: 42rem;
-    }
-    p { color: var(--color-text-secondary); }
-    .gradient-text {
-      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    /* ===== GLASS SURFACE ===== */
-    .surface {
-      background:
-        linear-gradient(135deg,
-          rgba(255, 255, 255, 0.055) 0%,
-          rgba(255, 255, 255, 0.035) 100%
-        );
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 1.125rem;
-      padding: 2rem;
-    }
-    /* ===== ACCENT LINE ===== */
-    .accent-line {
-      width: 2rem;
-      height: 2px;
-      background: linear-gradient(90deg, var(--color-brand-primary), var(--color-brand-accent));
-      border-radius: 1px;
-    }
-    .accent-line-vert {
-      width: 2px;
-      height: 2rem;
-      background: linear-gradient(180deg, var(--color-brand-primary), var(--color-brand-accent));
-      border-radius: 1px;
-    }
-    /* ===== FEATURE GRID ===== */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-    }
-    .feature-card {
-      background:
-        linear-gradient(135deg,
-          rgba(255, 255, 255, 0.045) 0%,
-          rgba(255, 255, 255, 0.025) 100%
-        );
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 0.875rem;
-      padding: 1.5rem;
-      transition: border-color var(--motion-normal) var(--easing-ui);
-    }
-    .feature-card:hover { border-color: rgba(155, 124, 255, 0.35); }
-    .feature-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
-    /* ===== CTA ===== */
-    .cta-primary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.875rem 2rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent));
-      color: var(--color-bg-void);
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: transform var(--motion-normal) var(--easing-ui),
-                  box-shadow var(--motion-normal) var(--easing-ui);
-    }
-    .cta-primary:hover,
-    .cta-primary:focus-visible {
-      transform: translateY(-1px);
-      box-shadow: 0 0 28px rgba(155, 124, 255, 0.45);
-    }
-    /* ===== FOOTER ===== */
-    footer {
-      padding: 3rem 2rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      text-align: center;
-      color: var(--color-text-secondary);
-      font-size: 0.875rem;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="USNEE — приватный трекер употребления без осуждения. Запись за минуту, аналитика и инструменты безопасности. Все данные — на твоём устройстве." />
+<meta name="theme-color" content="#0b0d1a" />
+<title>USNEE — замечай. понимай. выбирай.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============ TOKENS (USNEE) ============ */
+:root {
+  --bg-void: #070814;
+  --bg-base: #0b0d1a;
+  --surface-1: #14182a;
+  --surface-2: #1b2035;
+  --surface-3: #252b43;
+  --text-1: #ffffff;
+  --text-2: #a7adc3;
+  --text-3: #69708b;
+  --brand: #9b7cff;
+  --brand-2: #b18cff;
+  --accent: #e078f4;
+  --cyan: #67e8f9;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #fb476b;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(155, 124, 255, 0.4);
+  --focus: #a855f7;
+  --radius-card: 1.375rem;
+  --radius-hero: 1.875rem;
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --shadow-hero: 0 24px 70px rgba(0, 0, 0, 0.55);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 120ms;
+  --normal: 200ms;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-2);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ CANVAS FIELD (3D scene) ============ */
+#field {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============ TOP NAV ============ */
+#topnav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px clamp(20px, 4vw, 48px);
+  transition: background-color var(--normal) var(--ease), border-color var(--normal) var(--ease), box-shadow var(--normal) var(--ease);
+  border-bottom: 1px solid transparent;
+}
+#topnav.scrolled {
+  background: rgba(7, 8, 20, 0.72);
+  border-bottom-color: var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-1);
+  text-decoration: none;
+}
+.brand-mark {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 0 24px rgba(155, 124, 255, 0.35), inset 0 0 12px rgba(155, 124, 255, 0.15);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand-2);
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+.nav-links a {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: color var(--fast) var(--ease), background-color var(--fast) var(--ease);
+}
+.nav-links a:hover { color: var(--text-1); background: rgba(155, 124, 255, 0.12); }
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #0b0d1a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(155, 124, 255, 0.35);
+  transition: transform var(--normal) var(--ease), box-shadow var(--normal) var(--ease), background-color var(--normal) var(--ease);
+}
+.nav-cta:hover { transform: translateY(-2px); background: var(--brand-2); box-shadow: 0 10px 32px rgba(155, 124, 255, 0.5); }
+.nav-cta .soon { font-size: 8px; font-weight: 700; letter-spacing: 1px; padding: 2px 7px; border-radius: 999px; background: rgba(251, 71, 107, 0.18); color: var(--danger); }
+
+@media (max-width: 720px) {
+  .nav-links { display: none; }
+}
+
+/* ============ PROGRESS BAR ============ */
+#progressBar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  z-index: 60;
+  background: var(--brand-2);
+  box-shadow: 0 0 12px rgba(155, 124, 255, 0.7);
+  pointer-events: none;
+}
+
+/* ============ LAYOUT ============ */
+#scroll-container {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.section { position: relative; pointer-events: none; scroll-snap-align: start; will-change: transform; }
+.section > * { pointer-events: auto; }
+
+.wrap {
+  width: min(1080px, 100% - 48px);
+  margin-inline: auto;
+}
+
+/* ============ HERO ============ */
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: clamp(28px, 6vh, 72px) 24px 0;
+  gap: 22px;
+}
+
+.hero-tag {
+  margin-top: clamp(24px, 8vh, 90px);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--brand-2);
+  text-shadow: 0 0 24px rgba(155, 124, 255, 0.45);
+}
+
+.hero h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 500;
+  font-size: clamp(34px, 7vw, 84px);
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+  color: var(--text-1);
+  max-width: 15ch;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.65);
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--brand-2);
+  text-shadow: 0 0 34px rgba(155, 124, 255, 0.5), 0 0 90px rgba(155, 124, 255, 0.18);
+}
+
+.hero-sub {
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 300;
+  line-height: 1.75;
+  max-width: 540px;
+  color: var(--text-2);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* ============ BUTTONS ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--normal) var(--ease), box-shadow var(--normal) var(--ease), border-color var(--normal) var(--ease), background-color var(--normal) var(--ease);
+}
+.btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.btn-primary {
+  background: var(--brand);
+  color: #0b0d1a;
+  box-shadow: 0 8px 32px rgba(155, 124, 255, 0.35);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background: var(--brand-2);
+  box-shadow: 0 14px 44px rgba(155, 124, 255, 0.5);
+}
+
+.btn-ghost {
+  background: rgba(20, 24, 42, 0.8);
+  color: var(--text-1);
+  border-color: var(--border);
+  box-shadow: var(--shadow-card);
+}
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55), 0 0 24px rgba(155, 124, 255, 0.15);
+}
+
+.btn:focus-visible, a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.pill-soon {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 71, 107, 0.45);
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+/* ============ SCROLL HINT ============ */
+.scroll-hint {
+  margin-top: auto;
+  margin-bottom: clamp(16px, 6vh, 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.scroll-hint span {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.scroll-line {
+  width: 2px;
+  height: 44px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  box-shadow: 0 0 14px rgba(155, 124, 255, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--brand-2);
+  animation: scrollPulse 2.2s var(--ease) infinite;
+}
+@keyframes scrollPulse {
+  0% { transform: translateY(-100%); }
+  55%, 100% { transform: translateY(100%); }
+}
+
+/* ============ MANIFESTO ============ */
+.manifesto {
+  min-height: 90svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  text-align: center;
+  padding: 96px 24px;
+}
+.section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.manifesto h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: clamp(24px, 4vw, 44px);
+  line-height: 1.35;
+  max-width: 860px;
+  color: var(--text-1);
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.6);
+}
+.manifesto h2 em {
+  font-style: normal;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(224, 120, 244, 0.35);
+}
+
+/* ============ FEATURES ============ */
+.features {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(40px, 6vh, 64px);
+  padding: 96px 24px;
+  text-align: center;
+}
+.features-head h2 {
+  margin-top: 14px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: clamp(24px, 4vw, 40px);
+  color: var(--text-1);
+}
+.features-head h2 em { font-style: normal; color: var(--brand-2); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 1040px;
+  text-align: left;
+}
+@media (max-width: 960px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .card-grid { grid-template-columns: 1fr; } }
+
+.card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 210px;
+  overflow: hidden;
+  transition: transform var(--normal) var(--ease), border-color var(--normal) var(--ease), box-shadow var(--normal) var(--ease);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--surface-3);
+  opacity: 0;
+  transition: opacity var(--normal) var(--ease);
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-hero), 0 0 34px rgba(155, 124, 255, 0.12);
+}
+.card:hover::before { opacity: 1; }
+
+.card-icon {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--brand-2);
+  box-shadow: 0 0 18px rgba(155, 124, 255, 0.18);
+}
+.card-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card:nth-child(2) .card-icon { color: var(--cyan); box-shadow: 0 0 18px rgba(103, 232, 249, 0.18); }
+.card:nth-child(3) .card-icon { color: var(--accent); box-shadow: 0 0 18px rgba(224, 120, 244, 0.18); }
+.card:nth-child(4) .card-icon { color: var(--success); box-shadow: 0 0 18px rgba(52, 211, 153, 0.18); }
+
+.card-num {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.card h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -0.2px;
+}
+.card p {
+  font-size: 13.5px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* ============ HOW ============ */
+.how {
+  min-height: 90svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(40px, 6vh, 60px);
+  padding: 96px 24px;
+  text-align: center;
+}
+.how-head h2 {
+  margin-top: 14px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: clamp(24px, 4vw, 40px);
+  color: var(--text-1);
+}
+.how-head h2 em { font-style: normal; color: var(--cyan); text-shadow: 0 0 30px rgba(103, 232, 249, 0.3); }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 1040px;
+  text-align: left;
+}
+@media (max-width: 960px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .steps { grid-template-columns: 1fr; } }
+
+.step {
+  position: relative;
+  padding: 24px 22px 26px;
+  border-radius: var(--radius-card);
+  background: rgba(11, 13, 26, 0.65);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--normal) var(--ease), border-color var(--normal) var(--ease);
+}
+.step:hover { transform: translateY(-4px); border-color: rgba(103, 232, 249, 0.35); }
+.step-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--cyan);
+  opacity: 0.85;
+  text-shadow: 0 0 26px rgba(103, 232, 249, 0.3);
+  line-height: 1;
+}
+.step h3 {
+  margin-top: 14px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.step p {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* ============ QUOTE ============ */
+.quote-section {
+  min-height: 80svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  text-align: center;
+  padding: 96px 24px;
+}
+.quote-section blockquote {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: clamp(20px, 3.2vw, 36px);
+  line-height: 1.45;
+  max-width: 780px;
+  color: var(--text-1);
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.6);
+}
+.quote-section blockquote em { font-style: normal; color: var(--success); text-shadow: 0 0 30px rgba(52, 211, 153, 0.3); }
+.quote-attr {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ============ CTA ============ */
+.cta-section {
+  min-height: 90svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  padding: 96px 24px;
+}
+.cta-section h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 500;
+  font-size: clamp(30px, 5.5vw, 60px);
+  line-height: 1.15;
+  color: var(--text-1);
+  text-shadow: 0 2px 44px rgba(0, 0, 0, 0.65);
+}
+.cta-section h2 em {
+  font-style: normal;
+  color: var(--brand-2);
+  text-shadow: 0 0 40px rgba(155, 124, 255, 0.5), 0 0 100px rgba(155, 124, 255, 0.2);
+}
+.cta-sub {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text-2);
+  max-width: 460px;
+  line-height: 1.7;
+}
+.safety-note {
+  margin-top: 18px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-3);
+  max-width: 480px;
+  line-height: 1.7;
+}
+.safety-note strong { color: var(--warning); font-weight: 600; }
+
+/* ============ FOOTER ============ */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 34px 24px 44px;
+  text-align: center;
+  background: var(--bg-void);
+}
+.footer-inner {
+  width: min(1080px, 100%);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.footer-brand .brand-mark { width: 28px; height: 28px; font-size: 12px; border-radius: 8px; }
+footer p {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-3);
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+/* ============ REVEAL ============ */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transition-delay: calc(var(--d, 0) * 130ms);
+  will-change: opacity, transform;
+}
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============ ULTRAWIDE 21:9 / SHORT HEIGHT ============ */
+@media (min-aspect-ratio: 18/9), (min-width: 1800px) {
+  .wrap { width: min(1480px, 100% - 96px); }
+  .hero {
+    min-height: 100svh;
+    justify-content: center;
+    padding: clamp(64px, 8vh, 96px) 24px clamp(24px, 4vh, 48px);
+    gap: 16px;
+  }
+  .hero-tag { margin-top: 0; }
+  .hero h1 {
+    font-size: clamp(40px, 3.4vw, 68px);
+    max-width: 18ch;
+    line-height: 1.08;
+  }
+  .hero-sub { max-width: 640px; font-size: 17px; }
+  .hero-actions { margin-top: 4px; }
+  .card-grid, .steps { max-width: 1320px; margin-inline: auto; }
+  .section-title, .features h2, .how h2 { font-size: clamp(28px, 2.4vw, 40px); }
+}
+
+/* Short ultrawide panels (e.g. 2560×1080) — stop vertical crush / empty sides */
+@media (max-height: 920px) and (min-width: 1400px) {
+  .hero {
+    min-height: auto;
+    padding: 88px 24px 36px;
+    gap: 14px;
+  }
+  .hero-tag { margin-top: 0; }
+  .hero h1 { font-size: clamp(36px, 4.2vh, 56px); }
+  .hero-sub { font-size: 15px; line-height: 1.55; max-width: 560px; }
+  .btn { min-height: 46px; padding: 0 22px; }
+  .section { scroll-snap-align: none; }
+  .card-grid, .steps { gap: 16px; }
+  .card, .step { padding: 18px; }
+  [data-reveal] { transform: translateY(16px); }
+}
+
+@media (min-width: 2400px) {
+  .wrap { width: min(1680px, 100% - 120px); }
+  .hero h1 { font-size: 64px; }
+}
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; scroll-snap-type: none; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .scroll-line::after { animation: none; }
+  #field { display: none; }
+  .card:hover, .step:hover, .btn:hover { transform: none; }
+  .section { transform: none !important; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
 </head>
 <body>
-  <!-- Scroll progress indicator -->
-  <div class="scroll-progress" id="progressBar"></div>
 
-  <!-- 3D particle field -->
-  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+<canvas id="field" aria-hidden="true"></canvas>
+<div id="progressBar" aria-hidden="true"></div>
 
-  <!-- Top navigation -->
-  <nav class="top-nav" role="navigation" aria-label="Главная навигация">
-    <div class="logo">USNEE</div>
-    <div class="nav-links">
-      <a href="#features" class="active">Возможности</a>
-      <a href="#security">Безопасность</a>
-      <a href="#download">Скачать</a>
-    </div>
-  </nav>
+<!-- ============ TOP NAV ============ -->
+<nav id="topnav" aria-label="Основная навигация">
+  <a class="nav-brand" href="#top" aria-label="USNEE — наверх">
+    <span class="brand-mark" aria-hidden="true">U</span>
+    USNEE
+  </a>
+  <ul class="nav-links">
+    <li><a href="#manifesto">Философия</a></li>
+    <li><a href="#features">Что внутри</a></li>
+    <li><a href="#how">Как это</a></li>
+    <li><a href="#cta">Открыть</a></li>
+  </ul>
+  <a class="nav-cta" href="#cta">Открыть <span class="soon">скоро</span></a>
+</nav>
 
-  <main>
-    <!-- HERO -->
-    <section style="padding-top: 6rem; min-height: 90vh; justify-content: center;">
-      <div class="reveal">
-        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
-        <h1 class="gradient-text">
-          Ваш личный дневник подходов — безопасно, офлайн‑в первую очередь.
-        </h1>
-        <p class="lead" style="margin-top: 1.5rem;">
-          USNEE объединяет запись, аналитику и защиту ваших данных в одном
-         -premium‑интерфейсе. Данные хранятся локально, а синхронизация — по
-          вашему выбору.
-        </p>
-      </div>
-      <div class="reveal" style="--i: 1; margin-top: 2rem;">
-        <a href="#download" class="cta-primary">
-          Начать работу
-        </a>
-      </div>
-    </section>
+<div id="scroll-container">
 
-    <!-- FEATURES -->
-    <section id="features">
-      <div class="reveal">
-        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
-        <h2>Возможности, созданные для вас</h2>
-      </div>
-      <div class="feature-grid">
-        <div class="feature-card reveal" style="--i: 0;">
-          <h3>Мгновенная запись</h3>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-            Быстрая запись веществ и доз с защитой от дублей.
-          </p>
-        </div>
-        <div class="feature-card reveal" style="--i: 1;">
-          <h3>Аналитика в реальном времени</h3>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-            Графики и статистика по подписям за считанные секунды.
-          </p>
-        </div>
-        <div class="feature-card reveal" style="--i: 2;">
-          <h3>Офлайн‑в первую очередь</h3>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-            Работает без интернета. Локальная база данных IndexedDB.
-          </p>
-        </div>
-        <div class="feature-card reveal" style="--i: 3;">
-          <h3>Тёмная тема 2086</h3>
-          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
-            Премиальный dark‑дизайн с микровзаимодействиями.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECURITY -->
-    <section id="security">
-      <div class="reveal">
-        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
-        <h2>Безопасность превыше всего</h2>
-        <p class="lead">
-          PIN‑защита, автоматическая блокировка и безопасное удаление
-          гарантируют, что ваши данные остаются под контролем.
-        </p>
-      </div>
-      <div class="surface reveal" style="--i: 0;">
-        <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem;">
-          <li style="display: flex; gap: 1rem; align-items: flex-start;">
-            <span class="accent-line-vert" style="margin-top: 0.25rem;"></span>
-            <div>
-              <strong style="color: var(--color-text-primary);">PIN‑блокировка</strong>
-              <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
-                Четырёхзначный PIN с задержкой и автоматической очисткой
-                после нескольких неудачных попыток.
-              </p>
-            </div>
-          </li>
-          <li style="display: flex; gap: 1rem; align-items: flex-start;">
-            <span class="accent-line-vert" style="margin-top: 0.25rem;"></span>
-            <div>
-              <strong style="color: var(--color-text-primary);">Офлайн‑хранение</strong>
-              <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-top: 0.25rem;">
-                Все записи сохраняются локально в IndexedDB вашего устройства.
-              </p>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- DOWNLOAD -->
-    <section id="download">
-      <div class="reveal">
-        <div class="accent-line" style="margin-bottom: 1.5rem;"></div>
-        <h2>Готово к использованию</h2>
-        <p class="lead">
-          USNEE доступен как Telegram Mini App. Откройте приложение через
-          Telegram — никаких дополнительных установок.
-        </p>
-      </div>
-      <div class="reveal" style="--i: 0;">
-        <a href="https://t.me/usnee_bot/start" class="cta-primary">
-          Открыть в Telegram
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p style="margin-bottom: 0.5rem;">
-      USNEE © 2025. Все права защищены.
+  <!-- ============ HERO ============ -->
+  <section class="section hero" data-stage="0" id="top" aria-label="USNEE — главная">
+    <p class="hero-tag" data-reveal data-delay="1">Telegram Mini App · offline-first</p>
+    <h1 data-reveal data-delay="2">Замечай.<br />Понимай.<br /><em>Выбирай.</em></h1>
+    <p class="hero-sub" data-reveal data-delay="3">
+      USNEE — приватный трекер употребления без осуждения.
+      Запись за минуту, честная аналитика и инструменты безопасности рядом.
+      Все данные живут на твоём устройстве.
     </p>
-    <p>
-      <a href="mailto:support@usnee.sex" style="color: var(--color-text-secondary); text-decoration: underline;">
-        support@usnee.sex
+    <div class="hero-actions" data-reveal data-delay="4">
+      <a class="btn btn-primary" href="#cta" aria-label="Открыть USNEE в Telegram">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Открыть в Telegram <span class="pill-soon">скоро</span>
       </a>
+      <a class="btn btn-ghost" href="#features">Что внутри</a>
+    </div>
+    <div class="scroll-hint" data-reveal data-delay="5">
+      <span>Листай</span>
+      <div class="scroll-line" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- ============ MANIFESTO ============ -->
+  <section class="section manifesto" data-stage="1" id="manifesto" aria-label="Философия">
+    <span class="section-label" data-reveal>Философия</span>
+    <h2 data-reveal data-delay="1">
+      Технологии не должны судить. Приватный дневник, который помогает
+      <em>замечать свои паттерны</em> — без рейтингов, без стыда, без давления.
+    </h2>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section features" data-stage="2" id="features" aria-label="Возможности">
+    <div class="features-head">
+      <span class="section-label" data-reveal>Что внутри</span>
+      <h2 data-reveal data-delay="1">Спокойная <em>система</em> для себя</h2>
+    </div>
+    <div class="card-grid">
+      <article class="card" data-reveal data-delay="1">
+        <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+        <span class="card-num">01 · Быстро</span>
+        <h3>Запись за минуту</h3>
+        <p>Выбери только то, что знаешь сейчас. Остальное заполнишь позже — идеальность не требуется.</p>
+      </article>
+      <article class="card" data-reveal data-delay="2">
+        <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <span class="card-num">02 · Приватно</span>
+        <h3>Локально и без сети</h3>
+        <p>Offline-first: записи сначала живут на устройстве. PIN и шифрованный экспорт — по желанию.</p>
+      </article>
+      <article class="card" data-reveal data-delay="3">
+        <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
+        <span class="card-num">03 · Честно</span>
+        <h3>Динамика, не оценка</h3>
+        <p>Сон, вода, самочувствие и недельный ритм — спокойный взгляд на перемены без соревнований.</p>
+      </article>
+      <article class="card" data-reveal data-delay="4">
+        <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6Z"/><path d="M9.5 12l2 2 3.5-4"/></svg></div>
+        <span class="card-num">04 · Рядом</span>
+        <h3>Безопасность под рукой</h3>
+        <p>SOS-контакт и таймер наблюдения помогают сориентироваться, когда это важно.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ HOW ============ -->
+  <section class="section how" data-stage="3" id="how" aria-label="Как это работает">
+    <div class="how-head">
+      <span class="section-label" data-reveal>Как это работает</span>
+      <h2 data-reveal data-delay="1">Четыре <em>шага</em>, без сложностей</h2>
+    </div>
+    <div class="steps">
+      <div class="step" data-reveal data-delay="1">
+        <div class="step-num" aria-hidden="true">01</div>
+        <h3>Запиши</h3>
+        <p>Что, как и почему — парой касаний. Запись сохраняется мгновенно, даже без сети.</p>
+      </div>
+      <div class="step" data-reveal data-delay="2">
+        <div class="step-num" aria-hidden="true">02</div>
+        <h3>Посмотри ритм</h3>
+        <p>Недельная динамика и сводки показывают паттерны, которые обычно не замечаешь.</p>
+      </div>
+      <div class="step" data-reveal data-delay="3">
+        <div class="step-num" aria-hidden="true">03</div>
+        <h3>Выбери шаг</h3>
+        <p>Один маленький шаг лучше большого обещания. Прогресс — про направление, не про идеал.</p>
+      </div>
+      <div class="step" data-reveal data-delay="4">
+        <div class="step-num" aria-hidden="true">04</div>
+        <h3>Владей данными</h3>
+        <p>Всё остаётся на твоём устройстве. Экспорт — с шифрованием, если захочешь.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUOTE ============ -->
+  <section class="section quote-section" data-stage="4" aria-label="Цитата">
+    <blockquote data-reveal>
+      «Прогресс — не оценка и не соревнование.<br />
+      Это спокойный способ <em>заметить перемены</em>.»
+    </blockquote>
+    <span class="quote-attr" data-reveal data-delay="1">— Принцип USNEE</span>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="section cta-section" data-stage="5" id="cta" aria-label="Открыть USNEE">
+    <h2 data-reveal>Войди в <em>своё</em> пространство</h2>
+    <p class="cta-sub" data-reveal data-delay="1">
+      Запусти USNEE в Telegram — он уже на твоём устройстве, без установок и регистраций.
     </p>
-  </footer>
+    <div data-reveal data-delay="2">
+      <a class="btn btn-primary" href="#cta" aria-label="Открыть USNEE в Telegram">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Открыть в Telegram <span class="pill-soon">скоро</span>
+      </a>
+    </div>
+    <p class="safety-note" data-reveal data-delay="3">
+      USNEE не заменяет экстренные службы.<br />
+      При угрозе жизни — <strong>звони 112</strong>.
+    </p>
+  </section>
 
-  <script>
-    // ===== 3D particle field (WebGL-free canvas, ~60fps) =====
-    (function () {
-      const canvas = document.getElementById('hero-canvas');
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      let width, height;
-      const particles = [];
-      const count = 650;
+</div>
 
-      function resize() {
-        width = canvas.offsetWidth;
-        height = canvas.offsetHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.scale(dpr, dpr);
+<footer>
+  <div class="footer-inner">
+    <span class="footer-brand"><span class="brand-mark" aria-hidden="true">U</span> USNEE</span>
+    <p>Приватный трекер употребления. Сделано с заботой — без осуждения и без рекламы.<br />Данные не покидают твоё устройство, пока ты сам этого не захочешь.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================================================================
+     3D CAMERA FIELD — «полёт» сквозь частицы, привязанный к скроллу.
+     Canvas 2D-проекция (без three.js): глубина -> размер/яркость/скорость.
+     Позиция камеры интерполируется между keyframes секций (data-stage).
+  ================================================================ */
+  var canvas = document.getElementById('field');
+  var ctx = canvas.getContext('2d');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var MAX_DPR = 1.5;
+  var COLORS = ['155,124,255', '103,232,249', '224,120,244'];
+
+  var W = 0, H = 0;
+  var raf = null;
+  var running = !reduced;
+  var mouseX = 0, mouseY = 0;
+  var mouseActive = false;
+  var lastTime = 0;
+
+  var FOV = 1100;             // «фокус» камеры (пересчитывается в resize под 21:9)
+  var CAM_Z = 0;              // глубина полёта (растёт со скроллом)
+  var CAM_X = 0;              // боковое смещение (ракурс)
+  var CAM_Y = 0;              // вертикаль (ракурс)
+  var ROLL = 0;               // лёгкий крен
+
+  var depthA = 0.35, depthB = 1.25;   // диапазон глубины частиц
+  var COUNT = 150;
+
+  var P = [];                 // частицы: x,z (мир), y, size, color, seed
+
+  function seed(n) {
+    return function () {
+      n |= 0; n = (n + 0x6D2B79F5) | 0;
+      var t = Math.imul(n ^ (n >>> 15), 1 | n);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function initParticles() {
+    var rnd = seed(20260829);
+    P = [];
+    for (var i = 0; i < COUNT; i++) {
+      P.push({
+        x: (rnd() - 0.5) * 2,          // -1..1
+        z: depthA + rnd() * (depthB - depthA),
+        y: (rnd() - 0.5) * 1.6,
+        size: 0.5 + rnd() * 1.6,
+        color: COLORS[(rnd() * COLORS.length) | 0],
+        seed: rnd() * 100
+      });
+    }
+  }
+
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    /* 21:9 / ultrawide: keep FOV relative to shorter side so field isn't empty on sides */
+    var aspect = W / Math.max(H, 1);
+    FOV = 1100 * Math.min(1.35, Math.max(0.85, aspect / (16 / 9)));
+  }
+
+  /* Проекция 3D-точки в 2D с вращением/креном камеры */
+  function project(px, py, pz, roll) {
+    var rx = px - CAM_X;
+    var ry = py - CAM_Y;
+    var rz = pz - CAM_Z;
+    /* roll around Z (view axis) */
+    var c = Math.cos(roll), s = Math.sin(roll);
+    var rx2 = rx * c - ry * s;
+    var ry2 = rx * s + ry * c;
+    var scale = FOV / Math.max(rz, 0.08);
+    return {
+      x: W * 0.5 + rx2 * scale,
+      y: H * 0.5 + ry2 * scale,
+      s: scale
+    };
+  }
+
+  function draw(now) {
+    if (!running) return;
+    var dt = Math.min((now - lastTime) / 1000 || 0.016, 0.05);
+    lastTime = now;
+    var t = now * 0.001;
+
+    ctx.clearRect(0, 0, W, H);
+
+    /* фон — глубокое свечение (canvas light) */
+    var g1 = ctx.createRadialGradient(W * 0.5, H * 0.42, 0, W * 0.5, H * 0.42, Math.max(W, H) * 0.7);
+    g1.addColorStop(0, 'rgba(155,124,255,0.05)');
+    g1.addColorStop(1, 'rgba(155,124,255,0)');
+    ctx.fillStyle = g1;
+    ctx.fillRect(0, 0, W, H);
+
+    /* частицы-«травы»: ближние крупнее и ярче, дальние мелкие и тусклые */
+    var items = [];
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i];
+      var z = p.z - CAM_Z;
+      if (z < 0.06) { p.z += 1.1; z = p.z - CAM_Z; }  /* wrap за камерой */
+      var pp = project(p.x, p.y, p.z, ROLL);
+      var fade = Math.min(1, Math.max(0, (z - 0.1) / 0.5));       /* ближний fade */
+      var far = Math.min(1, Math.max(0, (2.2 - z) / 1.6));       /* дальний fade */
+      var alpha = fade * far * (0.25 + 0.5 * Math.abs(Math.sin(t * 1.1 + p.seed)));
+      var size = p.size * (pp.s / (FOV / 0.8)) * 3.2;
+      items.push({
+        x: pp.x, y: pp.y, size: size, alpha: alpha,
+        color: p.color, seed: p.seed, z: z
+      });
+    }
+
+    /* сортировка: дальние рисуются первыми */
+    items.sort(function (a, b) { return b.z - a.z; });
+
+    for (var k = 0; k < items.length; k++) {
+      var it = items[k];
+      if (it.alpha <= 0.02 || it.size <= 0.1) continue;
+      ctx.beginPath();
+      ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + it.color + ',' + it.alpha.toFixed(3) + ')';
+      ctx.fill();
+      if (it.size > 2.6) {
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, it.size * 2.6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(' + it.color + ',' + (it.alpha * 0.12).toFixed(3) + ')';
+        ctx.fill();
       }
-      window.addEventListener('resize', resize);
-      resize();
+    }
 
-      // init particles with pseudo-3D depth
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          z: Math.random() * 100, // depth 0..100
-          size: Math.random() * 1.6 + 0.4,
-          speed: Math.random() * 0.05 + 0.01
-        });
+    /* поле-линии (горизонт) — редкие тонкие лучи из глубины */
+    ctx.lineWidth = 0.6;
+    for (var m = 0; m < 26; m++) {
+      var bx = ((m / 26) - 0.5) * 2.4;
+      var bz = 0.2 + (m % 5) * 0.24;
+      var p1 = project(bx, -0.9, bz, ROLL);
+      var p2 = project(bx * 0.7, -0.9, bz + 0.9, ROLL);
+      ctx.strokeStyle = 'rgba(155,124,255,' + (0.02 + 0.03 * ((m % 3) / 2)).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  /* ---- камера привязана к скроллу ---- */
+  var sectionOffsets = [];
+  function syncSections() {
+    sectionOffsets = [];
+    document.querySelectorAll('.section[data-stage]').forEach(function (sec) {
+      sectionOffsets.push(sec.offsetTop);
+    });
+  }
+
+  function getScrollT() {
+    var st = window.pageYOffset || document.documentElement.scrollTop;
+    var doc = document.documentElement.scrollHeight - window.innerHeight;
+    return doc > 0 ? Math.min(1, Math.max(0, st / doc)) : 0;
+  }
+
+  function updateCamera() {
+    var t = getScrollT();
+    /* keyframes: [scrollT, camX, camY, camZ, roll] — полёт по сценарию */
+    var kfs = [
+      [0.00, 0.0, 0.00, 0.00, 0.00],
+      [0.16, 0.0, 0.05, 0.28, 0.02],
+      [0.34, 0.4, 0.10, 0.55, -0.03],
+      [0.52, -0.4, 0.18, 0.80, 0.03],
+      [0.70, 0.3, -0.10, 1.05, -0.02],
+      [0.86, 0.0, -0.20, 1.30, 0.02],
+      [1.00, 0.0, -0.05, 1.45, 0.00]
+    ];
+    /* интерполяция между keyframes */
+    var i = 0;
+    while (i < kfs.length - 2 && kfs[i + 1][0] < t) i++;
+    var a = kfs[i], b = kfs[i + 1];
+    var range = b[0] - a[0];
+    var tt = range > 0 ? Math.max(0, Math.min(1, (t - a[0]) / range)) : 0;
+    var e = tt * tt * (3 - 2 * tt);   /* smoothstep */
+    CAM_X = a[1] + (b[1] - a[1]) * e;
+    CAM_Y = a[2] + (b[2] - a[2]) * e;
+    CAM_Z = a[3] + (b[3] - a[3]) * e;
+    ROLL = a[4] + (b[4] - a[4]) * e;
+  }
+
+  /* плавная прокрутка секций (навигация) */
+  function scrollToSection(id) {
+    var el = document.querySelector(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  /* ---- прогресс-бар и nav-фон ---- */
+  var progressBar = document.getElementById('progressBar');
+  var topnav = document.getElementById('topnav');
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      var t = getScrollT();
+      updateCamera();
+      if (progressBar) progressBar.style.width = (t * 100).toFixed(2) + '%';
+      if (topnav) topnav.classList.toggle('scrolled', (window.pageYOffset || document.documentElement.scrollTop) > 40);
+      ticking = false;
+    });
+  }
+
+  /* ---- навигация ---- */
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var href = a.getAttribute('href');
+      if (!href || href.length < 2 || href === '#top' && window.pageYOffset < 10) {
+        if (href === '#top') { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); }
+        return;
       }
+      e.preventDefault();
+      scrollToSection(href);
+    });
+  });
 
-      function animate() {
-        ctx.clearRect(0, 0, width, height);
+  /* ---- запуск ---- */
+  if (running) {
+    resize();
+    initParticles();
+    syncSections();
 
-        // fade trail for motion blur effect
-        ctx.fillStyle = 'rgba(7, 8, 20, 0.18)';
-        ctx.fillRect(0, 0, width, height);
+    window.addEventListener('resize', function () { resize(); syncSections(); });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('touchmove', onScroll, { passive: true });
+    window.addEventListener('mousemove', function (e) {
+      mouseX = e.clientX; mouseY = e.clientY; mouseActive = true;
+    }, { passive: true });
+    window.addEventListener('mouseleave', function () { mouseActive = false; });
 
-        ctx.fillStyle = '#9b7cff';
-
-        for (const p of particles) {
-          // drift by depth (parallax)
-          p.z -= p.speed;
-          if (p.z <= 0) {
-            p.z = 100;
-            p.x = Math.random() * width;
-            p.y = Math.random() * height;
+    /* reveal on scroll */
+    var revealEls = document.querySelectorAll('[data-reveal]');
+    if ('IntersectionObserver' in window && !reduced) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            io.unobserve(entry.target);
           }
-
-          // project 3D -> 2D with simple perspective
-          const scale = p.z / 100; // 0..1 — farther = smaller
-          const screenX = p.x + (p.x - width / 2) * (1 - scale) * 0.02;
-          const screenY = p.y + (p.y - height / 2) * (1 - scale) * 0.03;
-          const size = p.size * scale + 0.3;
-
-          // twinkle
-          const alpha = 0.35 + scale * 0.45;
-          ctx.fillStyle = 'rgba(155, 124, 255, ' + alpha + ')';
-          ctx.beginPath();
-          ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        requestAnimationFrame(animate);
-      }
-      animate();
-    })();
-
-    // ===== Scroll progress bar + reveal =====
-    (function () {
-      const progress = document.getElementById('progressBar');
-      const reveals = document.querySelectorAll('.reveal, .feature-card');
-
-      function onScroll() {
-        const total = document.body.scrollHeight - window.innerHeight;
-        const scrolled = window.scrollY;
-        const pct = total > 0 ? (scrolled / total) : 0;
-        progress.style.transform = 'scaleX(' + pct + ')';
-
-        reveals.forEach(r => {
-          const rect = r.getBoundingClientRect();
-          if (rect.top < window.innerHeight * 0.85) {
-            r.classList.add('visible');
-          }
         });
-      }
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+      revealEls.forEach(function (el) { io.observe(el); });
+    } else {
+      revealEls.forEach(function (el) { el.classList.add('revealed'); });
+    }
 
-      // reduced-motion: skip animations
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        reveals.forEach(r => r.classList.add('visible'));
-      }
-    })();
+    onScroll();
+    raf = requestAnimationFrame(draw);
+  }
 
-    // ===== Smooth anchor + active link highlight =====
-    (function () {
-      const links = document.querySelectorAll('.top-nav .nav-links a');
-      const sections = Array.from(links).map(a => document.getElementById(a.getAttribute('href').slice(1)));
-
-      function setActive() {
-        let current = '';
-        sections.forEach((s, i) => {
-          if (!s) return;
-          const rect = s.getBoundingClientRect();
-          if (rect.top <= window.innerHeight / 2) {
-            current = links[i].getAttribute('href');
-          }
-        });
-        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === current));
-      }
-      window.addEventListener('scroll', setActive, { passive: true });
-    })();
-  </script>
+  /* reduced-motion: показать всё сразу, без полёта */
+  if (reduced) {
+    document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('revealed'); });
+  }
+})();
+</script>
 </body>
 </html>
