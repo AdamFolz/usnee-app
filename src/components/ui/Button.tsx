@@ -13,10 +13,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'border-transparent bg-usnee-brand text-white shadow-hero hover:brightness-110',
-  secondary: 'border-usnee-border bg-usnee-surface2 text-usnee-text hover:bg-usnee-surface3',
-  glass: 'border-usnee-border bg-usnee-glass text-usnee-text hover:bg-usnee-glassStrong',
-  danger: 'border-transparent bg-usnee-danger text-white shadow-sos hover:brightness-110',
+  primary: 'border-transparent bg-usnee-brand text-white shadow-hero hover:-translate-y-0.5 hover:brightness-110',
+  secondary: 'border-usnee-border bg-usnee-surface2 text-usnee-text hover:-translate-y-0.5 hover:bg-usnee-surface3',
+  glass: 'border-usnee-border bg-usnee-glass text-usnee-text hover:-translate-y-0.5 hover:bg-usnee-glassStrong',
+  danger: 'border-transparent bg-usnee-danger text-white shadow-sos hover:-translate-y-0.5 hover:brightness-110',
   ghost: 'border-transparent bg-transparent text-usnee-text2 hover:bg-usnee-glass'
 };
 

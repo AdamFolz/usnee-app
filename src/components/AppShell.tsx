@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { PanicButton } from './PanicButton';
 import { SosButton } from './SosButton';
-import { cx } from './ui';
+import { AmbientField, cx } from './ui';
 import { registerTelegramBackHandler } from '../integrations/telegram';
 
 export interface AppShellProps {
@@ -23,6 +23,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="app-shell relative flex min-h-0 flex-col overflow-hidden bg-usnee-bg text-usnee-text">
+      <AmbientField />
       <a
         href="#main-content"
         className="fixed left-4 top-4 z-[120] -translate-y-24 rounded-md bg-usnee-brand px-4 py-3 font-semibold text-white transition-transform focus:translate-y-0"
@@ -33,7 +34,7 @@ export function AppShell({ children }: AppShellProps) {
         id="main-content"
         tabIndex={-1}
         className={cx(
-          'min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-[calc(1rem+var(--safe-area-left))] pr-[calc(1rem+var(--safe-area-right))] pt-[calc(1rem+var(--content-safe-area-top))]',
+          'app-scroll relative z-[1] min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-[calc(1rem+var(--safe-area-left))] pr-[calc(1rem+var(--safe-area-right))] pt-[calc(1rem+var(--content-safe-area-top))]',
           immersive
             ? 'flex flex-col pb-[calc(1rem+var(--content-safe-area-bottom))]'
             : 'pb-[calc(6.5rem+var(--safe-area-bottom))]'

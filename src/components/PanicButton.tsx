@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from 'react';
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { ShieldAlert } from 'lucide-react';
 
@@ -17,8 +17,7 @@ export function PanicButton() {
     setHolding(false);
   };
 
-  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+  const beginHold = () => {
     clearHold();
     setHolding(true);
     timerRef.current = setTimeout(() => {
@@ -26,6 +25,11 @@ export function PanicButton() {
       setHolding(false);
       panic();
     }, HOLD_MS);
+  };
+
+  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    beginHold();
   };
 
   const handlePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
@@ -37,6 +41,20 @@ export function PanicButton() {
     clearHold();
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+      event.preventDefault();
+      beginHold();
+    }
+  };
+
+  const handleKeyUp = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      clearHold();
+    }
+  };
+
   return (
     <button
       type="button"
@@ -44,6 +62,8 @@ export function PanicButton() {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onLostPointerCapture={clearHold}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       className={`fixed right-3 z-50 flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-full transition-all active:scale-90 ${
         holding ? 'scale-110 bg-usnee-danger' : 'bg-usnee-surface2'
       }`}
