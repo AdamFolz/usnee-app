@@ -23,7 +23,12 @@ export interface AmountResult {
 }
 
 export function normalizeAmountInput(input: string): string {
-  const normalized = input.replace(',', '.').replace(/[^\d.]/g, '');
+  const withDot = input.replace(',', '.');
+  // BUG-004: если ввод уже валидное число (в т.ч. научная нотация 1e5),
+  // сохраняем как есть — не вырезаем символы regex'ом (1e5 не должен стать 15).
+  if (withDot && Number.isFinite(Number(withDot))) return withDot;
+  // Иначе вычищаем до цифр и точки, схлопывая повторные разделители.
+  const normalized = withDot.replace(/[^\d.]/g, '');
   const [whole = '', ...fractions] = normalized.split('.');
   return fractions.length ? `${whole}.${fractions.join('')}` : whole;
 }

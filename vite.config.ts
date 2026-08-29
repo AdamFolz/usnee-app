@@ -32,6 +32,11 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
+            // Never cache API responses: sensitive data must not be served from SW cache.
+            urlPattern: /\/api\//,
+            handler: 'NetworkOnly'
+          },
+          {
             urlPattern: /^https:\/\/.*\/.*/i,
             handler: 'NetworkFirst',
             options: { cacheName: 'usnee-cache' }

@@ -8,6 +8,12 @@ interface AppState {
   unlocked: boolean;
   setUnlocked: (v: boolean) => void;
 
+  // PIN brute-force protection (SEC-002)
+  pinAttempts: number;
+  pinLockedUntil: number;
+  registerPinFailure: () => void;
+  resetPinAttempts: () => void;
+
   // Navigation
   screen: AppScreen;
   setScreen: (s: AppScreen) => void;
@@ -51,6 +57,17 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       unlocked: false,
       setUnlocked: (v) => set({ unlocked: v }),
+
+      pinAttempts: 0,
+      pinLockedUntil: 0,
+      registerPinFailure: () => {
+        const attempts = get().pinAttempts + 1;
+        // Backoff ladder: 1s -> 2s -> 5s -> 15s -> wipe (5th failure)
+        const delays = [1000, 2000, 5000, 15000];
+        const lockUntil = attempts <= delays.length ? Date.now() + delays[attempts - 1] : 0;
+        set({ pinAttempts: attempts, pinLockedUntil: lockUntil });
+      },
+      resetPinAttempts: () => set({ pinAttempts: 0, pinLockedUntil: 0 }),
 
       screen: 'home',
       setScreen: (s) => set({ screen: s }),
@@ -97,7 +114,10 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         settings: state.settings,
         showOnboarding: state.showOnboarding,
-        lastRecordContext: state.lastRecordContext
+        lastRecordContext: state.lastRecordContext,
+        timers: state.timers,
+        pinAttempts: state.pinAttempts,
+        pinLockedUntil: state.pinLockedUntil
       })
     }
   )

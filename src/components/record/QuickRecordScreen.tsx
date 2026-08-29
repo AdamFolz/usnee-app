@@ -360,6 +360,7 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
                 update({
                   methodId: method.id,
                   methodName: method.name,
+                  amountInput: '',
                   amountUnit: method.id === 'inject' ? 'мл' : 'мг'
                 });
                 setPicker(null);

@@ -8,6 +8,8 @@ const entry: ConsumptionEntry = { id: 'e1', substanceId: 'meph', methodId: 'inje
 
 describe('record domain', () => {
   it('normalizes comma and repeated decimal separators', () => expect(normalizeAmountInput('1,2.3')).toBe('1.23'));
+  it('keeps scientific notation intact (BUG-004: 1e5 must not become 15)', () => expect(normalizeAmountInput('1e5')).toBe('1e5'));
+  it('keeps leading minus intact so validation can reject it (BUG-004: -10 must not become 10)', () => expect(normalizeAmountInput('-10')).toBe('-10'));
   it.each(['', '0', '-2'])('rejects invalid amount %s', (value) => expect(parseRecordAmount(value, 'мг').valid).toBe(false));
   it('converts grams and solution ml to mg', () => {
     expect(parseRecordAmount('1.5', 'г').calculatedMassMg).toBe(1500);

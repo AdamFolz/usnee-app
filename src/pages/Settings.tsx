@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
-import { clearAllData, getEntries, addEntry } from '../utils/db';
-import { hashPin, encryptData, decryptData } from '../utils/crypto';
+import { resetUserData, getEntries, importEntriesLocalOnly } from '../utils/db';
+import { hashPin, verifyPin, encryptData, decryptData } from '../utils/crypto';
 import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { SUBSTANCES } from '../constants/substances';
 import {
@@ -29,7 +29,7 @@ export default function Settings() {
   const todayCount = useAppStore((s) => s.todayCount);
 
   const [pinModal, setPinModal] = useState(false);
-  const [pinStep, setPinStep] = useState<'new' | 'confirm'>('new');
+  const [pinStep, setPinStep] = useState<'new' | 'confirm' | 'verify'>('new');
   const [pinNew, setPinNew] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [pinError, setPinError] = useState('');
@@ -42,6 +42,27 @@ export default function Settings() {
   }, [refreshEntries]);
 
   const handlePinDigit = async (d: string, isConfirm: boolean) => {
+    if (pinStep === 'verify') {
+      const next = pinNew + d;
+      setPinNew(next);
+      if (next.length === 4) {
+        const ok = await verifyPin(next, settings.pinHash ?? '');
+        if (ok) {
+          updateSettings({ pinHash: undefined });
+          setPinModal(false);
+          setPinNew('');
+          setPinStep('new');
+          setPinError('');
+        } else {
+          setPinError('Неверный PIN');
+          setTimeout(() => {
+            setPinNew('');
+            setPinError('');
+          }, 800);
+        }
+      }
+      return;
+    }
     const target = isConfirm ? pinConfirm : pinNew;
     if (target.length >= 4) return;
     const next = target + d;
@@ -90,7 +111,12 @@ export default function Settings() {
 
   const togglePin = () => {
     if (settings.pinHash) {
-      updateSettings({ pinHash: undefined });
+      // BUG-002: отключение PIN требует подтверждения текущим PIN
+      setPinNew('');
+      setPinConfirm('');
+      setPinStep('verify');
+      setPinError('');
+      setPinModal(true);
     } else {
       openPinModal();
     }
@@ -101,7 +127,7 @@ export default function Settings() {
       setDeleteStage(deleteStage + 1);
       return;
     }
-    await clearAllData();
+    await resetUserData();
     updateSettings({
       pinHash: undefined,
       dailyLimit: undefined,
@@ -176,6 +202,7 @@ export default function Settings() {
               <div>
                 <p className="text-sm font-medium text-usnee-text">PIN-код</p>
                 <p className="text-xs text-usnee-text2">{settings.pinHash ? 'Установлен' : 'Не установлен'}</p>
+                <p className="text-xs text-usnee-text2">PIN блокирует интерфейс, но не шифрует хранилище.</p>
               </div>
             </div>
             <label className="relative inline-flex cursor-pointer items-center">
@@ -249,11 +276,12 @@ export default function Settings() {
                   if (!Array.isArray(parsed.entries)) {
                     throw new Error('Формат файла не распознан. Ожидались записи в entries');
                   }
-                  for (const entry of parsed.entries) {
-                    await addEntry({ ...entry, createdAt: Date.now(), updatedAt: Date.now() });
-                  }
+                  const importedCount = await importEntriesLocalOnly(parsed.entries);
                   await refreshEntries();
-                  window.alert(`Загружено: ${formatCountRu(parsed.entries.length, RECORD_FORMS)}`);
+                  if (importedCount === 0) {
+                    throw new Error('В файле нет корректных записей');
+                  }
+                  window.alert(`Загружено: ${formatCountRu(importedCount, RECORD_FORMS)}`);
                 } catch (err) {
                   window.alert('Ошибка импорта: ' + (err as Error).message);
                 }
@@ -439,10 +467,10 @@ export default function Settings() {
             Отмена
           </button>
           <h2 className="mb-2 text-xl font-bold text-usnee-text">
-            {pinStep === 'new' ? (settings.pinHash ? 'Новый PIN' : 'Установить PIN') : 'Повтори PIN'}
+            {pinStep === 'new' ? (settings.pinHash ? 'Новый PIN' : 'Установить PIN') : pinStep === 'confirm' ? 'Повтори PIN' : 'Выключить PIN'}
           </h2>
           <p className="mb-6 text-sm text-usnee-text2">
-            {pinStep === 'new' ? 'Введи 4 цифры' : 'Ещё раз для проверки'}
+            {pinStep === 'new' ? 'Введи 4 цифры' : pinStep === 'confirm' ? 'Ещё раз для проверки' : 'Введи текущий PIN'}
           </p>
           <div className="mb-8 flex gap-3">
             {[0,1,2,3].map(i => {

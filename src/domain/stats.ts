@@ -9,6 +9,7 @@ export function filterEntriesByPeriod(entries: ConsumptionEntry[], period: Stats
   if (period === 'all') return entries;
   const days = period === '7d' ? 7 : 30;
   const from = now - days * 24 * 60 * 60 * 1000;
+  // 7d = rolling 168h, not a calendar week.
   return entries.filter((entry) => entry.timestamp >= from && entry.timestamp <= now + 5 * 60_000);
 }
 

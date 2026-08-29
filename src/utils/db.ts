@@ -73,6 +73,7 @@ export async function createEntryTransaction(command: CreateEntryTransactionComm
   if (command.movement && command.batchId) stores.push('batchMovements', 'batches');
   const tx = database.transaction(stores, 'readwrite');
   if (await tx.objectStore('outbox').get(command.operation.operationId)) { await tx.done; return 'duplicate'; }
+  // TODO: atomic outbox claim needs backend/lease semantics; current client path stays idempotent.
   if (command.movement && command.batchId) {
     const batch = await tx.objectStore('batches').get(command.batchId);
     if (!batch || !batch.active) { await tx.done; throw new Error('BATCH_UNAVAILABLE'); }
@@ -250,7 +251,12 @@ export async function getActiveBatch(substanceId?: string): Promise<Batch | unde
 export async function updateBatch(batch: Batch): Promise<void> { await (await getDB()).put('batches', batch); }
 export async function addMood(entry: MoodEntry): Promise<void> { await (await getDB()).put('mood', entry); }
 export async function getMoods(): Promise<MoodEntry[]> { return (await getDB()).getAll('mood'); }
-export async function addSleep(entry: SleepEntry): Promise<void> { await (await getDB()).put('sleep', entry); }
+export async function addSleep(entry: SleepEntry): Promise<void> {
+  const database = await getDB();
+  const active = (await database.getAll('sleep')).find((item) => !item.endTime);
+  if (active && !entry.endTime) throw new Error('SLEEP_ALREADY_ACTIVE');
+  await database.put('sleep', entry);
+}
 export async function getSleep(): Promise<SleepEntry[]> { return (await getDB()).getAll('sleep'); }
 export async function addFood(entry: FoodEntry): Promise<void> { await (await getDB()).put('food', entry); }
 export async function getFood(): Promise<FoodEntry[]> { return (await getDB()).getAll('food'); }
@@ -264,4 +270,56 @@ export async function clearAllData(): Promise<void> {
   const tx = database.transaction(names, 'readwrite');
   await Promise.all(names.map((name) => tx.objectStore(name).clear()));
   await tx.done;
+}
+
+export async function resetUserData(): Promise<void> {
+  await clearAllData();
+  localStorage.removeItem('usnee-clean-days');
+  localStorage.removeItem('usnee-app-store');
+}
+
+// ---- Import (BUG-001 / BUG-003) ----
+
+export function isConsumptionEntry(value: unknown): value is ConsumptionEntry {
+  if (!value || typeof value !== 'object') return false;
+  const entry = value as Partial<ConsumptionEntry>;
+  return (
+    typeof entry.id === 'string' &&
+    typeof entry.substanceId === 'string' &&
+    typeof entry.methodId === 'string' &&
+    typeof entry.timestamp === 'number' &&
+    Number.isFinite(entry.timestamp) &&
+    typeof entry.dose === 'number' &&
+    Number.isFinite(entry.dose) &&
+    entry.dose > 0 &&
+    typeof entry.doseUnit === 'string' &&
+    typeof entry.alone === 'boolean' &&
+    typeof entry.createdAt === 'number' &&
+    typeof entry.updatedAt === 'number'
+  );
+}
+
+/**
+ * Import entries explicitly as local-only: written to `entries` and marked
+ * in `entrySync` as `local-only`, with NO outbox operation — so the sync
+ * runner never picks them up (BUG-003: import must not bypass sync silently;
+ * these are local records and stay local until user re-records them).
+ */
+export async function importEntriesLocalOnly(entries: unknown[]): Promise<number> {
+  const database = await getDB();
+  const valid = entries.filter(isConsumptionEntry);
+  if (valid.length === 0) return 0;
+  const tx = database.transaction(['entries', 'entrySync'], 'readwrite');
+  for (const entry of valid) {
+    await tx.objectStore('entries').put(entry);
+    await tx.objectStore('entrySync').put({
+      entityId: entry.id,
+      operationId: entry.id,
+      createOperationId: entry.id,
+      state: 'local-only',
+      revision: 0
+    });
+  }
+  await tx.done;
+  return valid.length;
 }
