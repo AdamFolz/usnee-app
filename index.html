@@ -7,6 +7,19 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>USNEE</title>
+  <script>
+    (function () {
+      if (!/\/landing(?:\/|$)/.test(location.pathname)) return;
+      if (!('serviceWorker' in navigator)) return;
+      if (sessionStorage.getItem('usnee-landing-bypass')) return;
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        if (!regs.length) return;
+        sessionStorage.setItem('usnee-landing-bypass', '1');
+        return Promise.all(regs.map(function (r) { return r.unregister(); }))
+          .then(function () { location.reload(); });
+      });
+    })();
+  </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     html, body { background: #0b0d1a; color: #ffffff; margin: 0; padding: 0; height: 100%; overflow: hidden; }

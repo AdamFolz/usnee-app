@@ -30,6 +30,9 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Mini App SW scope is /usnee-app/, which also covers /landing/.
+        // Without this, NavigationRoute serves the SPA shell there.
+        navigateFallbackDenylist: [/\/landing(?:\/|$)/],
         runtimeCaching: [
           {
             // Never cache API responses: sensitive data must not be served from SW cache.
