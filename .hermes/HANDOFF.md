@@ -56,13 +56,29 @@
 
 - [ ] **Ротация Krea-ключа** — ключ `3c702185...` был публично в истории репо и в живом бандле часами. Прод чист, но история публична → ключ скомпрометирован НАВСЕГДА. Ротация в Krea dashboard — единственный пункт, который нельзя восстановить из git
 - [ ] **PostHog EU** — аналитика в проде. Реальный ключ запинен в `analytics.public.ts` (PostHog write-only, безопасно в клиенте). Подтвердить что это осознанное решение
+
+## Хвосты агента (не владельца — задачи кода)
+
 - [ ] **screen_view** — объявлен в allowlist, но не эмитится. Доделать: useEffect на смену роута в App
 - [ ] **property_blacklist** → `property_denylist` в posthog-js ^1.424 (устаревшее имя опции)
+- [ ] **app_open source** для standalone-PWA (сейчас `source: 'telegram'` хардкод)
+- [ ] **byMethod label** = сырой methodId (`'inject'`) — использовать METHODS, как bySubstance использует SUBSTANCES
+- [ ] **getCalendarWeekEntries** — мёртвый экспорт, подключить в WeeklySummaryCard (Home)
+- [ ] **Слой 4:** тесты самого HistoryDashboard (компонент без тестов — только домен покрыт)
+- [ ] **PROJECT_STATE.md** — четвёртый раз переносится
+
+## Сессия 02.09 18:25 — второй пилот (review + fixes)
+
+- **Сделано:** diff-ревью слоёв 1–3 по реальному коду (впервые по настоящим коммитам, не транскриптам). Найдены 3 бага: (A) usageStreak обнулялся в полночь, (B) last4Weeks misnomer, (C) плюрализация сломана в 3 местах (мёртвый тернарник). Все три исправлены: usageStreak считает со вчера если сегодня пусто, formatCountRu в header/aria/fallback, visibleWeeks. Тест перевёрнут + добавлен edge case.
+- **Коммиты:** `1e4de72` fix(stats): usageStreak survives midnight, pluralization, rename last4Weeks
+- **Цепочка:** 173/173 ✅ · typecheck ✅ · build ✅ (PWA 8 precache)
+- **Не сделано:** слой 4 (тесты HistoryDashboard), getCalendarWeekEvents wiring, screen_view, PROJECT_STATE.md, /stats absorption
+- **Следующий шаг:** слой 4 тесты HistoryDashboard → getCalendarWeekEvents → screen_view → PROJECT_STATE.md → /stats
 
 ## Стек
 
 - Vite + React + TS + Tailwind, Telegram Mini App, PWA (8 precache)
-- Vitest 172/172, tsc --noEmit, PWA build
+- Vitest 173/173, tsc --noEmit, PWA build
 - Bottom nav: /, /history, /add, /progress, /profile
 
 ## Формат конца сессии
