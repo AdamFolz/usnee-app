@@ -156,7 +156,13 @@ export default function Settings() {
         try {
           content = await encryptData(content, password);
         } catch {
-          window.alert('Не удалось зашифровать. Экспортирую как обычный JSON без пароля.');
+          // SEC: never downgrade a requested encrypted export to plaintext.
+          // Harm-reduction data must not be written to disk "by accident"
+          // when crypto.subtle is unavailable (non-secure context) or fails.
+          window.alert(
+            'Не удалось зашифровать экспорт (WebCrypto недоступен). Экспорт прерван — данные НЕ сохранены в открытом виде. Открой приложение по HTTPS и повтори.'
+          );
+          return;
         }
       }
       const blob = new Blob([content], { type: 'application/json' });
