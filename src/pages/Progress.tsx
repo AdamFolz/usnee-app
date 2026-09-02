@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, CalendarCheck, ChevronRight, Droplets, HeartPulse, Moon, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
+import { Activity, CalendarCheck, ChevronRight, Droplets, HeartPulse, Moon, ShieldCheck, Sparkles, TrendingUp, Star, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { ConsumptionEntry, MoodEntry, SleepEntry } from '../types';
-import { getEntries, getMoods, getSleep, getWater } from '../utils/db';
+import type { ConsumptionEntry, MoodEntry, SleepEntry, Batch, WaterEntry } from '../types';
+import { getEntries, getMoods, getSleep, getWater, getBatches } from '../utils/db';
 import { startOfDay } from '../utils/date';
 import { cleanStreak } from '../domain/stats';
+import { evaluateUnlockedAchievements } from '../domain/achievements';
+import { calculateXpSnapshot, getLevelName, xpForLevel } from '../domain/gamification';
 import { Button, Surface, TopBar } from '../components/ui';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -14,15 +16,17 @@ export function Progress() {
   const [entries, setEntries] = useState<ConsumptionEntry[]>([]);
   const [moods, setMoods] = useState<MoodEntry[]>([]);
   const [sleep, setSleep] = useState<SleepEntry[]>([]);
-  const [water, setWater] = useState<{ timestamp: number; amount: number }[]>([]);
+  const [water, setWater] = useState<WaterEntry[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getEntries(), getMoods(), getSleep(), getWater()]).then(([e, m, s, w]) => {
+    Promise.all([getEntries(), getMoods(), getSleep(), getWater(), getBatches()]).then(([e, m, s, w, b]) => {
       setEntries(e);
       setMoods(m);
       setSleep(s);
       setWater(w);
+      setBatches(b);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -37,6 +41,16 @@ export function Progress() {
   const sleepMinutes = sleep.filter((item) => item.duration && item.endTime && item.endTime >= last7[0])
     .reduce((sum, item) => sum + (item.duration || 0), 0) / 60_000;
   const waterAmount = water.filter((item) => item.timestamp >= last7[0]).reduce((sum, item) => sum + item.amount, 0);
+
+  // XP / Level calculation
+  const xpSnapshot = useMemo(() => {
+    const unlocked = evaluateUnlockedAchievements({ entries, water, batches });
+    return calculateXpSnapshot({ entries, moods, sleep, water, batches, unlockedAchievements: unlocked });
+  }, [entries, moods, sleep, water, batches]);
+
+  const levelName = getLevelName(xpSnapshot.level);
+  const nextLevelXp = xpForLevel(xpSnapshot.level + 1);
+  const xpToNext = nextLevelXp - xpSnapshot.xpInLevel;
 
 
   const cards = [
@@ -62,6 +76,65 @@ export function Progress() {
 
             </div>
 
+          </Surface>
+
+          {/* XP / Level Card */}
+          <Surface className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent">
+                  <Star className="h-6 w-6 text-white" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-caption uppercase text-usnee-text3">Уровень</p>
+                  <p className="text-title-lg font-bold text-usnee-text">Ур. {xpSnapshot.level}</p>
+                  <p className="text-caption text-usnee-text2">{levelName}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1 text-usnee-brand">
+                  <Zap className="h-5 w-5" aria-hidden="true" />
+                  <span className="text-title-md font-bold tabular-nums">{xpSnapshot.totalXp}</span>
+                  <span className="text-caption text-usnee-text3">XP</span>
+                </div>
+                <p className="mt-1 text-caption text-usnee-text2">
+                  до ур. {xpSnapshot.level + 1}: {xpToNext} XP
+                </p>
+              </div>
+            </div>
+            {/* XP Progress Bar */}
+            <div className="mt-4">
+              <div className="flex justify-between text-caption text-usnee-text3 mb-1">
+                <span>Прогресс уровня</span>
+                <span>{Math.round(xpSnapshot.xpProgress * 100)}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-usnee-surface2">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-usnee-brand to-usnee-accent transition-all duration-500"
+                  style={{ width: `${Math.round(xpSnapshot.xpProgress * 100)}%` }}
+                  role="progressbar"
+                  aria-valuenow={Math.round(xpSnapshot.xpProgress * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Прогресс уровня ${xpSnapshot.xpProgress * 100}%`}
+                />
+              </div>
+            </div>
+            {/* XP Breakdown */}
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-caption text-usnee-text3">Записи</p>
+                <p className="text-caption font-semibold text-usnee-text">{xpSnapshot.breakdown.entriesXp}</p>
+              </div>
+              <div>
+                <p className="text-caption text-usnee-text3">Ачивки</p>
+                <p className="text-caption font-semibold text-usnee-brand">+{xpSnapshot.breakdown.achievementsXp}</p>
+              </div>
+              <div>
+                <p className="text-caption text-usnee-text3">Трекинг</p>
+                <p className="text-caption font-semibold text-usnee-text">{xpSnapshot.breakdown.moodXp + xpSnapshot.breakdown.sleepXp + xpSnapshot.breakdown.waterXp}</p>
+              </div>
+            </div>
           </Surface>
 
           <div className="grid grid-cols-2 gap-3">

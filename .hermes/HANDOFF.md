@@ -75,6 +75,29 @@
 - **Не сделано:** /stats absorption (решение pending)
 - **Следующий шаг:** решение по /stats — поглотить дашбордом или оставить отдельным роутом; потом фаза 4 (gamification)
 
+## Сессия 02.09 23:34 — Фаза 4: геймификация (XP + Level)
+
+- **Сделано:**
+  - `src/domain/gamification.ts` — полная система XP/Level:
+    - XP константы (PER_ENTRY=10, PER_ACHIEVEMENT_BASE=25/RARE=50/LEGENDARY=100, PER_MOOD=5, PER_SLEEP=5, PER_WATER=2, PER_CLEAN_DAY=5, PER_USAGE_DAY=3)
+    - `xpForLevel(level)` — XP для перехода на уровень (формула: floor(level * 100 * (1 + level * 0.1)))
+    - `levelFromXp(xp)` — уровень из XP
+    - `xpProgressInLevel(xp)` — прогресс внутри уровня (0..1)
+    - `xpFromEntries/Moods/Sleep/Water/Achievements` — XP от активностей
+    - `calculateXpSnapshot` — полный снапшот с breakdown
+    - `getLevelName` — названия уровней (Начинающий → Просветлённый)
+  - `src/domain/gamification.test.ts` — 39 тестов
+  - `src/pages/Progress.tsx` — карточка XP/Level с:
+    - Уровень + название
+    - Всего XP (Zap icon)
+    - Прогресс-бар уровня (gradient)
+    - Breakdown: записи / ачивки / трекинг
+- **Цепочка:** 218/218 ✅ · typecheck ✅ · build ✅ (PWA 8 precache, 1178 KiB)
+- **Pending:** 
+  - /stats absorption (решение всё ещё pending)
+  - Profile.tsx — показать ачивки с XP tier (common/rare/legendary)
+  - Добавить больше UI для геймификации
+
 ## Стек
 
 - Vite + React + TS + Tailwind, Telegram Mini App, PWA (8 precache)

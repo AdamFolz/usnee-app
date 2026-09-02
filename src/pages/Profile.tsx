@@ -7,6 +7,7 @@ import {
 } from '../utils/db';
 import { ACHIEVEMENTS } from '../constants/triggers';
 import { evaluateUnlockedAchievements } from '../domain/achievements';
+import { xpForAchievement, getAchievementTier } from '../domain/gamification';
 import { generateId, startOfDay, startOfWeek } from '../utils/date';
 import { MoodEntry, ConsumptionEntry, SleepEntry } from '../types';
 import {
@@ -14,7 +15,7 @@ import {
 } from 'recharts';
 import {
   Moon, Sun, Star, Utensils, Droplets, Timer, Calendar, Award,
-  TrendingUp, Check, X, Plus, Minus, Activity, Settings
+  TrendingUp, Check, X, Plus, Minus, Activity, Settings, Zap
 } from 'lucide-react';
 import { formatCountRu, SLEEP_FORMS } from '../utils/pluralize';
 
@@ -523,6 +524,18 @@ export default function Profile() {
         <div className="grid grid-cols-2 gap-3">
           {ACHIEVEMENTS.map((ach) => {
             const unlocked = unlockedAchievements.has(ach.id);
+            const tier = getAchievementTier(ach.id);
+            const xp = xpForAchievement(ach.id);
+            const tierColors: Record<string, string> = {
+              common: 'text-usnee-text2',
+              rare: 'text-usnee-info',
+              legendary: 'text-usnee-warning',
+            };
+            const tierLabels: Record<string, string> = {
+              common: '⚪',
+              rare: '🔵',
+              legendary: '🟡',
+            };
             return (
               <div
                 key={ach.id}
@@ -537,8 +550,23 @@ export default function Profile() {
                   </p>
                 </div>
                 <p className="mt-1 text-xs text-usnee-text2">{ach.description}</p>
-                {unlocked && (
-                  <p className="mt-2 text-[10px] font-medium uppercase text-usnee-success">Разблокировано</p>
+                {unlocked ? (
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-[10px] font-medium uppercase text-usnee-success">Разблокировано</p>
+                    <div className={`flex items-center gap-1 text-xs ${tierColors[tier]}`}>
+                      <Zap className="h-3 w-3" aria-hidden="true" />
+                      <span>+{xp} XP</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center gap-1 text-xs text-usnee-text3">
+                    <span>{tierLabels[tier]}</span>
+                    <span className="text-[10px]">{tier === 'legendary' ? 'Легендарная' : tier === 'rare' ? 'Редкая' : 'Обычная'}</span>
+                    <span className="ml-auto flex items-center gap-0.5">
+                      <Zap className="h-3 w-3" aria-hidden="true" />
+                      <span>{xp}</span>
+                    </span>
+                  </div>
                 )}
               </div>
             );
