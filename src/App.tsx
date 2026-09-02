@@ -18,7 +18,6 @@ import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
 import { Progress } from './pages/Progress';
 import Learn from './pages/Learn';
-import { KreaGenerator } from './pages/KreaGenerator';
 import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
 import { useOutboxSync } from './hooks/useOutboxSync';
 
@@ -93,7 +92,6 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/partials" element={<Partials />} />
-        <Route path="/krea" element={<KreaGenerator />} />
       </Routes>
     </Layout>
   );
