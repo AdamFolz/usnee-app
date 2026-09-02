@@ -6,10 +6,11 @@
 
 ## Текущее состояние
 
-- **Ветка:** master, `ahead 3` от origin/main (f55dcba)
-- **origin/main:** `f55dcba` feat(analytics): privacy-first PostHog usage analytics (EU) — сквош «USNEE Deploy», вся explicit-история сжата
-- **Последний коммит master:** `36d515f` feat(history): dashboard with heatmap, dose sums, streaks
-- **Незакоммичено:** `.hermes/`, `BOARD.md`, `media/` — не относится к USNEE-коду
+- **Ветка:** master, `3cd94a7` == origin/main (актуален, пуш не требуется)
+- **origin/main:** `3cd94a7` — все 16 explicit-коммитов поверх `186ec51` запушены
+- **origin/master:** `accc7b1` — устаревший remote, отстаёт на 16; не использовать
+- **review/phase3:** ветка создана и запушена (`3cd94a7`) — для ревью вторым пилотом
+- **Незакоммичено:** `.hermes/` (кроме HANDOFF), `BOARD.md`, `media/` — не относится к USNEE-коду
 
 ## Что сделано (коммиты master поверх origin/main)
 
@@ -30,9 +31,13 @@
 - [x] Слой 1: `domain/stats.ts` — канонические функции + тесты (`2d2f669`)
 - [x] Слой 2: achievements.ts + Progress.tsx rewired к каноническим (`2d2f669`)
 - [x] Слой 3: HistoryDashboard в History.tsx, дашборд сверху, список ниже (`36d515f`)
-- [ ] Слой 4: тесты дашборда (рендер хитмапа, суммы, стрики)
-- [ ] Пуш master → origin (или review/phase3 ветка)
-- [ ] Docs: PROJECT_STATE.md обновить
+- [x] Слой 4: тесты дашборда — 6 тестов HistoryDashboard (`e894569`)
+- [x] Хвосты агента: screen_view, property_denylist, app_open source, byMethod, getCalendarWeekEntries (`8b65f31`)
+- [x] Пуш master → origin/main (актуален: `3cd94a7`)
+- [x] Ветка review/phase3 создана и запушена
+- [x] Docs: PROJECT_STATE.md обновлён (секция 8, фаза 3)
+- [ ] Решение по /stats — поглотить дашбордом или оставить отдельным роутом (pending)
+- [ ] Фаза 4: геймификация (streak + XP + уровни + ачивки в UI)
 
 ## Следующий заход — чеклист
 
@@ -111,6 +116,12 @@
 ---
 
 *Второй пилот: «Введись из .hermes/HANDOFF.md»*
+## Сессия 02.09 23:25 — верификация цепочки + пуш + review/phase3
+
+- **Сделано:** цепочка test:run (179/179 ✅) → typecheck ✅ → build ✅ (PWA 8 precache, 1174 KiB); подтверждено что origin/main уже актуален (`3cd94a7` == master); ветка `review/phase3` создана и запушена для ревью вторым пилотом; HANDOFF обновлён.
+- **Пуш:** master → origin/main не потребовался (уже `3cd94a7`). `origin/master` устаревший (`accc7b1`), не использовать.
+- **Не сделано:** /stats absorption (решение pending)
+- **Следующий шаг:** решение по /stats; старт фазы 4 (геймификация: streak + XP + уровни + ачивки в UI поверх существующего домена)
 
 ## Стек
 
