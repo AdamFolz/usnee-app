@@ -115,7 +115,7 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
               <div key={s.substanceId} className="flex items-baseline justify-between gap-2">
                 <span className="min-w-0 flex-1 truncate text-body-sm text-usnee-text2">{s.label}</span>
                 <span className="text-body-sm font-bold">
-                  {s.totalMg !== undefined ? formatMg(s.totalMg) : `${s.count} × ${formatCountRu(s.count, RECORD_FORMS)}`}
+                  {s.totalMg !== undefined ? formatMg(s.totalMg) : formatCountRu(s.count, RECORD_FORMS)}
                 </span>
               </div>
             ))}
