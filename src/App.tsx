@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { UserSettings } from './types';
 import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
@@ -31,6 +31,13 @@ function App() {
   const dismissOnboarding = useAppStore((s) => s.dismissOnboarding);
   useOutboxSync(dbReady && !showOnboarding && (!settings.pinHash || unlocked));
 
+  const location = useLocation();
+  useEffect(() => {
+    if (dbReady && !showOnboarding && (!settings.pinHash || unlocked)) {
+      trackEvent('screen_view', { name: location.pathname });
+    }
+  }, [location.pathname, dbReady, showOnboarding, settings.pinHash, unlocked]);
+
   useEffect(() => {
       const unsubscribeViewport = subscribeTelegramViewport();
       initAnalytics();
@@ -53,8 +60,8 @@ function App() {
         if (!st.settings.onboardingCompleted) {
           useAppStore.setState({ showOnboarding: true });
         }
-        initTelegramMiniApp();
-        trackEvent('app_open', { source: 'telegram' });
+        const isTelegram = initTelegramMiniApp();
+        trackEvent('app_open', { source: isTelegram ? 'telegram' : 'pwa' });
       });
 
     return unsubscribeViewport;

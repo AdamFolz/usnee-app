@@ -1,5 +1,6 @@
 import type { ConsumptionEntry, Batch } from '../types';
 import { SUBSTANCES } from '../constants/substances';
+import { METHODS } from '../constants/methods';
 import { startOfDay } from '../utils/date';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -154,7 +155,7 @@ export function aggregateDoseSummary(
 
   const byMethod = [...methodMap.entries()].map(([id, data]) => ({
     methodId: id,
-    label: id,
+    label: METHODS.find((m) => m.id === id)?.name ?? id,
     count: data.count,
   })).sort((a, b) => b.count - a.count);
 

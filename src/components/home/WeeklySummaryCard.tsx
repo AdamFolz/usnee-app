@@ -2,10 +2,10 @@ import { CalendarDays } from 'lucide-react';
 import { Surface } from '../ui';
 import type { ConsumptionEntry } from '../../types';
 import { formatCountRu, RECORD_FORMS } from '../../utils/pluralize';
+import { getCalendarWeekEntries } from '../../domain/stats';
 
 export function getWeekCount(entries: ConsumptionEntry[], now: number): number {
-  const start = now - 7 * 24 * 60 * 60 * 1000;
-  return entries.filter((entry) => entry.timestamp >= start && entry.timestamp <= now).length;
+  return getCalendarWeekEntries(entries, now).length;
 }
 
 export function WeeklySummaryCard({ entries, todayCount, now }: { entries: ConsumptionEntry[]; todayCount: number; now: number }) {

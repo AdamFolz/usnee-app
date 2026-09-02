@@ -29,7 +29,7 @@ export function initAnalytics(): void {
       autocapture: false,
       disable_session_recording: true,
       ip: false,
-      property_blacklist: ['$ip', '$host', '$browser', '$os', '$device_type', '$current_url', '$pathname'],
+      property_denylist: ['$ip', '$host', '$browser', '$os', '$device_type', '$current_url', '$pathname'],
       loaded: (ph) => {
         client = ph;
         try {
