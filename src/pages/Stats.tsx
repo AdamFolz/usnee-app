@@ -3,6 +3,7 @@ import { AlertCircle, CalendarDays, Hash, Pill } from 'lucide-react';
 import type { ConsumptionEntry } from '../types';
 import { getEntries } from '../utils/db';
 import { aggregateSimpleStats, filterEntriesByPeriod, type StatsPeriod } from '../domain/stats';
+import { trackEvent } from '../integrations/analytics';
 import { InlineNotice, Surface, TopBar } from '../components/ui';
 
 const periods: Array<{ id: StatsPeriod; label: string }> = [
@@ -19,6 +20,7 @@ export function Stats() {
 
   useEffect(() => {
     let active = true;
+    trackEvent('stats_viewed');
     getEntries()
       .then((records) => { if (active) setEntries(records); })
       .catch(() => { if (active) setError('Не удалось прочитать локальные записи'); })

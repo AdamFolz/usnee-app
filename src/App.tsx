@@ -19,6 +19,7 @@ import { Partials } from './pages/Partials';
 import { Progress } from './pages/Progress';
 import Learn from './pages/Learn';
 import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
+import { initAnalytics, trackEvent } from './integrations/analytics';
 import { useOutboxSync } from './hooks/useOutboxSync';
 
 function App() {
@@ -31,28 +32,30 @@ function App() {
   useOutboxSync(dbReady && !showOnboarding && (!settings.pinHash || unlocked));
 
   useEffect(() => {
-    const unsubscribeViewport = subscribeTelegramViewport();
-    initDB().then(async () => {
-      setDbReady(true);
-      const st = useAppStore.getState();
-      const legacyPin = (st.settings as { pin?: string }).pin;
-      // Migrate legacy plaintext PIN -> PBKDF2 hash so it is never stored in cleartext.
-      if (legacyPin && !st.settings.pinHash && /^\d{4}$/.test(legacyPin)) {
-        try {
-          const hashed = await hashPin(legacyPin);
-          useAppStore.setState((s) => {
-            const { pin: _legacy, ...rest } = s.settings as UserSettings & { pin?: string };
-            return { settings: { ...rest, pinHash: hashed } };
-          });
-        } catch {
-          // crypto.subtle unavailable (insecure context); leave as-is so user can re-set.
+      const unsubscribeViewport = subscribeTelegramViewport();
+      initAnalytics();
+      initDB().then(async () => {
+        setDbReady(true);
+        const st = useAppStore.getState();
+        const legacyPin = (st.settings as { pin?: string }).pin;
+        // Migrate legacy plaintext PIN -> PBKDF2 hash so it is never stored in cleartext.
+        if (legacyPin && !st.settings.pinHash && /^\d{4}$/.test(legacyPin)) {
+          try {
+            const hashed = await hashPin(legacyPin);
+            useAppStore.setState((s) => {
+              const { pin: _legacy, ...rest } = s.settings as UserSettings & { pin?: string };
+              return { settings: { ...rest, pinHash: hashed } };
+            });
+          } catch {
+            // crypto.subtle unavailable (insecure context); leave as-is so user can re-set.
+          }
         }
-      }
-      if (!st.settings.onboardingCompleted) {
-        useAppStore.setState({ showOnboarding: true });
-      }
-      initTelegramMiniApp();
-    });
+        if (!st.settings.onboardingCompleted) {
+          useAppStore.setState({ showOnboarding: true });
+        }
+        initTelegramMiniApp();
+        trackEvent('app_open', { source: 'telegram' });
+      });
 
     return unsubscribeViewport;
   }, []);

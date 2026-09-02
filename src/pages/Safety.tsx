@@ -3,6 +3,7 @@ import { AlertTriangle, Phone, Heart, Wind, ChevronDown, ChevronUp, Play, Square
 import { NorsSession, TimerState, Substance } from '../types';
 import { SUBSTANCES } from '../constants/substances';
 import { addNors } from '../utils/db';
+import { trackEvent } from '../integrations/analytics';
 import { useAppStore } from '../stores/appStore';
 
 const NORS_INTERVALS = [5, 10, 15, 30];
@@ -71,6 +72,7 @@ function vibrateDevice(pattern: number | number[] = [300, 200, 300]) {
 }
 
 export default function Safety() {
+  trackEvent('safety_opened');
   const { addTimer, removeTimer } = useAppStore();
 
   // --- NORS state ---

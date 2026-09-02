@@ -6,6 +6,7 @@ import type { QuickRecordDraft } from '../domain/record';
 import { parseRecordAmount, readInjectionSite, validateRecordDraft } from '../domain/record';
 import { createEntryTransaction, reverseEntryTransaction } from '../utils/db';
 
+import { trackEvent } from '../integrations/analytics';
 import { createUuid } from '../utils/ids';
 
 export interface PreparedRecordCommand {
@@ -63,6 +64,7 @@ export function prepareRecordCommand(draft: QuickRecordDraft, batch?: Batch | nu
 
 export async function persistPreparedRecord(command: PreparedRecordCommand) {
   const result = await createEntryTransaction(command);
+  if (result === 'created') trackEvent('record_created');
   return result;
 }
 

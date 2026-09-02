@@ -8,6 +8,7 @@ import { prepareRecordCommand, persistPreparedRecord, PreparedRecordCommand, rev
 import { useAppStore } from '../../stores/appStore';
 import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
 import { getEntries } from '../../utils/db';
+import { trackEvent } from '../../integrations/analytics';
 import { buildLastRecordContext } from '../../domain/record';
 import { METHODS } from '../../constants/methods';
 import { SUBSTANCES } from '../../constants/substances';
@@ -165,6 +166,7 @@ export function QuickRecordScreen() {
     setUndoing(true);
     try {
       await reversePreparedRecord(savedCommand);
+      trackEvent('record_undone');
       await refreshEntries();
       const remaining = await getEntries();
       setLastRecordContext(lastRecordContextFromEntry(remaining[remaining.length - 1] ?? null));
