@@ -13,11 +13,15 @@ import {
   WeeklySummaryCard
 } from '../components/home';
 import { Button, InlineNotice, Surface } from '../components/ui';
+import { useToast } from '../components/ui/Toast';
 import { SUBSTANCES } from '../constants/substances';
+import { buildLastRecordContext, type QuickRecordDraft } from '../domain/record';
 import { useHomeData } from '../hooks/useHomeData';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useAppStore } from '../stores/appStore';
+import { prepareRecordCommand, persistPreparedRecord } from '../services/recordPersistence';
 import { adaptLegacyBatch } from '../utils/batchPresentation';
+import { getBatches } from '../utils/db';
 
 function getSubstanceName(id?: string): string {
   if (!id) return 'Неизвестное вещество';
@@ -30,7 +34,10 @@ export default function Home() {
   const data = useHomeData();
   const timers = useAppStore((state) => state.timers);
   const refreshEntries = useAppStore((state) => state.refreshEntries);
+  const setLastRecordContext = useAppStore((state) => state.setLastRecordContext);
+  const showToast = useToast().showToast;
   const [now, setNow] = useState(Date.now());
+  const [repeating, setRepeating] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000);
@@ -54,10 +61,59 @@ export default function Home() {
   );
 
   const hasEntries = entries.length > 0;
-  // Cold skeleton only when there is nothing to show yet. Existing records must stay visible.
-  const showColdSkeleton = data.status === 'loading' && !data.hasLoadedOnce && !hasEntries;
-  const showFirstRecordEmpty = data.hasLoadedOnce && !data.errors.entries && !hasEntries;
-  const goRecord = () => navigate('/add');
+    // Cold skeleton only when there is nothing to show yet. Existing records must stay visible.
+    const showColdSkeleton = data.status === 'loading' && !data.hasLoadedOnce && !hasEntries;
+    const showFirstRecordEmpty = data.hasLoadedOnce && !data.errors.entries && !hasEntries;
+    const goRecord = () => navigate('/add');
+
+    const repeatLast = async () => {
+      if (!lastEntry || repeating) return;
+      setRepeating(true);
+      try {
+        const batches = await getBatches();
+        const batch = lastEntry.batchId ? (batches.find((b) => b.id === lastEntry.batchId) ?? null) : null;
+        const draft: QuickRecordDraft = {
+          substanceId: lastEntry.substanceId,
+          substanceName: lastEntry.substanceName,
+          methodId: lastEntry.methodId,
+          methodName: lastEntry.methodName,
+          amountInput: String(lastEntry.dose),
+          amountUnit: lastEntry.doseUnit,
+          occurredAt: Date.now(),
+          alone: Boolean(lastEntry.alone),
+          batchId: lastEntry.batchId,
+          methodDetails: lastEntry.methodDetails ?? {}
+        };
+        const prepared = prepareRecordCommand(draft, batch);
+        await persistPreparedRecord(prepared);
+        await refreshEntries();
+        setLastRecordContext(
+          buildLastRecordContext({
+            substanceId: prepared.entry.substanceId,
+            substanceName: prepared.entry.substanceName,
+            methodId: prepared.entry.methodId,
+            methodName: prepared.entry.methodName,
+            amountUnit: prepared.entry.doseUnit,
+            batchId: prepared.batchId,
+            methodDetails: prepared.entry.methodDetails,
+            injectionSite: prepared.entry.injectionSite
+          })
+        );
+        showToast({
+          tone: 'success',
+          title: 'Записано',
+          detail: `${prepared.entry.substanceName} · ${prepared.entry.dose} ${prepared.entry.doseUnit}`
+        });
+      } catch (error) {
+        showToast({
+          tone: 'danger',
+          title: 'Не сохранилось',
+          detail: error instanceof Error ? error.message : 'Что-то пошло не так'
+        });
+      } finally {
+        setRepeating(false);
+      }
+    };
 
   if (showColdSkeleton) {
     return (
@@ -145,6 +201,8 @@ export default function Home() {
           substanceName={getSubstanceName(lastEntry.substanceId)}
           onOpenHistory={() => navigate('/history')}
           onCreate={goRecord}
+          onRepeat={() => void repeatLast()}
+          repeating={repeating}
         />
       ) : data.errors.entries ? (
         <InlineNotice tone="danger" title="История временно недоступна">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, FileText, Save } from 'lucide-react';
+import { ChevronDown, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { QuickRecordDraft } from '../../domain/record';
 import { findRecentDuplicate, parseRecordAmount, validateRecordDraft } from '../../domain/record';
@@ -18,7 +18,6 @@ import { MethodGuidance } from './MethodGuidance';
 import { ChoiceChip } from './ChoiceChip';
 import { NumericKeypad } from './NumericKeypad';
 import { RecordResult } from './RecordResult';
-import { RecordSummary } from './RecordSummary';
 
 function toLocalDateTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -40,7 +39,7 @@ function isDraftDirty(current: QuickRecordDraft, baseline: QuickRecordDraft, dra
   );
 }
 
-export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
+export function QuickRecordScreen() {
   const navigate = useNavigate();
   const defaults = useQuickRecordDefaults();
   const online = useOnlineStatus();
@@ -48,7 +47,6 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
   const setLastRecordContext = useAppStore((state) => state.setLastRecordContext);
   const [draft, setDraft] = useState<QuickRecordDraft | null>(null);
   const [picker, setPicker] = useState<'substance' | 'method' | null>(null);
-  const [review, setReview] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -80,10 +78,6 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
       setPicker(null);
       return;
     }
-    if (review) {
-      setReview(false);
-      return;
-    }
     if (duplicateOpen) {
       setDuplicateOpen(false);
       return;
@@ -102,7 +96,7 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
   useEffect(() => {
     if (defaults.status !== 'ready' || savedCommand) return undefined;
     return registerTelegramBackHandler(requestLeave);
-  }, [defaults.status, savedCommand, dirty, picker, review, duplicateOpen, leaveOpen, current, draft]);
+  }, [defaults.status, savedCommand, dirty, picker, duplicateOpen, leaveOpen, current, draft]);
 
   if (defaults.status === 'loading') {
     return (
@@ -132,7 +126,6 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
     if (saving || savedCommand) return;
     const duplicate = findRecentDuplicate(defaults.entries, current);
     if (duplicate && !duplicateAcknowledged) {
-      setReview(false);
       setDuplicateOpen(true);
       return;
     }
@@ -158,7 +151,6 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
         injectionSite: prepared.entry.injectionSite
       }));
       setSavedCommand(prepared);
-      setReview(false);
       setLeaveOpen(false);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Не удалось сохранить на устройстве');
@@ -205,15 +197,9 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain pb-4">
         <TopBar
-          title="Быстрая запись"
+          title="Новая запись"
           eyebrow={online ? 'Локально' : 'Без сети'}
           onBack={requestLeave}
-          action={
-            <Button variant="ghost" size="sm" onClick={onAdvanced}>
-              <FileText className="h-4 w-4" />
-              Расширенная
-            </Button>
-          }
         />
         {!online && (
           <InlineNotice tone="info" title="Работа без сети">
@@ -318,17 +304,17 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
             {errors[0]}
           </p>
         )}
-        <Button variant="ghost" onClick={onAdvanced}>
-          Расширенная запись
-        </Button>
-      </div>
+        <Button variant="ghost" onClick={goHome}>
+                  На главную
+                </Button>
+              </div>
 
-      <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg px-1 pb-[calc(0.75rem+var(--safe-area-bottom,0px))] pt-3">
-        <Button size="lg" className="w-full" disabled={errors.length > 0} onClick={() => setReview(true)}>
-          <Save className="h-5 w-5" />
-          Проверить запись
-        </Button>
-      </div>
+              <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg px-1 pb-[calc(0.75rem+var(--safe-area-bottom,0px))] pt-3">
+                <Button size="lg" className="w-full" disabled={errors.length > 0} loading={saving} onClick={() => void save()}>
+                  <Save className="h-5 w-5" />
+                  Записать
+                </Button>
+              </div>
 
       <BottomSheet open={picker === 'substance'} onClose={() => setPicker(null)} title="Выберите вещество">
         <div className="grid grid-cols-2 gap-2 pb-2">
@@ -370,24 +356,6 @@ export function QuickRecordScreen({ onAdvanced }: { onAdvanced: () => void }) {
             </ChoiceChip>
           ))}
         </div>
-      </BottomSheet>
-      <BottomSheet
-        open={review}
-        onClose={() => setReview(false)}
-        title="Проверьте запись"
-        footer={
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setReview(false)}>
-              <ArrowLeft className="h-4 w-4" />
-              Изменить
-            </Button>
-            <Button loading={saving} className="flex-1" onClick={() => void save()}>
-              Сохранить
-            </Button>
-          </div>
-        }
-      >
-        <RecordSummary draft={current} batch={batch} />
       </BottomSheet>
       <Dialog
         open={duplicateOpen}

@@ -58,7 +58,7 @@ export function useQuickRecordDefaults(): QuickDefaults {
           substanceName: substance?.name ?? lastContext?.substanceName ?? last?.substanceName,
           methodId,
           methodName: method?.name ?? lastContext?.methodName ?? last?.methodName,
-          amountInput: route.amountInput ?? '',
+          amountInput: route.amountInput ?? (last && last.dose > 0 ? String(last.dose) : ''),
           amountUnit,
           batchId: compatibleBatch?.id,
           occurredAt: Date.now(),

@@ -1,5 +1,5 @@
-import AdvancedRecordForm from '../components/record/AdvancedRecordForm';
+import { QuickRecordScreen } from '../components/record/QuickRecordScreen';
 
 export default function AddEntry() {
-  return <AdvancedRecordForm />;
+  return <QuickRecordScreen />;
 }

@@ -1,19 +1,36 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Batch, ConsumptionEntry } from '../types';
+import { ToastProvider } from '../components/ui/Toast';
+import { persistPreparedRecord } from '../services/recordPersistence';
 import Home from './Home';
 
 const homeState = vi.hoisted(() => ({
   online: true,
   data: {} as any,
-  store: { timers: [], refreshEntries: vi.fn() }
+  store: { timers: [], refreshEntries: vi.fn(), setLastRecordContext: vi.fn() }
 }));
 
 vi.mock('../hooks/useOnlineStatus', () => ({ useOnlineStatus: () => homeState.online }));
 vi.mock('../hooks/useHomeData', () => ({ useHomeData: () => homeState.data }));
 vi.mock('../stores/appStore', () => ({ useAppStore: (selector: (state: typeof homeState.store) => unknown) => selector(homeState.store) }));
+vi.mock('../services/recordPersistence', () => ({
+  prepareRecordCommand: vi.fn((draft: { substanceId: string; substanceName?: string; methodId: string; methodName?: string; amountInput: string; amountUnit: string; alone: boolean; batchId?: string }) => ({
+    entry: {
+      substanceId: draft.substanceId, substanceName: draft.substanceName, methodId: draft.methodId,
+      methodName: draft.methodName, timestamp: Date.now(), dose: Number(draft.amountInput) || 0,
+      doseUnit: draft.amountUnit, alone: draft.alone, injectionSite: undefined
+    },
+    operation: { operationId: 'op-1', entityId: 'entry-1' },
+    sync: { entityId: 'entry-1', operationId: 'op-1', state: 'pending', revision: 0 },
+    batchId: undefined, expectedBatchRemaining: undefined, nextBatchRemaining: undefined
+  })),
+  persistPreparedRecord: vi.fn().mockResolvedValue('created'),
+  reversePreparedRecord: vi.fn()
+}));
+vi.mock('../utils/db', () => ({ getBatches: vi.fn().mockResolvedValue([]) }));
 
 const entry: ConsumptionEntry = {
   id: 'e1', substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'iv', methodName: 'В/в',
@@ -27,7 +44,16 @@ const batch: Batch = {
 
 function Location() { return <div data-testid="location">{useLocation().pathname}</div>; }
 function renderHome() {
-  return render(<MemoryRouter initialEntries={['/']}><Routes><Route path="/" element={<Home />} /><Route path="*" element={<Location />} /></Routes></MemoryRouter>);
+  return render(
+    <ToastProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="*" element={<Location />} />
+        </Routes>
+      </MemoryRouter>
+    </ToastProvider>
+  );
 }
 
 beforeEach(() => {
@@ -101,6 +127,14 @@ describe('Home', () => {
     renderHome();
     await userEvent.click(screen.getAllByRole('button', { name: /Записать/ })[0]);
     expect(screen.getByTestId('location')).toHaveTextContent('/add');
+  });
+
+  it('repeats the last entry in one tap', async () => {
+    renderHome();
+    await userEvent.click(screen.getByRole('button', { name: /Повторить/ }));
+    await waitFor(() => expect(vi.mocked(persistPreparedRecord)).toHaveBeenCalledTimes(1));
+    expect(homeState.store.setLastRecordContext).toHaveBeenCalled();
+    expect(screen.getByText('Записано')).toBeInTheDocument();
   });
 
   it('shows a partial local-data error without hiding available content', () => {
