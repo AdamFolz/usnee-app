@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock3, Pencil, Trash2 } from 'lucide-react';
 import type { EntrySyncRecord } from '../contracts';
-import type { ConsumptionEntry } from '../types';
-import { getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
+import type { Batch, ConsumptionEntry } from '../types';
+import { getBatches, getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
 import { formatDateTime } from '../utils/date';
 import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { reverseEntryById } from '../services/entryActions';
@@ -11,7 +11,7 @@ import { lastRecordContextFromEntry } from '../domain/record';
 import { useAppStore } from '../stores/appStore';
 import { SUBSTANCES } from '../constants/substances';
 import { BottomSheet, Button, Dialog, InlineNotice, StatusBadge, Surface, TopBar } from '../components/ui';
-import { RecordSummary } from '../components/record';
+import { RecordSummary, HistoryDashboard } from '../components/record';
 
 function toLocalDateTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -20,6 +20,7 @@ function toLocalDateTime(timestamp: number): string {
 
 export function History() {
   const [entries, setEntries] = useState<ConsumptionEntry[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [syncById, setSyncById] = useState<Record<string, EntrySyncRecord>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,9 +36,10 @@ export function History() {
     setLoading(true);
     setError('');
     try {
-      const [records, sync] = await Promise.all([getEntries(), getEntrySyncRecords()]);
+      const [records, sync, batchList] = await Promise.all([getEntries(), getEntrySyncRecords(), getBatches()]);
       const sorted = [...records].sort((a, b) => b.timestamp - a.timestamp);
       setEntries(sorted);
+      setBatches(batchList);
       setSyncById(Object.fromEntries(sync.map((item) => [item.entityId, item])));
       return sorted;
     } catch {
@@ -188,6 +190,7 @@ export function History() {
           {error}
         </InlineNotice>
       )}
+      {entries.length > 0 && <HistoryDashboard entries={entries} batches={batches} />}
       {content}
       <BottomSheet open={Boolean(selected)} onClose={() => setSelected(null)} title="Запись">
         {selected && (

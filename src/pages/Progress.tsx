@@ -40,7 +40,7 @@ export function Progress() {
 
 
   const cards = [
-    { icon: CalendarCheck, label: 'Дни без записей', value: cleanDays, suffix: 'из 7', tone: 'text-usnee-success' },
+    { icon: CalendarCheck, label: 'Дни без записей', value: cleanDays, suffix: 'подряд', tone: 'text-usnee-success' },
     { icon: HeartPulse, label: 'Самочувствие', value: moodCount, suffix: 'отметок', tone: 'text-usnee-accent' },
     { icon: Moon, label: 'Сон', value: sleepMinutes ? Math.round(sleepMinutes / 60 * 10) / 10 : '—', suffix: 'часов', tone: 'text-usnee-info' },
     { icon: Droplets, label: 'Вода', value: waterAmount || '—', suffix: waterAmount ? 'мл' : 'пока нет', tone: 'text-usnee-cyan' }

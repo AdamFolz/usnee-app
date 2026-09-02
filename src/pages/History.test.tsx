@@ -1,14 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
+import { getEntries, getEntrySyncRecords, getBatches, updateEntryDetailsTransaction } from '../utils/db';
 import { reverseEntryById } from '../services/entryActions';
 import { History } from './History';
 
-vi.mock('../utils/db', () => ({ getEntries: vi.fn(), getEntrySyncRecords: vi.fn(), updateEntryDetailsTransaction: vi.fn() }));
+vi.mock('../utils/db', () => ({ getEntries: vi.fn(), getEntrySyncRecords: vi.fn(), getBatches: vi.fn(), updateEntryDetailsTransaction: vi.fn() }));
 vi.mock('../services/entryActions', () => ({ reverseEntryById: vi.fn() }));
 const mockedEntries = vi.mocked(getEntries);
 const mockedSync = vi.mocked(getEntrySyncRecords);
+const mockedBatches = vi.mocked(getBatches);
 const mockedUpdate = vi.mocked(updateEntryDetailsTransaction);
 const mockedReverse = vi.mocked(reverseEntryById);
 const base = { substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'inject', methodName: 'Инъекция', dose: 1, doseUnit: 'мл', methodDetails: {}, alone: true, createdAt: 1, updatedAt: 1 };
@@ -20,7 +21,8 @@ beforeEach(() => {
     { ...base, id: 'new', timestamp: new Date(2026, 0, 2, 12).getTime() }
   ]);
   mockedSync.mockResolvedValue([{ entityId: 'new', operationId: 'op', createOperationId: 'op', state: 'pending', revision: 0 }]);
-  mockedUpdate.mockResolvedValue({ ...base, id: 'new', timestamp: 20 });
+    mockedBatches.mockResolvedValue([]);
+    mockedUpdate.mockResolvedValue({ ...base, id: 'new', timestamp: 20 });
   mockedReverse.mockResolvedValue('reversed');
 });
 
