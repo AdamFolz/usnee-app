@@ -67,18 +67,18 @@
 - [ ] **Слой 4:** тесты самого HistoryDashboard (компонент без тестов — только домен покрыт)
 - [ ] **PROJECT_STATE.md** — четвёртый раз переносится
 
-## Сессия 02.09 18:25 — второй пилот (review + fixes)
+## Сессия 02.09 21:00 — баг-фикс C + слой 4 + хвосты
 
-- **Сделано:** diff-ревью слоёв 1–3 по реальному коду (впервые по настоящим коммитам, не транскриптам). Найдены 3 бага: (A) usageStreak обнулялся в полночь, (B) last4Weeks misnomer, (C) плюрализация сломана в 3 местах (мёртвый тернарник). Все три исправлены: usageStreak считает со вчера если сегодня пусто, formatCountRu в header/aria/fallback, visibleWeeks. Тест перевёрнут + добавлен edge case.
-- **Коммиты:** `1e4de72` fix(stats): usageStreak survives midnight, pluralization, rename last4Weeks
-- **Цепочка:** 173/173 ✅ · typecheck ✅ · build ✅ (PWA 8 precache)
-- **Не сделано:** слой 4 (тесты HistoryDashboard), getCalendarWeekEvents wiring, screen_view, PROJECT_STATE.md, /stats absorption
-- **Следующий шаг:** слой 4 тесты HistoryDashboard → getCalendarWeekEvents → screen_view → PROJECT_STATE.md → /stats
+- **Сделано:** баг C (дубль `2 × 2 записи` в dose fallback — вылечен одной строкой); слой 4: 6 тестов HistoryDashboard (стрики, heatmap aria, мг-сумма, fallback без дубля, пустой); getCalendarWeekEntries → WeeklySummaryCard (календарная Mon–Sun вместо rolling-7, синхрон с дашбордом); screen_view на смену роута (useLocation + useEffect); app_open source = telegram|pwa; property_denylist; byMethod label = METHODS name; HomeComponents.test — календарная неделя; PROJECT_STATE.md — секция 8 (фаза 3).
+- **Коммиты:** `e894569` (баг C + слой 4), `8b65f31` (calendar week + screen_view + analytics), PROJECT_STATE + HANDOFF
+- **Цепочка:** 179/179 ✅ · typecheck ✅ · build ✅ (PWA 8 precache, 1174 KiB)
+- **Не сделано:** /stats absorption (решение pending)
+- **Следующий шаг:** решение по /stats — поглотить дашбордом или оставить отдельным роутом; потом фаза 4 (gamification)
 
 ## Стек
 
 - Vite + React + TS + Tailwind, Telegram Mini App, PWA (8 precache)
-- Vitest 173/173, tsc --noEmit, PWA build
+- Vitest 179/179, tsc --noEmit, PWA build
 - Bottom nav: /, /history, /add, /progress, /profile
 
 ## Формат конца сессии

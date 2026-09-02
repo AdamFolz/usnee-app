@@ -162,6 +162,36 @@ Safety Hub отложен. Существующего честного SOS-sheet
 - основной показатель партии: масса, объём раствора или оба;
 - финальный логотип;
 - production hosting;
+
+## 8. Фаза 3: канонические статы и дашборд (02.09.2026)
+
+### Домен (src/domain/stats.ts)
+
+- `usageStreak` — серия дней подряд с записями; сегодня пусто → считает со вчера (не обнуляется в полночь).
+- `cleanStreak` — серия чистых дней подряд (без записей).
+- `maxUsageStreak` — рекорд `usageStreak`.
+- `doseToMg` — мг только при известной концентрации; иначе undefined.
+- `aggregateDoseSummary` — суммы по веществам; без концентрации — счётчик, не выдуманные мг.
+- `buildHeatmap` — 84 дня, 5 уровней интенсивности, Monday-start.
+- `getCalendarWeekEntries` — календарная неделя Mon–Sun (не rolling-7).
+
+### UI
+
+- `HistoryDashboard.tsx` — heatmap + стрики + суммы доз в /history; честные единицы, aria.
+- `WeeklySummaryCard` — «За 7 дней» = `getCalendarWeekEntries` (синх с дашбордом, не rolling-7).
+- `Progress.tsx` — `cleanStreak` (не last-7).
+
+### Аналитика
+
+- PostHog EU, privacy-спека: autocapture off, ip off, анонимный distinct_id.
+- `screen_view` эмитится на смену роута (`useLocation` + `useEffect`).
+- `app_open` source = `telegram` | `pwa` (detected via `initTelegramMiniApp()`).
+- `property_denylist` (posthog-js ^1.424, был `property_blacklist`).
+
+### Тесты
+
+- 179/179 ✅ (stats 23, achievements 12, HistoryDashboard 6, History 4, Home 8, остальные).
+- typecheck ✅, build ✅ (PWA 8 precache, 1174 KiB).
 - медицинская и юридическая верификация safety-контента.
 
 До фиксации этих решений текущие реализации в DONOR/REFERENCE не должны автоматически считаться финальными.
