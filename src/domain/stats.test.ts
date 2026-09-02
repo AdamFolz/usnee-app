@@ -54,9 +54,16 @@ describe('usageStreak', () => {
     expect(usageStreak([e1, e2, e3], now)).toBe(3);
   });
 
-  it('returns 0 when today has no entries', () => {
+  it('counts from yesterday when today is empty (streak survives midnight)', () => {
     const now = new Date(2026, 8, 2, 18).getTime();
     const e1 = entry('1', 'meph', now - DAY);
+    const e2 = entry('2', 'meph', now - 2 * DAY);
+    expect(usageStreak([e1, e2], now)).toBe(2);
+  });
+
+  it('returns 0 when both today and yesterday are empty', () => {
+    const now = new Date(2026, 8, 2, 18).getTime();
+    const e1 = entry('1', 'meph', now - 3 * DAY);
     expect(usageStreak([e1], now)).toBe(0);
   });
 

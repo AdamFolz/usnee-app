@@ -42,12 +42,13 @@ export function aggregateSimpleStats(entries: ConsumptionEntry[], locale = 'ru-R
 
 // ─── Canonical streak functions ───────────────────────────────────────
 
-/** Текущая серия дней подряд с хотя бы одной записью (включая сегодня). 0 если сегодня пусто. */
+/** Текущая серия дней подряд с хотя бы одной записью. Сегодня пусто — серия считает со вчера (не обнуляется в полночь). */
 export function usageStreak(entries: ConsumptionEntry[], now = Date.now()): number {
   if (entries.length === 0) return 0;
   const days = new Set(entries.map((entry) => startOfDay(entry.timestamp)));
   let streak = 0;
   let check = startOfDay(now);
+  if (!days.has(check)) check -= DAY; // сегодня пусто — начинаем со вчера
   while (days.has(check)) {
     streak++;
     check -= DAY;

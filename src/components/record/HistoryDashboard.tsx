@@ -9,6 +9,7 @@ import {
   cleanStreak,
 } from '../../domain/stats';
 import { Surface } from '../ui';
+import { formatCountRu, RECORD_FORMS } from '../../utils/pluralize';
 
 const DAY = 24 * 60 * 60 * 1000;
 const HEATMAP_DAYS = 84; // ~12 weeks
@@ -46,7 +47,7 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
     return result;
   }, [heatmap]);
 
-  const last4Weeks = weeks.slice(-12);
+  const visibleWeeks = weeks.slice(-12);
   const totalEntries = entries.length;
   const totalEntries30d = useMemo(
     () => entries.filter((e) => e.timestamp >= Date.now() - 30 * DAY).length,
@@ -77,16 +78,16 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
       <Surface className="p-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-body-sm font-bold">Активность</p>
-          <p className="text-caption text-usnee-text3">{totalEntries} записей · {totalEntries30d} за 30д</p>
+          <p className="text-caption text-usnee-text3">{formatCountRu(totalEntries, RECORD_FORMS)} · {totalEntries30d} за 30д</p>
         </div>
         <div className="flex gap-1 overflow-x-auto pb-1" role="img" aria-label="Тепловая карта активности по дням">
-          {last4Weeks.map((week, wi) => (
+          {visibleWeeks.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-1">
               {week.map((cell: HeatmapCell) => (
                 <div
                   key={cell.date}
                   className={`h-3 w-3 rounded-sm ${INTENSITY_COLORS[cell.intensity]}`}
-                  aria-label={`${formatDateLabel(cell.date)}: ${cell.count} записей`}
+                  aria-label={`${formatDateLabel(cell.date)}: ${formatCountRu(cell.count, RECORD_FORMS)}`}
                   title={`${formatDateLabel(cell.date)}: ${cell.count}`}
                 />
               ))}
@@ -114,7 +115,7 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
               <div key={s.substanceId} className="flex items-baseline justify-between gap-2">
                 <span className="min-w-0 flex-1 truncate text-body-sm text-usnee-text2">{s.label}</span>
                 <span className="text-body-sm font-bold">
-                  {s.totalMg !== undefined ? formatMg(s.totalMg) : `${s.count} × ${s.count > 0 ? 'записей' : 'записей'}`}
+                  {s.totalMg !== undefined ? formatMg(s.totalMg) : `${s.count} × ${formatCountRu(s.count, RECORD_FORMS)}`}
                 </span>
               </div>
             ))}
