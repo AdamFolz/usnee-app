@@ -92,11 +92,13 @@
     - Всего XP (Zap icon)
     - Прогресс-бар уровня (gradient)
     - Breakdown: записи / ачивки / трекинг
-- **Цепочка:** 218/218 ✅ · typecheck ✅ · build ✅ (PWA 8 precache, 1178 KiB)
-- **Pending:** 
-  - /stats absorption (решение всё ещё pending)
-  - Profile.tsx — показать ачивки с XP tier (common/rare/legendary)
+  - `src/pages/Profile.tsx` — ачивки с XP tier (common/rare/legendary)
+- **Цепочка:** 218/218 ✅ · typecheck ✅ · build ✅ (PWA 8 precache, 1179 KiB)
+- **Хвосты:**
+  - /stats absorption (решение pending)
+  - Profile.tsx — показать ачивки с XP tier (done ✅)
   - Добавить больше UI для геймификации
+- **Следующий шаг:** фаза 5 или /stats decision + интеграция XP в записи
 
 ## Стек
 
