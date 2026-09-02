@@ -20,8 +20,8 @@ import { useHomeData } from '../hooks/useHomeData';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useAppStore } from '../stores/appStore';
 import { prepareRecordCommand, persistPreparedRecord } from '../services/recordPersistence';
+import { trackEvent } from '../integrations/analytics';
 import { adaptLegacyBatch } from '../utils/batchPresentation';
-import { getBatches } from '../utils/db';
 
 function getSubstanceName(id?: string): string {
   if (!id) return 'Неизвестное вещество';
@@ -70,8 +70,7 @@ export default function Home() {
       if (!lastEntry || repeating) return;
       setRepeating(true);
       try {
-        const batches = await getBatches();
-        const batch = lastEntry.batchId ? (batches.find((b) => b.id === lastEntry.batchId) ?? null) : null;
+        const batch = data.activeBatch && data.activeBatch.substanceId === lastEntry.substanceId ? data.activeBatch : null;
         const draft: QuickRecordDraft = {
           substanceId: lastEntry.substanceId,
           substanceName: lastEntry.substanceName,
@@ -81,11 +80,12 @@ export default function Home() {
           amountUnit: lastEntry.doseUnit,
           occurredAt: Date.now(),
           alone: Boolean(lastEntry.alone),
-          batchId: lastEntry.batchId,
+          batchId: batch?.id,
           methodDetails: lastEntry.methodDetails ?? {}
         };
         const prepared = prepareRecordCommand(draft, batch);
         await persistPreparedRecord(prepared);
+        trackEvent('record_repeated');
         await refreshEntries();
         setLastRecordContext(
           buildLastRecordContext({

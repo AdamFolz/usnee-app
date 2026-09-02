@@ -27,7 +27,7 @@ interface AppState {
   todayCount: number;
   refreshEntries: () => Promise<void>;
   lastRecordContext: LastRecordContext | null;
-  setLastRecordContext: (context: LastRecordContext) => void;
+  setLastRecordContext: (context: LastRecordContext | null) => void;
 
   // Timers
   timers: TimerState[];

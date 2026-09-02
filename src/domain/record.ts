@@ -1,4 +1,6 @@
 import type { Batch, ConsumptionEntry, LastRecordContext } from '../types';
+import { METHODS } from '../constants/methods';
+import { SUBSTANCES } from '../constants/substances';
 
 export interface QuickRecordDraft {
   substanceId: string | null;
@@ -97,6 +99,75 @@ export function buildLastRecordContext(input: {
     amountUnit: input.amountUnit,
     batchId: input.batchId,
     injectionSite: readInjectionSite(input.methodDetails, input.injectionSite)
+  };
+}
+
+/** Пересобрать контекст последней записи из актуальной записи (или null, если записей нет). */
+export function lastRecordContextFromEntry(entry: ConsumptionEntry | null): LastRecordContext | null {
+  if (!entry) return null;
+  return buildLastRecordContext({
+    substanceId: entry.substanceId,
+    substanceName: entry.substanceName,
+    methodId: entry.methodId,
+    methodName: entry.methodName,
+    amountUnit: entry.doseUnit,
+    batchId: entry.batchId,
+    methodDetails: entry.methodDetails,
+    injectionSite: entry.injectionSite
+  });
+}
+
+export interface ResolvedQuickDefaults {
+  draft: QuickRecordDraft;
+  /** Совместимая активная партия (или null). */
+  batch: Batch | null;
+}
+
+/**
+ * Префилл быстрой записи. Доза и единица предзаполняются ТОЛЬКО парой из
+ * последней записи и только когда она согласована с восстановленными
+ * веществом/способом. Иначе lastContext (например, от удалённой записи)
+ * дал бы дозу чужой записи в чужой единице — ×1000 в дневнике доз.
+ */
+export function resolveQuickRecordDefaults(
+  route: Partial<QuickRecordDraft>,
+  lastContext: LastRecordContext | null,
+  last: ConsumptionEntry | undefined,
+  activeBatch: Batch | null
+): ResolvedQuickDefaults {
+  const substanceId = route.substanceId ?? lastContext?.substanceId ?? last?.substanceId ?? activeBatch?.substanceId ?? null;
+  const methodId = route.methodId ?? lastContext?.methodId ?? last?.methodId ?? (activeBatch ? 'inject' : null);
+  const method = METHODS.find((item) => item.id === methodId);
+  const substance = SUBSTANCES.find((item) => item.id === substanceId);
+  const requestedBatchId = route.batchId ?? lastContext?.batchId;
+  const batch =
+    activeBatch && activeBatch.substanceId === substanceId
+      ? !requestedBatchId || requestedBatchId === activeBatch.id
+        ? activeBatch
+        : null
+      : null;
+  const prefillFromLast = !!last && last.substanceId === substanceId && last.methodId === methodId && last.dose > 0;
+  const amountInput = route.amountInput ?? (prefillFromLast && last ? String(last.dose) : '');
+  const amountUnit = route.amountUnit ?? (prefillFromLast && last
+    ? last.doseUnit
+    : lastContext?.amountUnit ?? (methodId === 'inject' ? 'мл' : last?.doseUnit ?? 'мг'));
+  const lastSite = typeof last?.methodDetails?.site === 'string' ? last.methodDetails.site : last?.injectionSite;
+  const injectionSite = lastContext?.injectionSite ?? lastSite;
+  return {
+    batch,
+    draft: {
+      substanceId,
+      substanceName: substance?.name ?? lastContext?.substanceName ?? last?.substanceName,
+      methodId,
+      methodName: method?.name ?? lastContext?.methodName ?? last?.methodName,
+      amountInput,
+      amountUnit,
+      batchId: batch?.id,
+      occurredAt: Date.now(),
+      alone: route.alone ?? true,
+      notes: route.notes,
+      methodDetails: injectionSite ? { ...(route.methodDetails ?? {}), site: injectionSite } : route.methodDetails
+    }
   };
 }
 

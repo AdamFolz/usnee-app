@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ConsumptionEntry, Batch } from '../types';
-import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, buildLastRecordContext, resolveRecordAmountFields, selectCompatibleBatch, validateRecordDraft } from './record';
+import type { ConsumptionEntry, Batch, LastRecordContext } from '../types';
+import { findRecentDuplicate, normalizeAmountInput, parseRecordAmount, QuickRecordDraft, buildLastRecordContext, lastRecordContextFromEntry, resolveQuickRecordDefaults, resolveRecordAmountFields, selectCompatibleBatch, validateRecordDraft } from './record';
 
 const draft: QuickRecordDraft = { substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'inject', methodName: 'Инъекция', amountInput: '1', amountUnit: 'мл', occurredAt: Date.now(), alone: true, batchId: 'b1' };
 const batch: Batch = { id: 'b1', substanceId: 'meph', name: '№014', totalWeight: 400, weightUnit: 'мг', solutionVolume: 20, volumeUnit: 'мл', concentration: 20, createdAt: 1, active: true, remaining: 260 };
@@ -51,6 +51,81 @@ describe('record domain', () => {
       methodName: 'Инъекция',
       amountUnit: 'мл',
       batchId: 'b1',
+      injectionSite: 'Вена локтя'
+    });
+  });
+});
+
+const lastEntry = (over: Partial<ConsumptionEntry> = {}): ConsumptionEntry => ({
+  id: 'e9', substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'sniff', methodName: 'Интраназально',
+  timestamp: 1000, dose: 100, doseUnit: 'мг', methodDetails: {}, alone: true, createdAt: 1, updatedAt: 1, ...over
+});
+const context: LastRecordContext = { substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'sniff', methodName: 'Интраназально', amountUnit: 'мг' };
+
+describe('resolveQuickRecordDefaults', () => {
+  it('prefills dose and unit as a pair from the last entry when it matches the context', () => {
+    const { draft } = resolveQuickRecordDefaults({}, context, lastEntry(), null);
+    expect(draft.amountInput).toBe('100');
+    expect(draft.amountUnit).toBe('мг');
+  });
+
+  it('never mixes a dose from the last entry with a unit from a stale context', () => {
+    // Контекст от удалённой записи (меф, интраназально, мг), последняя живая — инъекция 0.5 мл.
+    const staleContext: LastRecordContext = { ...context, methodId: 'sniff', methodName: 'Интраназально' };
+    const last = lastEntry({ methodId: 'inject', methodName: 'Инъекция', dose: 0.5, doseUnit: 'мл' });
+    const { draft } = resolveQuickRecordDefaults({}, staleContext, last, null);
+    expect(draft.methodId).toBe('sniff');
+    expect(draft.amountInput).toBe('');
+    expect(draft.amountUnit).toBe('мг');
+  });
+
+  it('prefills from the last entry only when there is no context', () => {
+    const { draft } = resolveQuickRecordDefaults({}, null, lastEntry({ methodId: 'inject', methodName: 'Инъекция', dose: 0.5, doseUnit: 'мл' }), null);
+    expect(draft.substanceId).toBe('meph');
+    expect(draft.methodId).toBe('inject');
+    expect(draft.amountInput).toBe('0.5');
+    expect(draft.amountUnit).toBe('мл');
+  });
+
+  it('does not prefill a zero dose', () => {
+    const { draft } = resolveQuickRecordDefaults({}, null, lastEntry({ dose: 0 }), null);
+    expect(draft.amountInput).toBe('');
+  });
+
+  it('knows the naive unit fallback stays consistent with the resolved method', () => {
+    const { draft } = resolveQuickRecordDefaults({}, null, undefined, null);
+    expect(draft.amountUnit).toBe('мг');
+    expect(draft.substanceId).toBeNull();
+  });
+
+  it('lets explicit route values override any prefill', () => {
+    const { draft } = resolveQuickRecordDefaults({ amountInput: '2', amountUnit: 'г' }, context, lastEntry(), null);
+    expect(draft.amountInput).toBe('2');
+    expect(draft.amountUnit).toBe('г');
+  });
+
+  it('links only an active batch of the same substance', () => {
+    const active: Batch = { ...batch, id: 'b2' };
+    expect(resolveQuickRecordDefaults({}, context, lastEntry(), active).batch?.id).toBe('b2');
+    expect(resolveQuickRecordDefaults({}, context, lastEntry(), { ...active, substanceId: 'mdma' }).batch).toBeNull();
+    expect(resolveQuickRecordDefaults({ batchId: 'zzz' }, context, lastEntry(), active).batch).toBeNull();
+  });
+
+  it('carries the injection site into method details', () => {
+    const { draft } = resolveQuickRecordDefaults({}, { ...context, injectionSite: 'Вена локтя' }, lastEntry(), null);
+    expect(draft.methodDetails).toEqual({ site: 'Вена локтя' });
+  });
+});
+
+describe('lastRecordContextFromEntry', () => {
+  it('returns null when there is no entry', () => expect(lastRecordContextFromEntry(null)).toBeNull());
+  it('rebuilds context from a surviving entry', () => {
+    expect(lastRecordContextFromEntry(lastEntry({ methodDetails: { site: 'Вена локтя' } }))).toEqual({
+      substanceId: 'meph',
+      substanceName: 'Мефедрон',
+      methodId: 'sniff',
+      methodName: 'Интраназально',
+      amountUnit: 'мг',
       injectionSite: 'Вена локтя'
     });
   });

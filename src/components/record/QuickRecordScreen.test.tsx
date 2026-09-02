@@ -19,6 +19,12 @@ const baseDraft: QuickRecordDraft = {
 };
 
 let entries: ConsumptionEntry[] = [];
+let dbEntries: ConsumptionEntry[] = [];
+
+const store = vi.hoisted(() => ({
+  refreshEntries: vi.fn().mockResolvedValue(undefined),
+  setLastRecordContext: vi.fn()
+}));
 
 vi.mock('../../hooks/useQuickRecordDefaults', () => ({
   useQuickRecordDefaults: () => ({ status: 'ready', entries, batch: null, draft: baseDraft })
@@ -27,8 +33,11 @@ vi.mock('../../hooks/useQuickRecordDefaults', () => ({
 vi.mock('../../hooks/useOnlineStatus', () => ({ useOnlineStatus: () => true }));
 
 vi.mock('../../stores/appStore', () => ({
-  useAppStore: (selector: (state: { refreshEntries: () => Promise<void>; setLastRecordContext: (value: unknown) => void }) => unknown) =>
-    selector({ refreshEntries: vi.fn().mockResolvedValue(undefined), setLastRecordContext: vi.fn() })
+  useAppStore: (selector: (state: typeof store) => unknown) => selector(store)
+}));
+
+vi.mock('../../utils/db', () => ({
+  getEntries: () => Promise.resolve(dbEntries)
 }));
 
 vi.mock('../../services/recordPersistence', () => ({
@@ -62,6 +71,7 @@ async function enterAmount(value: string) {
 
 beforeEach(() => {
   entries = [];
+  dbEntries = [];
   vi.clearAllMocks();
   mockedPersist.mockResolvedValue('created');
 });
@@ -113,5 +123,31 @@ describe('QuickRecordScreen one-tap save', () => {
     await screen.findByText('Сохранено на устройстве');
     await waitFor(() => expect(mockedPersist).toHaveBeenCalledTimes(1));
     expect(mockedPrepare).toHaveBeenCalledTimes(1);
+  });
+
+  it('rebuilds the last-record context from surviving entries after undo', async () => {
+    const survivor: ConsumptionEntry = {
+      id: 'older', substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'sniff', methodName: 'Интраназально',
+      timestamp: baseDraft.occurredAt - 24 * 60 * 60_000, dose: 100, doseUnit: 'мг',
+      methodDetails: {}, alone: true, createdAt: 1, updatedAt: 1
+    };
+    dbEntries = [survivor];
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    await enterAmount('1');
+    await userEvent.click(screen.getByRole('button', { name: /Записать/ }));
+    await screen.findByText('Сохранено на устройстве');
+    store.setLastRecordContext.mockClear();
+
+    await userEvent.click(screen.getByRole('button', { name: /Отменить запись/ }));
+    await waitFor(() => expect(store.setLastRecordContext).toHaveBeenCalled());
+    expect(store.setLastRecordContext).toHaveBeenCalledWith({
+      substanceId: 'meph',
+      substanceName: 'Мефедрон',
+      methodId: 'sniff',
+      methodName: 'Интраназально',
+      amountUnit: 'мг',
+      injectionSite: undefined
+    });
   });
 });

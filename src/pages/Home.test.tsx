@@ -30,7 +30,6 @@ vi.mock('../services/recordPersistence', () => ({
   persistPreparedRecord: vi.fn().mockResolvedValue('created'),
   reversePreparedRecord: vi.fn()
 }));
-vi.mock('../utils/db', () => ({ getBatches: vi.fn().mockResolvedValue([]) }));
 
 const entry: ConsumptionEntry = {
   id: 'e1', substanceId: 'meph', substanceName: 'Мефедрон', methodId: 'iv', methodName: 'В/в',
