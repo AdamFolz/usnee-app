@@ -5,7 +5,6 @@ import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
 import { hashPin } from './utils/crypto';
 import { Layout } from './components/Layout';
-import { ToastProvider } from './components/ui';
 import { PinLock } from './components/PinLock';
 import { Onboarding } from './components/Onboarding';
 import Home from './pages/Home';
@@ -17,8 +16,9 @@ import { Safety } from './pages/Safety';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
-import Progress from './pages/Progress';
+import { Progress } from './pages/Progress';
 import Learn from './pages/Learn';
+import { KreaGenerator } from './pages/KreaGenerator';
 import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
 import { useOutboxSync } from './hooks/useOutboxSync';
 
@@ -80,23 +80,22 @@ function App() {
   }
 
   return (
-    <ToastProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/add" element={<AddEntry />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/learn" element={<Learn />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/safety" element={<Safety />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/partials" element={<Partials />} />
-        </Routes>
-      </Layout>
-    </ToastProvider>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/add" element={<AddEntry />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/safety" element={<Safety />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/partials" element={<Partials />} />
+        <Route path="/krea" element={<KreaGenerator />} />
+      </Routes>
+    </Layout>
   );
 }
 

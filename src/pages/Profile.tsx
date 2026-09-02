@@ -2,10 +2,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
 import {
-  getEntries, getMoods, getSleep, getFood, getWater,
+  getEntries, getMoods, getSleep, getFood, getWater, getBatches,
   addMood, addSleep, addFood, addWater
 } from '../utils/db';
 import { ACHIEVEMENTS } from '../constants/triggers';
+import { evaluateUnlockedAchievements } from '../domain/achievements';
 import { generateId, startOfDay, startOfWeek } from '../utils/date';
 import { MoodEntry, ConsumptionEntry, SleepEntry } from '../types';
 import {
@@ -49,8 +50,8 @@ export default function Profile() {
   // Load all data
   useEffect(() => {
     const load = async () => {
-      const [e, m, s, f, w] = await Promise.all([
-        getEntries(), getMoods(), getSleep(), getFood(), getWater()
+      const [e, m, s, f, w, b] = await Promise.all([
+        getEntries(), getMoods(), getSleep(), getFood(), getWater(), getBatches()
       ]);
       setEntries(e);
       setMoods(m);
@@ -70,37 +71,7 @@ export default function Profile() {
         : 0;
       setSleepStats({ avg: Math.round(avg * 10) / 10, count: weekSleep.length });
 
-      // Check achievements
-      const unlocked = new Set<string>();
-      if (e.length >= 1) unlocked.add('first');
-      if (e.some((x) => new Date(x.timestamp).getHours() === 3)) unlocked.add('night_owl');
-      if (e.filter((x) => x.alone).length >= 3) unlocked.add('lone_wolf');
-      const uniqueSubs = new Set(e.map((x) => x.substanceId)).size;
-      if (uniqueSubs >= 5) unlocked.add('chemist');
-      if (e.some((x) => (x.pulse || 0) >= 140)) unlocked.add('pulse_racer');
-      if (e.some((x) => x.fentanylTestResult === 'negative')) unlocked.add('fentanyl_slayer');
-      if (e.some((x) => x.missedShot)) unlocked.add('missed_shot');
-      // 7-day streak
-      // Simple week_bender: any 7 consecutive days with entries
-      const sortedDays = Array.from(new Set(e.map((x) => startOfDay(x.timestamp)))).sort((a, b) => a - b);
-      let maxStreak = 0;
-      let streak = 0;
-      for (let i = 0; i < sortedDays.length; i++) {
-        if (i === 0 || sortedDays[i] - sortedDays[i - 1] === 24 * 60 * 60 * 1000) {
-          streak++;
-          maxStreak = Math.max(maxStreak, streak);
-        } else {
-          streak = 1;
-        }
-      }
-      if (maxStreak >= 7) unlocked.add('week_bender');
-      // clean_7: check clean streak from today backwards
-      const cleanStreak = calculateCleanStreak(e);
-      if (cleanStreak >= 7) unlocked.add('clean_7');
-      // hydrated: water after 3 entries in a row
-      // simplistic: if water exists and entries >= 3
-      if (w.length > 0 && e.length >= 3) unlocked.add('hydrated');
-      setUnlockedAchievements(unlocked);
+      setUnlockedAchievements(evaluateUnlockedAchievements({ entries: e, water: w, batches: b }));
     };
     load();
   }, []);
@@ -621,18 +592,5 @@ export default function Profile() {
       </section>
     </div>
   );
-}
-
-function calculateCleanStreak(entries: ConsumptionEntry[]): number {
-  if (entries.length === 0) return 0;
-  const today = startOfDay(Date.now());
-  const days = new Set(entries.map((e) => startOfDay(e.timestamp)));
-  let streak = 0;
-  let check = today;
-  while (!days.has(check)) {
-    streak++;
-    check -= 24 * 60 * 60 * 1000;
-  }
-  return streak;
 }
 export { Profile };
