@@ -20,7 +20,6 @@ import { useHomeData } from '../hooks/useHomeData';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useAppStore } from '../stores/appStore';
 import { prepareRecordCommand, persistPreparedRecord } from '../services/recordPersistence';
-import { trackEvent } from '../integrations/analytics';
 import { adaptLegacyBatch } from '../utils/batchPresentation';
 
 function getSubstanceName(id?: string): string {
@@ -85,7 +84,6 @@ export default function Home() {
         };
         const prepared = prepareRecordCommand(draft, batch);
         await persistPreparedRecord(prepared);
-        trackEvent('record_repeated');
         await refreshEntries();
         setLastRecordContext(
           buildLastRecordContext({

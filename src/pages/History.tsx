@@ -6,7 +6,6 @@ import { getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '
 import { formatDateTime } from '../utils/date';
 import { formatCountRu, RECORD_FORMS } from '../utils/pluralize';
 import { reverseEntryById } from '../services/entryActions';
-import { trackEvent } from '../integrations/analytics';
 import { lastRecordContextFromEntry } from '../domain/record';
 import { useAppStore } from '../stores/appStore';
 import { SUBSTANCES } from '../constants/substances';
@@ -85,7 +84,6 @@ export function History() {
     try {
       if (!syncById[deleteEntry.id]?.createOperationId) throw new Error('LEGACY_ENTRY');
       await reverseEntryById(deleteEntry.id);
-      trackEvent('record_undone');
       setDeleteEntry(null);
       setSelected(null);
       const remaining = await load();
