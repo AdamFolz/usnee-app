@@ -1,6 +1,7 @@
 import type { Batch, ConsumptionEntry, WaterEntry } from '../types';
 import { startOfDay } from '../utils/date';
 import { readInjectionSite } from './record';
+import { cleanStreak } from './stats';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -41,7 +42,7 @@ export function evaluateUnlockedAchievements(input: {
     }
   }
   if (maxStreak >= 7) unlocked.add('week_bender');
-  if (calculateCleanStreak(entries, now) >= 7) unlocked.add('clean_7');
+  if (cleanStreak(entries, now) >= 7) unlocked.add('clean_7');
   if (water.length > 0 && entries.length >= 3) unlocked.add('hydrated');
 
   if (maxCountInWindow(times, DAY) >= 5) unlocked.add('still_alive');
@@ -57,19 +58,6 @@ export function evaluateUnlockedAchievements(input: {
   if (entries.filter(hasDiarySignal).length >= 3) unlocked.add('diary');
 
   return unlocked;
-}
-
-function calculateCleanStreak(entries: ConsumptionEntry[], now: number): number {
-  if (entries.length === 0) return 0;
-  const today = startOfDay(now);
-  const days = new Set(entries.map((entry) => startOfDay(entry.timestamp)));
-  let streak = 0;
-  let check = today;
-  while (!days.has(check)) {
-    streak++;
-    check -= DAY;
-  }
-  return streak;
 }
 
 function isNight(ts: number): boolean {

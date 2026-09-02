@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ConsumptionEntry, MoodEntry, SleepEntry } from '../types';
 import { getEntries, getMoods, getSleep, getWater } from '../utils/db';
 import { startOfDay } from '../utils/date';
+import { cleanStreak } from '../domain/stats';
 import { Button, Surface, TopBar } from '../components/ui';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -31,7 +32,7 @@ export function Progress() {
   }, []);
 
   const activeDays = useMemo(() => new Set(entries.map((entry) => startOfDay(entry.timestamp))), [entries]);
-  const cleanDays = useMemo(() => last7.filter((day) => !activeDays.has(day)).length, [activeDays, last7]);
+  const cleanDays = useMemo(() => cleanStreak(entries, Date.now()), [entries]);
   const moodCount = moods.filter((item) => item.timestamp >= last7[0]).length;
   const sleepMinutes = sleep.filter((item) => item.duration && item.endTime && item.endTime >= last7[0])
     .reduce((sum, item) => sum + (item.duration || 0), 0) / 60_000;
