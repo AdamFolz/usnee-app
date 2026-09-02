@@ -40,7 +40,12 @@ export default defineConfig({
             handler: 'NetworkOnly'
           },
           {
-            urlPattern: /^https:\/\/.*\/.*/i,
+            // SEC: cache only same-origin app assets. The previous catch-all
+            // /^https:\/\/.*\/.*/ (NetworkFirst) matched every cross-origin
+            // request; once a real API appears it would silently cache
+            // responses of any https host into the offline store.
+            urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
+              sameOrigin && url.pathname.startsWith('/usnee-app/'),
             handler: 'NetworkFirst',
             options: { cacheName: 'usnee-cache' }
           }
