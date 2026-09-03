@@ -143,3 +143,14 @@
 - **`.gitattributes`:** `/.hermes/HANDOFF.md merge=union` — на main. HANDOFF-конфликты между агентами самосольвятся
 - **Гигиена:** PROJECT_STATE.md и krea.ts на main отсутствуют (404), секрет-скан дельты #8 чист
 - **Следующий вход:** фаза 5 (интеграция XP в записи) или /stats decision
+
+## Сессия 03.09 20:15 — rebase на main + пуш + деплой + /stats decision
+
+- **Ребейз:** master rebase на `origin/main` (`98e8a54`) — забрал security PR #8 (fail-closed encrypted export, PBKDF2 clamp, SW runtime cache). Чисто, 3 коммита перекинуты.
+- **Пуш:** `master → origin/main` (`98e8a54..e338d47`) — fast-forward, чисто. explicit-коммиты: `f0e98e0` (haptic helpers + CSS + ConfettiBurst), `e338d47` (level-up celebrate + haptic на nav + XP feedback на record save).
+- **Цепочка:** 227/227 ✅ · typecheck ✅ · build ✅ (PWA 8 precache, 1183 KiB). Security PR добавил +9 тестов (218→227).
+- **Деплой:** `gh-pages` branch published (`npx gh-pages -d dist`); GitHub Pages переключён с `workflow` → `legacy` mode, source = `gh-pages` branch. Build status: `built` ✅. Сайт живёт: https://adamfolz.github.io/usnee-app/ (HTTP 200, `text/html`, lang=ru).
+- **/stats decision:** ОСТАВИТЬ отдельным роутом. Stats = табличный breakdown (byDay/bySubstance/byMethod/bySite + period filter), HistoryDashboard = визуал (heatmap, стрики, суммы). Комплементарно, не дублирующе. Единственный вход — Home → WeeklySummaryCard → onAnalytics → navigate('/stats').
+- **Хакер-шара** `hackerai.co/share/033bb52c...` — недоступна (timeout extraction), пропущена.
+- **Не сделано:** фаза 5 (XP feedback loop в момент записи — celebrate уже есть в UI, но без интеграции с gamification domain в save flow).
+- **Следующий шаг:** фаза 5 — интеграция XP-награды в save-флоу записи (calculateXpSnapshot до/после → diff → celebrate level-up); иконки/картинки/анимации (новая директива владельца — визуальная жизнь всего приложения).
