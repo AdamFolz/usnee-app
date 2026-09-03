@@ -10,6 +10,8 @@ import { applyHomeBatchRemaining } from '../../hooks/useHomeData';
 import { getEntries } from '../../utils/db';
 import { trackEvent } from '../../integrations/analytics';
 import { buildLastRecordContext } from '../../domain/record';
+import { computeRecordXpDelta } from '../../services/xpService';
+import type { RecordXpFeedback } from '../../domain/gamificationFeedback';
 import { METHODS } from '../../constants/methods';
 import { SUBSTANCES } from '../../constants/substances';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -55,6 +57,7 @@ export function QuickRecordScreen() {
   const [saveError, setSaveError] = useState('');
   const [savedCommand, setSavedCommand] = useState<PreparedRecordCommand | null>(null);
   const [undoing, setUndoing] = useState(false);
+  const [xpFeedback, setXpFeedback] = useState<RecordXpFeedback | null>(null);
   const commandRef = useRef<PreparedRecordCommand | null>(null);
   const baselineRef = useRef<QuickRecordDraft | null>(null);
 
@@ -137,7 +140,8 @@ export function QuickRecordScreen() {
     try {
       const prepared = commandRef.current ?? prepareRecordCommand(current, batch);
       commandRef.current = prepared;
-      await persistPreparedRecord(prepared);
+      const { feedback } = await computeRecordXpDelta(() => persistPreparedRecord(prepared));
+      setXpFeedback(feedback);
       await refreshEntries();
       if (prepared.batchId && prepared.nextBatchRemaining !== undefined) {
         applyHomeBatchRemaining(prepared.batchId, prepared.nextBatchRemaining);
@@ -167,6 +171,7 @@ export function QuickRecordScreen() {
     try {
       await reversePreparedRecord(savedCommand);
       trackEvent('record_undone');
+      setXpFeedback(null);
       await refreshEntries();
       const remaining = await getEntries();
       setLastRecordContext(lastRecordContextFromEntry(remaining[remaining.length - 1] ?? null));
@@ -185,11 +190,13 @@ export function QuickRecordScreen() {
     return (
       <RecordResult
         undoing={undoing}
+        feedback={xpFeedback}
         onHome={() => navigate('/')}
         onAnother={() => {
           commandRef.current = null;
           const next = { ...current, amountInput: '', occurredAt: Date.now() };
           setSavedCommand(null);
+          setXpFeedback(null);
           setDraft(next);
           baselineRef.current = next;
         }}
