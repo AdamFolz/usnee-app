@@ -154,3 +154,11 @@
 - **Хакер-шара** `hackerai.co/share/033bb52c...` — недоступна (timeout extraction), пропущена.
 - **Не сделано:** фаза 5 (XP feedback loop в момент записи — celebrate уже есть в UI, но без интеграции с gamification domain в save flow).
 - **Следующий шаг:** фаза 5 — интеграция XP-награды в save-флоу записи (calculateXpSnapshot до/после → diff → celebrate level-up); иконки/картинки/анимации (новая директива владельца — визуальная жизнь всего приложения).
+
+## Сессия 03.09 21:40 (arena/01a06865) — фаза 5 merged
+
+- PR #9 (feat/xp-record-feedback, 6ec1e06) MERGED -> main d39340d. XP-фидбек записи: computeRecordXpFeedback (чистый дифф снапшотов), xpService (fail-open IO), XP-карточка в RecordResult, level-up тост в Home repeat, undo сбрасывает фидбек.
+- Ребейз поверх e338d47 (confetti/haptic): конфликт RecordResult решён объединением — их haptic-эффект + моя карта реальной дельты; их статический бейдж +XP.PER_ENTRY остался только когда фидбека нет (иначе дубль/неверное число).
+- Цепочка: 232/232, typecheck, build (PWA 8 precache 1181 KiB), CodeQL+Analyze green.
+- XP = производное состояние: миграций нет, undo откатывает XP сам через данные.
+- След.: фаза 6 (по плану PROJECT_STATE) или /stats decision; HANDOFF конвенция append-only + merge=union живая, конфликтов нет.
