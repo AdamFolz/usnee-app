@@ -97,9 +97,18 @@ export async function encryptData(plaintext: string, password: string): Promise<
   return JSON.stringify(envelope);
 }
 
+const MIN_EXPORT_ITER = 50_000;
+const MAX_EXPORT_ITER = 1_000_000;
+
 export async function decryptData(payload: string, password: string): Promise<string> {
   const env = JSON.parse(payload) as EncryptedEnvelope;
   if (env.format !== 'usnee-export-aes') throw new Error('Неподдерживаемый формат экспорта');
+  // iter comes from the (possibly untrusted) file itself; a malicious export
+  // must not be able to request millions of PBKDF2 iterations (CPU DoS).
+  if (env.kdf !== 'PBKDF2-SHA256') throw new Error('Неподдерживаемый KDF экспорта');
+  if (!Number.isInteger(env.iter) || env.iter < MIN_EXPORT_ITER || env.iter > MAX_EXPORT_ITER) {
+    throw new Error('Недопустимое число итераций KDF в экспорте');
+  }
   const salt = base64ToBuf(env.salt);
   const iv = base64ToBuf(env.iv);
   const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
