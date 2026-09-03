@@ -5,11 +5,18 @@ export interface TelegramBackButton {
   offClick: (handler: () => void) => void;
 }
 
+export interface TelegramHapticFeedback {
+  impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
+  notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
+  selectionChanged: () => void;
+}
+
 export interface TelegramWebApp {
   initData?: string;
   viewportHeight?: number;
   viewportStableHeight?: number;
   BackButton?: TelegramBackButton;
+  HapticFeedback?: TelegramHapticFeedback;
   ready?: () => void;
   expand?: () => void;
   setHeaderColor?: (color: string) => void;
@@ -89,6 +96,21 @@ function syncTelegramBackButton() {
     attachedBackButton = nextButton;
   }
   nextButton.show();
+}
+
+/**
+ * Haptic feedback via Telegram WebApp. No-op outside Telegram (PWA).
+ */
+export function hapticImpact(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'light'): void {
+  getTelegramWebApp()?.HapticFeedback?.impactOccurred(style);
+}
+
+export function hapticNotification(type: 'error' | 'success' | 'warning'): void {
+  getTelegramWebApp()?.HapticFeedback?.notificationOccurred(type);
+}
+
+export function hapticSelection(): void {
+  getTelegramWebApp()?.HapticFeedback?.selectionChanged();
 }
 
 /**
