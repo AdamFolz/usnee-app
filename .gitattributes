@@ -1,0 +1,17 @@
+# Normalize all text files to LF line endings
+* text=auto eol=lf
+
+# Ensure scripts are always LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# HANDOFF is append-only coordination between two agents;
+# union merge keeps both sides of a conflict instead of markers
+/.hermes/HANDOFF.md merge=union

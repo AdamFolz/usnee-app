@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>USNEE · прототип «Дневник»</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0F0D0B; --paper:#161310; --paper2:#1E1A16; --paper3:#262019;
+    --ink:#EFE8DB; --ink2:#A69C8C; --ink3:#6E675C;
+    --accent:#C94F4F; --accent-dim:#8E3A3A;
+    --moss:#8AA06E; --ochre:#C9974E; --slate:#6E8FA3;
+    --line:rgba(239,232,219,.10); --line2:rgba(239,232,219,.06);
+    --r-s:8px; --r-m:12px; --r-l:16px;
+    --sp:18px;
+    --f-head:'Lora',Georgia,serif; --f-ui:'Onest',-apple-system,system-ui,sans-serif; --f-num:'JetBrains Mono',ui-monospace,monospace;
+    --nav-h:64px;
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:var(--f-ui); background:var(--page); color:var(--ink);
+    line-height:1.45; -webkit-font-smoothing:antialiased;
+    overflow:hidden; overscroll-behavior:none;
+    font-size:16px;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  #app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+  .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-t) + 10px) var(--sp) calc(var(--nav-h) + var(--safe-b) + 28px)}
+  .screen{display:none;height:100%;flex-direction:column}
+  .screen.on{display:flex}
+
+  /* ---------- typography ---------- */
+  .cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+  h1{font-family:var(--f-head);font-size:27px;font-weight:500;letter-spacing:-.01em;line-height:1.18}
+  h2{font-family:var(--f-head);font-size:19px;font-weight:500}
+  .serif{font-family:var(--f-head)}
+  .it{font-style:italic;color:var(--ink2)}
+  .num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+  .muted{color:var(--ink2)}
+  .dim{color:var(--ink3)}
+  .sm{font-size:13px}
+  .xs{font-size:12px}
+
+  /* ---------- diary ---------- */
+  .daterow{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .rule{height:1px;background:var(--line);margin:22px 0}
+  .lead{margin-top:22px}
+  .lead .since{margin-top:6px;font-size:14px;color:var(--ink2)}
+  .entry{padding:14px 0;border-bottom:1px solid var(--line2);display:flex;gap:14px;align-items:flex-start}
+  .entry:last-child{border-bottom:0}
+  .entry .t{font-family:var(--f-num);font-size:13px;color:var(--ink3);min-width:44px;padding-top:3px}
+  .entry .body{flex:1;min-width:0}
+  .entry .name{font-family:var(--f-head);font-size:17px}
+  .entry .meta{font-size:13px;color:var(--ink2);margin-top:2px}
+  .entry .note{font-family:var(--f-head);font-style:italic;font-size:14px;color:var(--ink3);margin-top:5px}
+  .tick{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:9px;flex:none;opacity:.85}
+  .tick.q{background:var(--slate)}
+  .tick.c{background:var(--ochre)}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-l);padding:16px}
+  .card + .card{margin-top:12px}
+  .rowsplit{display:flex;justify-content:space-between;align-items:center;gap:12px}
+
+  /* ---------- sticky CTA ---------- */
+  .nav{
+    position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + var(--safe-b));
+    padding-bottom:var(--safe-b);
+    background:var(--page);
+    border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-around;z-index:20
+  }
+  .nav button{background:none;border:0;color:var(--ink3);font-family:var(--f-ui);font-size:11px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px;min-width:56px;min-height:48px;justify-content:center}
+  .nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .nav button.on{color:var(--ink)}
+  .nav .rec{color:var(--ink);font-size:11px}
+  .nav .rec .dot{width:44px;height:44px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(201,79,79,.32); margin-bottom:-2px}
+  .nav .rec .dot svg{width:22px;height:22px;stroke:#160E0E;stroke-width:2.2}
+
+  /* ---------- buttons ---------- */
+  .btn{width:100%;min-height:54px;border:0;border-radius:var(--r-m);font-family:var(--f-ui);font-size:16px;font-weight:600;
+    color:#170E0E;background:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s;text-decoration:none;cursor:pointer}
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:transparent;color:var(--ink2);border:1px solid var(--line);font-weight:500}
+  .btn.quiet{background:var(--paper2);color:var(--ink)}
+  .btn.sm{min-height:44px;font-size:14px}
+  button:focus-visible,[role="button"]:focus-visible,a:focus-visible{outline:2px solid var(--ochre);outline-offset:3px}
+  .topbar{display:flex;align-items:center;min-height:44px;margin-bottom:4px}
+  .back{background:none;border:0;color:var(--ink2);font:500 14px var(--f-ui);padding:10px 8px 10px 0;min-height:44px}
+  .action-card{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}
+  .danger{color:var(--accent)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:var(--r-m);
+    padding:11px 14px;font-size:15px;font-family:var(--f-ui);min-height:46px;display:flex;align-items:center;gap:8px;cursor:pointer}
+  .chip .h{font-family:var(--f-num);font-size:12px;color:var(--ink3)}
+  .chip.on{border-color:var(--accent);background:rgba(201,79,79,.10)}
+  .chip.on .h{color:var(--accent)}
+
+  .seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:3px;gap:3px}
+  .seg button{flex:1;min-height:42px;border:0;background:none;color:var(--ink2);font-family:var(--f-ui);font-size:14px;border-radius:9px;white-space:nowrap}
+  .seg button.on{background:var(--paper3);color:var(--ink)}
+
+  .stepper{display:flex;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:10px 12px}
+  .stepper button{width:46px;height:46px;border-radius:11px;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:22px;font-family:var(--f-ui)}
+  .stepper .val{flex:1;text-align:center}
+  .stepper .val b{font-family:var(--f-num);font-size:26px;font-weight:500}
+  .stepper .val span{display:block;font-size:11px;color:var(--ink3);letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
+
+  .marg{display:flex;gap:10px;align-items:flex-start;border-left:2px solid var(--accent);padding:8px 0 8px 12px;margin-top:14px}
+  .marg p{font-family:var(--f-head);font-style:italic;font-size:14px;color:var(--ink2)}
+  .marg a{color:var(--accent);font-family:var(--f-ui);font-style:normal;font-size:13px;text-decoration:none;border-bottom:1px solid rgba(201,79,79,.4)}
+
+  /* ---------- stats ---------- */
+  .big{font-family:var(--f-num);font-size:56px;line-height:1;font-weight:500;letter-spacing:-.03em}
+  .bars{display:flex;align-items:flex-end;gap:7px;height:96px;margin-top:16px}
+  .bars div{flex:1;background:var(--paper3);border-radius:3px 3px 0 0;position:relative}
+  .bars div.hi{background:var(--accent);opacity:.8}
+  .barlab{display:flex;gap:7px;margin-top:8px}
+  .barlab span{flex:1;text-align:center;font-size:10px;color:var(--ink3);font-family:var(--f-num)}
+  .ledger{margin-top:8px}
+  .ledger .l{display:flex;align-items:baseline;gap:8px;padding:12px 0;border-bottom:1px solid var(--line2)}
+  .ledger .l .n{font-family:var(--f-head);font-size:16px}
+  .ledger .l .fill{flex:1;border-bottom:1px dotted rgba(239,232,219,.16);transform:translateY(-4px)}
+  .ledger .l .v{font-family:var(--f-num);font-size:14px;color:var(--ink2)}
+
+  /* ---------- safety ---------- */
+  .safety{background:#1A0E0E}
+  .safety .scroll{padding-top:calc(var(--safe-t) + 14px)}
+  .sos-h{font-family:var(--f-head);font-size:26px;color:#FFE7E7}
+  .check{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,180,180,.12);align-items:flex-start;cursor:pointer}
+  .check i{width:22px;height:22px;border-radius:7px;border:1px solid rgba(255,180,180,.35);flex:none;margin-top:1px}
+  .check.done i{background:var(--accent);border-color:var(--accent)}
+  .check p{font-size:15px;color:#F3DADA}
+  .timer{font-family:var(--f-num);font-size:44px;color:#FFCFCF;letter-spacing:-.02em}
+
+  /* ---------- sheet / toast ---------- */
+  .veil{position:absolute;inset:0;background:rgba(8,6,5,.62);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+  .veil.on{opacity:1;pointer-events:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:31;background:var(--paper);border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;padding:10px var(--sp) calc(18px + var(--safe-b));transform:translateY(102%);transition:transform .24s cubic-bezier(.2,.7,.2,1)}
+  .sheet.on{transform:translateY(0)}
+  .grab{width:34px;height:4px;border-radius:2px;background:rgba(239,232,219,.2);margin:4px auto 14px}
+  .sheet .item{display:flex;gap:12px;align-items:center;min-height:52px;font-size:16px;border-bottom:1px solid var(--line2)}
+  .sheet .item:last-child{border-bottom:0}
+  .sheet .item.danger{color:var(--accent)}
+
+  .toast{position:absolute;left:12px;right:12px;bottom:calc(var(--nav-h) + var(--safe-b) + 12px);z-index:40;
+    background:var(--paper2);border:1px solid var(--line);border-radius:var(--r-m);padding:13px 15px;
+    display:flex;align-items:center;gap:12px;transform:translateY(160%);transition:transform .26s cubic-bezier(.2,.7,.2,1),opacity .18s linear;
+    opacity:0;pointer-events:none;
+    box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .toast.on{transform:translateY(0);opacity:1;pointer-events:auto}
+  .toast .ok{width:26px;height:26px;border-radius:50%;background:var(--moss);display:flex;align-items:center;justify-content:center;flex:none}
+  .toast .ok svg{width:14px;height:14px;stroke:#12180C;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .toast .txt{flex:1;font-size:14px}
+  .toast button{background:none;border:0;color:var(--accent);font-family:var(--f-ui);font-size:14px;padding:8px 4px}
+
+  .fade{animation:fade .26s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .hint{position:fixed;top:calc(var(--safe-t) + 6px);right:10px;z-index:50;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);background:rgba(22,19,16,.8);border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+
+  /* ---------- switch ---------- */
+  .sw{width:46px;height:28px;border-radius:14px;background:var(--paper3);border:1px solid var(--line);position:relative;flex:none;transition:background .18s;cursor:pointer}
+  .sw::after{content:'';position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--ink3);transition:transform .18s,background .18s}
+  .sw.on{background:rgba(201,79,79,.22);border-color:var(--accent-dim)}
+  .sw.on::after{transform:translateX(18px);background:var(--accent)}
+
+  /* ---------- profile ---------- */
+  .ava{border-radius:50%;background:var(--paper3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--f-head);color:var(--ink);flex:none;width:56px;height:56px;font-size:22px}
+  .prow{display:flex;gap:14px;align-items:center;margin-top:14px}
+
+  /* ---------- onboarding ---------- */
+  .ob{height:100%;flex-direction:column;padding-top:var(--safe-t)}
+  .ob-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .ob-track::-webkit-scrollbar{display:none}
+  .ob-page{min-width:100%;box-sizing:border-box;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;padding:0 30px}
+  .ob-mark{font-family:var(--f-head);font-size:60px;line-height:1;color:var(--accent);opacity:.9}
+  .ob-mark svg{width:52px;height:52px;stroke:var(--accent);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+  .ob-page h1{font-size:29px;margin-top:20px}
+  .ob-page p{font-size:16px;color:var(--ink2);margin-top:14px;max-width:300px}
+  .ob-foot{padding:0 30px calc(24px + var(--safe-b))}
+  .ob-dots{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+  .ob-dots i{width:7px;height:7px;border-radius:50%;background:var(--paper3);transition:background .2s,width .2s}
+  .ob-dots i.on{background:var(--accent);width:20px;border-radius:4px}
+
+  /* ---------- pin ---------- */
+  .pin{height:100%;flex-direction:column;align-items:center;padding:calc(var(--safe-t) + 10px) 26px calc(22px + var(--safe-b))}
+  .pin-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .pin-dots{display:flex;gap:16px;margin-top:26px}
+  .pin-dots i{width:13px;height:13px;border-radius:50%;border:1px solid var(--ink3);transition:background .12s,border-color .12s}
+  .pin-dots i.f{background:var(--accent);border-color:var(--accent)}
+  .pin-dots.err i{border-color:var(--accent)}
+  @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-8px)}40%,60%{transform:translateX(8px)}}
+  .pin-dots.shake{animation:shake .4s}
+  .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:300px}
+  .key{height:62px;border-radius:var(--r-m);border:1px solid var(--line);background:var(--paper);color:var(--ink);font-family:var(--f-num);font-size:25px;font-weight:500}
+  .key:active{background:var(--paper3);transform:scale(.97)}
+  .key.act{font-family:var(--f-ui);font-size:14px;color:var(--ink2);background:none;border-color:var(--line2)}
+
+  /* ---------- states ---------- */
+  .fill-center{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 18px;box-sizing:border-box}
+  .empty-mark{font-family:var(--f-head);font-size:56px;line-height:1;color:var(--ink3);opacity:.55}
+  .sk{background:var(--paper2);border-radius:6px;position:relative;overflow:hidden}
+  .sk::after{content:'';position:absolute;top:0;bottom:0;width:34%;left:-40%;background:rgba(239,232,219,.06);animation:sh 1.3s infinite}
+  @keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  .skrow{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line2)}
+</style>
+</head>
+<body>
+<div class="hint">прототип</div>
+<div id="app">
+
+  <!-- ============ ДНЕВНИК ============ -->
+  <section class="screen on" id="s-diary">
+    <div class="scroll">
+      <div class="daterow">
+        <div><div class="cap">Пятница</div><h1 style="margin-top:4px">16 августа</h1></div>
+        <button data-go="profile" style="background:none;border:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:inherit">
+          <span class="num sm dim">день 12</span>
+          <span class="ava" style="width:38px;height:38px;font-size:16px">М</span>
+        </button>
+      </div>
+
+      <div class="lead">
+        <div class="cap">Последняя запись</div>
+        <h2 style="margin-top:8px">Трава · 0,3 г · вейп</h2>
+        <div class="since">2 часа 14 минут назад, в 19:12</div>
+        <p class="serif it" style="margin-top:10px;font-size:15px">«вечер, устал, ничего особенного»</p>
+      </div>
+
+      <div class="rule"></div>
+
+      <div class="cap">Сегодня — 3 записи</div>
+      <div style="margin-top:8px">
+        <div class="entry" data-open="Трава · 0,3 г">
+          <div class="t">19:12</div><div class="tick"></div>
+          <div class="body"><div class="name">Трава</div><div class="meta">0,3 г · вейп · дома</div></div>
+        </div>
+        <div class="entry" data-open="Кофеин · 180 мг">
+          <div class="t">15:40</div><div class="tick c"></div>
+          <div class="body"><div class="name">Кофеин</div><div class="meta">180 мг · напиток</div></div>
+        </div>
+        <div class="entry" data-open="Кофеин · 100 мг">
+          <div class="t">09:05</div><div class="tick c"></div>
+          <div class="body"><div class="name">Кофеин</div><div class="meta">100 мг · напиток</div>
+            <div class="note">«чтобы проснуться»</div></div>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+
+      <div class="card">
+        <div class="rowsplit">
+          <div><div class="cap">Открытая партия</div>
+            <div class="serif" style="font-size:17px;margin-top:5px">GSC — Гёрл Скаут Куки</div>
+            <div class="sm muted" style="margin-top:3px"><span class="num">1,2</span> г из <span class="num">3</span> г</div></div>
+          <div class="num dim sm">40%</div>
+        </div>
+        <div style="height:4px;background:var(--paper3);border-radius:2px;margin-top:12px;overflow:hidden">
+          <div style="width:40%;height:100%;background:var(--accent);opacity:.75"></div>
+        </div>
+      </div>
+
+      <div class="marg">
+        <p>Три дня подряд после 19:00. Мы не осуждаем — <span style="white-space:nowrap">просто заметили.</span>
+          <a href="#" data-go="stats">посмотреть выписку</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ЗАПИСЬ ============ -->
+  <section class="screen" id="s-record">
+    <div class="scroll">
+      <div class="cap">Запись</div>
+      <h1 style="margin-top:6px">Что было?</h1>
+      <p class="sm muted" style="margin-top:6px">Одно касание — и хватит. Подробности можно дописать позже.</p>
+
+      <div style="margin-top:20px">
+        <div class="cap">Часто у тебя</div>
+        <div class="chips" style="margin-top:10px" id="subs">
+          <button class="chip on" data-sub="Трава" data-unit="г" data-step="0.1" data-def="0.3">Трава <span class="h">6×</span></button>
+          <button class="chip" data-sub="Кофеин" data-unit="мг" data-step="20" data-def="180">Кофеин <span class="h">4×</span></button>
+          <button class="chip" data-sub="Алкоголь" data-unit="ст" data-step="1" data-def="1">Алкоголь <span class="h">3×</span></button>
+          <button class="chip" data-sub="Никотин" data-unit="шт" data-step="1" data-def="1">Никотин <span class="h">2×</span></button>
+          <button class="chip" data-sub="Стимулятор" data-unit="г" data-step="0.05" data-def="0.1">Стимулятор <span class="h">1×</span></button>
+          <button class="chip" data-go="entry" style="color:var(--ink2)">Другое…</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="cap">Доза</div>
+        <div class="stepper" style="margin-top:10px">
+          <button id="minus">−</button>
+          <div class="val"><b id="dose">0,3</b><span id="unit">грамма</span></div>
+          <button id="plus">+</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="cap">Способ</div>
+        <div class="seg" style="margin-top:10px" id="method">
+          <button class="on">вейп</button><button>курение</button><button>внутрь</button>
+        </div>
+      </div>
+
+      <div class="marg" id="dupe" style="display:none">
+        <p>Похожая запись уже есть — <span class="num">19:12</span>, 0,3 г. <a href="#" id="anyway">записать всё равно</a></p>
+      </div>
+
+      <div style="margin-top:22px">
+        <button class="btn" id="save">Записать</button>
+        <button class="btn ghost sm" style="margin-top:10px" data-go="entry">Добавить подробности</button>
+      </div>
+      <p class="xs dim" style="text-align:center;margin-top:14px">Время поставится само — <span class="num">21:26</span></p>
+    </div>
+  </section>
+
+  <!-- ============ ЖУРНАЛ ============ -->
+  <section class="screen" id="s-journal">
+    <div class="scroll">
+      <div class="cap">Журнал</div>
+      <h1 style="margin-top:6px">Что было раньше</h1>
+
+      <div style="margin-top:22px">
+        <div class="cap">Сегодня</div>
+        <div class="entry" data-open="Трава · 0,3 г"><div class="t">19:12</div><div class="tick"></div>
+          <div class="body"><div class="name">Трава</div><div class="meta">0,3 г · вейп</div></div></div>
+        <div class="entry" data-open="Кофеин · 180 мг"><div class="t">15:40</div><div class="tick c"></div>
+          <div class="body"><div class="name">Кофеин</div><div class="meta">180 мг · напиток</div></div></div>
+        <div class="entry" data-open="Кофеин · 100 мг"><div class="t">09:05</div><div class="tick c"></div>
+          <div class="body"><div class="name">Кофеин</div><div class="meta">100 мг · напиток</div></div></div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="cap">Вчера</div>
+      <div class="entry" data-open="Алкоголь · 3 ст"><div class="t">22:50</div><div class="tick q"></div>
+        <div class="body"><div class="name">Алкоголь</div><div class="meta">3 стакана · с друзьями</div>
+          <div class="note">«день рождения у Кости»</div></div></div>
+      <div class="entry" data-open="Трава · 0,4 г"><div class="t">20:05</div><div class="tick"></div>
+        <div class="body"><div class="name">Трава</div><div class="meta">0,4 г · вейп</div></div></div>
+      <div class="entry" data-open="Кофеин · 200 мг"><div class="t">11:20</div><div class="tick c"></div>
+        <div class="body"><div class="name">Кофеин</div><div class="meta">200 мг · напиток</div></div></div>
+
+      <div class="rule"></div>
+      <div class="cap">14 августа</div>
+      <div class="entry" data-open="Трава · 0,2 г"><div class="t">21:30</div><div class="tick"></div>
+        <div class="body"><div class="name">Трава</div><div class="meta">0,2 г · вейп</div></div></div>
+      <div class="entry" data-open="Кофеин · 180 мг"><div class="t">10:00</div><div class="tick c"></div>
+        <div class="body"><div class="name">Кофеин</div><div class="meta">180 мг · напиток</div></div></div>
+
+      <p class="xs dim" style="text-align:center;margin-top:22px">Коснись записи, чтобы изменить или удалить</p>
+    </div>
+  </section>
+
+  <!-- ============ ВЫПИСКА ============ -->
+  <section class="screen" id="s-stats">
+    <div class="scroll">
+      <div class="cap">Выписка</div>
+      <h1 style="margin-top:6px">Последние 7 дней</h1>
+
+      <div class="seg" style="margin-top:16px" id="period">
+        <button class="on">7 дней</button><button>30 дней</button><button>всё</button>
+      </div>
+
+      <div style="margin-top:24px">
+        <div class="big">14</div>
+        <div class="sm muted" style="margin-top:4px">записей · в среднем <span class="num">2,0</span> в день</div>
+        <div class="bars">
+          <div style="height:35%"></div><div style="height:55%"></div><div style="height:25%"></div>
+          <div style="height:70%"></div><div style="height:45%"></div><div style="height:100%" class="hi"></div>
+          <div style="height:60%"></div>
+        </div>
+        <div class="barlab"><span>Сб</span><span>Вс</span><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span></div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="cap">По веществам</div>
+      <div class="ledger">
+        <div class="l"><span class="n">Трава</span><span class="fill"></span><span class="v">6× · 2,1 г</span></div>
+        <div class="l"><span class="n">Кофеин</span><span class="fill"></span><span class="v">4× · 980 мг</span></div>
+        <div class="l"><span class="n">Алкоголь</span><span class="fill"></span><span class="v">3× · 7 ст</span></div>
+        <div class="l"><span class="n">Стимулятор</span><span class="fill"></span><span class="v">1× · 0,1 г</span></div>
+      </div>
+
+      <div class="marg"><p>Чистых дней: <span class="num">2</span> из 7. Худший вечер — четверг.</p></div>
+
+      <div style="margin-top:20px">
+        <button class="btn ghost sm" data-go="safety" style="color:var(--accent);border-color:rgba(201,79,79,.35)">Экстренная страница</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ЭКСТРЕННО ============ -->
+  <section class="screen safety" id="s-safety">
+    <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+      <div class="cap" style="color:#C98C8C">Экстренная страница</div>
+      <h1 class="sos-h" style="margin-top:6px">Плохо? Давай по шагам.</h1>
+      <p class="sm" style="color:#D8B9B9;margin-top:8px">Ничего не надо решать сразу. Просто иди сверху вниз.</p>
+
+      <div style="margin-top:20px">
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Сядь или ляг на бок. По возможности не оставайся один.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Если можешь глотать — вода маленькими глотками. Не кофе, не алкоголь.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Напиши тому, кто рядом. Кнопка ниже.</p></div>
+        <div class="check" role="checkbox" aria-checked="false" tabindex="0"><i></i><p>Если рвота, судороги, не можешь разбудить — <b>112</b>.</p></div>
+      </div>
+
+      <div class="card" style="background:rgba(255,120,120,.06);border-color:rgba(255,150,150,.16);margin-top:22px;text-align:center">
+        <div class="cap" style="color:#C98C8C">Прошло с записи</div>
+        <div class="timer" style="margin-top:6px">02:14</div>
+      </div>
+
+      <div style="margin-top:18px">
+        <a class="btn" href="tel:112" aria-label="Позвонить в экстренную службу 112">Позвонить 112</a>
+        <button class="btn quiet sm" style="margin-top:10px" data-action="contact">Написать Кате</button>
+        <button class="btn ghost sm" style="margin-top:10px" data-go="diary">Мне уже лучше</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ПОДРОБНОСТИ (Add Entry) ============ -->
+  <section class="screen" id="s-entry">
+    <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+      <div class="cap">Подробная запись</div>
+      <h1 style="margin-top:6px">Трава · 0,3 г</h1>
+      <p class="sm muted" style="margin-top:6px">Всё необязательно. Можно закрыть — черновик сохранится.</p>
+
+      <div class="card" style="margin-top:18px">
+        <div class="cap">Когда</div>
+        <div class="rowsplit" style="margin-top:8px"><span class="serif" style="font-size:17px">Сегодня, 21:26</span><span class="sm" style="color:var(--accent)">изменить</span></div>
+      </div>
+      <div class="card">
+        <div class="cap">Из партии</div>
+        <div class="rowsplit" style="margin-top:8px"><span class="serif" style="font-size:17px">GSC — Гёрл Скаут Куки</span><span class="num sm dim">1,2 г</span></div>
+      </div>
+      <div class="card">
+        <div class="cap">Зачем</div>
+        <div class="chips" style="margin-top:10px">
+          <button class="chip on">расслабиться</button><button class="chip">не спится</button>
+          <button class="chip">за компанию</button><button class="chip">скучно</button><button class="chip">боль</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cap">С кем</div>
+        <div class="chips" style="margin-top:10px">
+          <button class="chip on">один</button><button class="chip">с друзьями</button><button class="chip">с партнёром</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cap">Заметка</div>
+        <p class="serif it" style="margin-top:8px;font-size:15px">«вечер, устал, ничего особенного»</p>
+      </div>
+
+      <div style="margin-top:20px">
+        <button class="btn" id="save2">Сохранить запись</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section class="screen ob" id="s-onboarding">
+    <div class="ob-track" id="ob-track">
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 3v18"/></svg></div>
+        <h1>Тетрадь, а не надзиратель</h1>
+        <p>USNEE — личный дневник. Записывай, что было, без оценок и нравоучений. Хочешь меньше — увидишь это в цифрах сам.</p>
+      </div>
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></svg></div>
+        <h1>Остаётся у тебя</h1>
+        <p>Записи хранятся на этом устройстве. Их не видит ни бот, ни сервер, ни другие люди. Можно закрыть вход PIN-кодом.</p>
+      </div>
+      <div class="ob-page">
+        <div class="ob-mark"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h1>Запись — за пару касаний</h1>
+        <p>Выбрал вещество, поправил дозу — готово, время встанет само. Подробности (зачем, с кем, партия) — по желанию, не обязательны.</p>
+      </div>
+    </div>
+    <div class="ob-foot">
+      <div class="ob-dots" id="ob-dots"><i class="on"></i><i></i><i></i></div>
+      <button class="btn" id="ob-next">Дальше</button>
+      <button class="btn ghost" data-go="pin" style="margin-top:10px">Пропустить</button>
+    </div>
+  </section>
+
+  <!-- ============ PIN ============ -->
+  <section class="screen pin" id="s-pin">
+    <div class="topbar" style="width:100%"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+    <div class="pin-top">
+      <div class="cap" id="pin-cap">Придумай PIN</div>
+      <h1 id="pin-title" style="margin-top:8px">Четыре цифры</h1>
+      <p class="sm muted" id="pin-sub" style="margin-top:8px;max-width:260px">Он будет закрывать вход в дневник. Запомни его — восстановить нельзя.</p>
+      <div class="pin-dots" id="pin-dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="keys" id="keys">
+      <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+      <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+      <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+      <button class="key act" id="pin-forgot">Забыл</button><button class="key">0</button><button class="key act" id="pin-del">⌫</button>
+    </div>
+  </section>
+
+  <!-- ============ PROFILE ============ -->
+  <section class="screen" id="s-profile">
+    <div class="scroll">
+      <div class="topbar"><button class="back" data-back aria-label="Вернуться назад">‹ Назад</button></div>
+      <div class="daterow"><div><div class="cap">Профиль</div><h1 style="margin-top:4px">Марк</h1></div></div>
+      <div class="prow">
+        <span class="ava">М</span>
+        <div><div class="serif" style="font-size:17px">на связи 12 дней</div><div class="num sm dim">48 записей · 3 партии</div></div>
+      </div>
+
+      <div class="cap" style="margin-top:26px">Приватность</div>
+      <div class="card" style="margin-top:8px">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Вход по PIN</span><span class="sw on" data-toggle role="switch" aria-checked="true" tabindex="0" aria-label="Вход по PIN"></span></div>
+      </div>
+      <div class="card">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Скрыть суммы в списке</span><span class="sw" data-toggle role="switch" aria-checked="false" tabindex="0" aria-label="Скрыть суммы в списке"></span></div>
+      </div>
+      <div class="card" data-go="pin">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Сменить PIN</span><span class="sm" style="color:var(--accent)">изменить</span></div>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Если станет плохо</div>
+      <div class="card action-card" role="button" tabindex="0" data-action="contact">
+        <div class="rowsplit"><span class="serif" style="font-size:16px">Близкий контакт</span><span class="num sm dim">Катя</span></div>
+        <p class="sm muted" style="margin-top:6px">Кому «Помощь» предложит написать. Номер хранится только у тебя.</p>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Единицы</div>
+      <div class="card">
+        <div class="seg" style="margin-top:2px"><button class="on">граммы</button><button>миллиграммы</button></div>
+      </div>
+
+      <div class="cap" style="margin-top:22px">Данные</div>
+      <button class="card action-card" data-action="export"><div class="rowsplit"><span class="serif" style="font-size:16px">Выгрузить в файл</span><span class="sm" style="color:var(--accent)">экспорт</span></div></button>
+      <button class="card action-card" data-action="delete"><div class="rowsplit"><span class="serif danger" style="font-size:16px">Стереть всё</span><span class="sm danger">удалить</span></div></button>
+
+      <div class="cap" style="margin-top:22px">Ещё</div>
+      <div class="card" data-go="onboarding"><div class="rowsplit"><span class="serif" style="font-size:16px">Показать вступление снова</span><span class="sm dim">›</span></div></div>
+      <p class="sm muted" style="text-align:center;margin:22px 0 6px">USNEE · дневник · v2 · без облака</p>
+    </div>
+  </section>
+
+  <!-- ============ STATE: EMPTY ============ -->
+  <section class="screen" id="s-empty">
+    <div class="scroll">
+      <div class="daterow"><div><div class="cap">Пятница</div><h1 style="margin-top:4px">16 августа</h1></div><span class="num sm dim">день 1</span></div>
+      <div class="fill-center">
+        <div class="empty-mark">«»</div>
+        <h1 style="font-size:24px;margin-top:16px">Пока пусто</h1>
+        <p class="serif it" style="color:var(--ink2);margin-top:10px;max-width:280px">Первая страница дневника всегда чистая. Запиши, когда что-то было — я запомню за тебя.</p>
+        <button class="btn" data-go="record" style="margin-top:22px;max-width:240px">Сделать первую запись</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATE: LOADING ============ -->
+  <section class="screen" id="s-loading">
+    <div class="scroll">
+      <div class="daterow"><div><div class="cap sk" style="width:70px;height:11px">&nbsp;</div><div class="sk" style="width:150px;height:26px;margin-top:8px">&nbsp;</div></div><div class="sk" style="width:46px;height:14px">&nbsp;</div></div>
+      <div class="sk" style="width:100%;height:52px;border-radius:12px;margin-top:20px">&nbsp;</div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:60%;height:15px">&nbsp;</div><div class="sk" style="width:38%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:50%;height:15px">&nbsp;</div><div class="sk" style="width:30%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <div class="skrow"><div class="sk" style="width:44px;height:44px;border-radius:10px">&nbsp;</div><div style="flex:1"><div class="sk" style="width:66%;height:15px">&nbsp;</div><div class="sk" style="width:42%;height:12px;margin-top:8px">&nbsp;</div></div></div>
+      <p class="sm muted" style="text-align:center;margin-top:26px">Открываю дневник…</p>
+    </div>
+  </section>
+
+  <!-- ============ STATE: ERROR ============ -->
+  <section class="screen" id="s-error">
+    <div class="scroll">
+      <div class="fill-center">
+        <div class="empty-mark" style="color:var(--accent);opacity:.85">!</div>
+        <h1 style="font-size:24px;margin-top:16px">Не смог открыть дневник</h1>
+        <p class="serif it" style="color:var(--ink2);margin-top:10px;max-width:290px">Что-то сбилось при чтении. Твои записи на месте — они на этом устройстве и никуда не делись.</p>
+        <button class="btn" data-go="loading" style="margin-top:22px;max-width:240px">Попробовать снова</button>
+        <button class="btn ghost" data-go="safety" style="margin-top:10px;max-width:240px">Мне нужна помощь</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ nav / sheet / toast ============ -->
+  <div class="veil" id="veil"></div>
+  <div class="sheet" id="sheet">
+    <div class="grab"></div>
+    <h2 id="sheet-title">Запись</h2>
+    <p class="sm muted" style="margin:4px 0 8px">Сегодня, 19:12</p>
+    <div class="item">Изменить дозу или время</div>
+    <div class="item">Добавить заметку</div>
+    <div class="item">Скопировать как новую</div>
+    <div class="item danger" id="del">Удалить запись</div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <div class="txt" id="toast-txt">Записано. Трава · 0,3 г · 21:26</div>
+    <button id="undo">отменить</button>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button data-go="diary" class="on">
+      <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 3v18"/></svg>Дневник</button>
+    <button data-go="journal">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Журнал</button>
+    <button data-go="record" class="rec">
+      <span class="dot"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Записать</button>
+    <button data-go="stats">
+      <svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Выписка</button>
+    <button data-go="safety">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M12 9v4M12 16h.01"/></svg>Помощь</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    tg.ready(); tg.expand();
+    try { tg.setHeaderColor('#0F0D0B'); tg.setBackgroundColor('#0F0D0B'); } catch(e){}
+    try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e){}
+    if (tg.viewportStableHeight) {
+      var setH = function(){ document.documentElement.style.height = tg.viewportStableHeight + 'px'; document.body.style.height = tg.viewportStableHeight + 'px'; };
+      setH(); tg.onEvent('viewportChanged', setH);
+    }
+  }
+  function hap(kind){
+    try{
+      if(!tg||!tg.HapticFeedback) return;
+      if(kind==='sel') tg.HapticFeedback.selectionChanged();
+      else if(kind==='ok') tg.HapticFeedback.notificationOccurred('success');
+      else if(kind==='warn') tg.HapticFeedback.notificationOccurred('warning');
+      else tg.HapticFeedback.impactOccurred(kind||'light');
+    }catch(e){}
+  }
+
+  var root = ['diary','journal','record','stats','safety'];
+  var noNav = ['onboarding','pin'];
+  var cur = 'diary', history = [];
+
+  function show(id, push){
+    if (push !== false && id !== cur) history.push(cur);
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+    var el = document.getElementById('s-' + id);
+    if (!el) return;
+    el.classList.add('on');
+    var sc = el.querySelector('.scroll');
+    if (sc) { sc.scrollTop = 0; sc.classList.remove('fade'); void el.offsetWidth; sc.classList.add('fade'); }
+    cur = id;
+    document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.go === id && !b.classList.contains('rec')); });
+    document.getElementById('nav').style.display = (id === 'safety' || id === 'entry' || noNav.indexOf(id) >= 0) ? 'none' : 'flex';
+    if (tg && tg.BackButton) { root.indexOf(id) === 0 ? tg.BackButton.hide() : tg.BackButton.show(); }
+    if (id === 'onboarding') resetOb();
+    if (id === 'pin') resetPin();
+  }
+  if (tg && tg.BackButton) tg.BackButton.onClick(function(){ var p = history.pop() || 'diary'; hap('light'); show(p, false); });
+
+  document.addEventListener('click', function(e){
+    var back = e.target.closest('[data-back]');
+    if (back) { e.preventDefault(); hap('light'); show(history.pop() || 'diary', false); return; }
+    var go = e.target.closest('[data-go]');
+    if (go) { e.preventDefault(); hap('light'); show(go.dataset.go); return; }
+    var op = e.target.closest('[data-open]');
+    if (op) { openSheet(op.dataset.open); return; }
+    var action = e.target.closest('[data-action]');
+    if (action) {
+      var type = action.dataset.action;
+      if (type === 'contact') { hap('light'); toastQuiet('Открываю сообщение Кате…'); }
+      if (type === 'export') { hap('ok'); toastQuiet('Файл подготовлен. В прототипе скачивание не включено.'); }
+      if (type === 'delete') {
+        if (window.confirm('Стереть все записи? Это действие нельзя отменить.')) { hap('warn'); toastQuiet('Записи удалены.'); }
+      }
+      return;
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="checkbox"]')) { e.preventDefault(); e.target.click(); }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="switch"]')) { e.preventDefault(); e.target.click(); }
+  });
+
+  // --- record screen state
+  var dose = 0.3, unit = 'г', step = 0.1;
+  var unitWord = { 'г':'грамма', 'мг':'миллиграмм', 'ст':'стакана', 'шт':'штуки' };
+  function fmt(v){ return (Math.round(v*100)/100).toString().replace('.', ','); }
+  function render(){
+    document.getElementById('dose').textContent = fmt(dose);
+    document.getElementById('unit').textContent = unitWord[unit] || unit;
+  }
+  document.getElementById('subs').addEventListener('click', function(e){
+    var c = e.target.closest('.chip[data-sub]'); if(!c) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('on'); });
+    c.classList.add('on'); hap('sel');
+    unit = c.dataset.unit; step = parseFloat(c.dataset.step); dose = parseFloat(c.dataset.def); render();
+    document.getElementById('dupe').style.display = (c.dataset.sub === 'Трава') ? 'flex' : 'none';
+  });
+  document.getElementById('plus').onclick = function(){ dose = Math.round((dose+step)*100)/100; hap('sel'); render(); };
+  document.getElementById('minus').onclick = function(){ dose = Math.max(step, Math.round((dose-step)*100)/100); hap('sel'); render(); };
+  document.getElementById('method').addEventListener('click', function(e){
+    if (e.target.tagName !== 'BUTTON') return;
+    this.querySelectorAll('button').forEach(function(b){ b.classList.remove('on'); });
+    e.target.classList.add('on'); hap('sel');
+  });
+  document.getElementById('period').addEventListener('click', function(e){
+    if (e.target.tagName !== 'BUTTON') return;
+    this.querySelectorAll('button').forEach(function(b){ b.classList.remove('on'); });
+    e.target.classList.add('on'); hap('sel');
+  });
+  document.getElementById('anyway').onclick = function(e){ e.preventDefault(); document.getElementById('dupe').style.display='none'; hap('warn'); };
+
+  // --- save + toast
+  var tEl = document.getElementById('toast'), tTimer;
+  function toast(txt){
+    document.getElementById('toast-txt').textContent = txt;
+    tEl.classList.add('on'); clearTimeout(tTimer);
+    tTimer = setTimeout(function(){ tEl.classList.remove('on'); }, 4200);
+  }
+  function save(){
+    var sub = document.querySelector('#subs .chip.on');
+    hap('ok');
+    show('diary');
+    toast('Записано. ' + (sub ? sub.dataset.sub : 'Трава') + ' · ' + fmt(dose) + ' ' + unit + ' · 21:26');
+  }
+  document.getElementById('save').onclick = save;
+  document.getElementById('save2').onclick = save;
+  document.getElementById('undo').onclick = function(){ hap('warn'); tEl.classList.remove('on'); toastQuiet('Отменено. Ничего не записали.'); };
+  function toastQuiet(txt){ setTimeout(function(){ toast(txt); document.getElementById('undo').style.display='none';
+    setTimeout(function(){ document.getElementById('undo').style.display=''; }, 2600); }, 220); }
+
+  // --- sheet
+  var sheet = document.getElementById('sheet'), veil = document.getElementById('veil');
+  function openSheet(title){ document.getElementById('sheet-title').textContent = title; sheet.classList.add('on'); veil.classList.add('on'); hap('light'); }
+  function closeSheet(){ sheet.classList.remove('on'); veil.classList.remove('on'); }
+  veil.onclick = closeSheet;
+  sheet.addEventListener('click', function(e){ if (e.target.closest('.item')) { hap(e.target.id === 'del' ? 'warn' : 'sel'); closeSheet(); } });
+
+  // --- onboarding
+  var obTrack = document.getElementById('ob-track');
+  function obIndex(){ return obTrack ? Math.round(obTrack.scrollLeft / obTrack.clientWidth) : 0; }
+  function obSync(){
+    var i = obIndex();
+    document.querySelectorAll('#ob-dots i').forEach(function(d, n){ d.classList.toggle('on', n === i); });
+    document.getElementById('ob-next').textContent = (i >= 2) ? 'Начать' : 'Дальше';
+  }
+  function resetOb(){ if (obTrack) obTrack.scrollLeft = 0; obSync(); }
+  if (obTrack) obTrack.addEventListener('scroll', obSync);
+  document.getElementById('ob-next').onclick = function(){
+    var i = obIndex(); hap('light');
+    if (i >= 2) { show('pin'); }
+    else obTrack.scrollTo({ left: (i+1) * obTrack.clientWidth, behavior: 'smooth' });
+  };
+
+  // --- pin
+  var pinStage = 'set', pinFirst = '', pinBuf = '';
+  var pinDots = document.getElementById('pin-dots');
+  function paintPin(){
+    pinDots.querySelectorAll('i').forEach(function(d, n){ d.classList.toggle('f', n < pinBuf.length); });
+  }
+  function pinText(cap, title, sub){
+    document.getElementById('pin-cap').textContent = cap;
+    document.getElementById('pin-title').textContent = title;
+    document.getElementById('pin-sub').textContent = sub;
+  }
+  function resetPin(){ pinStage = 'set'; pinFirst = ''; pinBuf = ''; paintPin();
+    pinText('Придумай PIN', 'Четыре цифры', 'Он будет закрывать вход в дневник. Запомни его — восстановить нельзя.'); }
+  function pinErr(){ pinDots.classList.add('shake','err'); hap('warn');
+    setTimeout(function(){ pinDots.classList.remove('shake','err'); pinBuf=''; paintPin(); }, 450); }
+  function pinPush(d){
+    if (pinBuf.length >= 4) return;
+    pinBuf += d; hap('sel'); paintPin();
+    if (pinBuf.length < 4) return;
+    setTimeout(function(){
+      if (pinStage === 'set') {
+        pinFirst = pinBuf; pinBuf = ''; pinStage = 'confirm'; paintPin();
+        pinText('Повтори PIN', 'Ещё раз', 'Введи те же четыре цифры, чтобы не ошибиться.');
+      } else if (pinStage === 'confirm') {
+        if (pinBuf === pinFirst) { hap('ok'); show('diary', false); }
+        else { pinErr(); pinStage = 'set'; pinFirst = '';
+          pinText('Не совпало', 'Начнём заново', 'Цифры разошлись. Придумай PIN ещё раз.'); }
+      }
+    }, 120);
+  }
+  document.getElementById('keys').addEventListener('click', function(e){
+    var k = e.target.closest('.key'); if (!k || k.classList.contains('act')) return;
+    pinPush(k.textContent.trim());
+  });
+  document.getElementById('pin-del').onclick = function(){ pinBuf = pinBuf.slice(0, -1); hap('light'); paintPin(); };
+  document.getElementById('pin-forgot').onclick = function(){ hap('warn');
+    pinText('PIN не восстановить', 'Только сброс', 'Мы не храним PIN и не можем его подсказать. Сбросить можно лишь вместе со всеми записями — это не отменить.'); }
+
+  document.addEventListener('click', function(e){
+    var check = e.target.closest('[role="checkbox"]');
+    if (check) { var next = check.getAttribute('aria-checked') !== 'true'; check.setAttribute('aria-checked', String(next)); check.classList.toggle('done', next); hap('sel'); }
+  });
+
+  // --- profile toggles
+  document.addEventListener('click', function(e){
+    var sw = e.target.closest('[data-toggle]');
+    if (sw) { var next = !sw.classList.contains('on'); sw.classList.toggle('on', next); sw.setAttribute('aria-checked', String(next)); hap('sel'); }
+  });
+
+  render();
+  var valid = root.concat(['entry','onboarding','pin','profile','empty','loading','error']);
+  var q = ((location.search + location.hash).match(/[?&#]s=([a-z]+)/) || [])[1];
+  show(valid.indexOf(q) >= 0 ? q : 'diary', false);
+})();
+</script>
+</body>
+</html>

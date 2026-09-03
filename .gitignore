@@ -1,0 +1,15 @@
+node_modules
+build
+dist
+.gigaide
+.env
+.env.local
+*.log
+.DS_Store
+*.zip
+usnee-deploy.zip
+coverage
+.vscode
+.idea
+*.swp
+*.swo
