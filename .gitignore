@@ -13,3 +13,8 @@ coverage
 .idea
 *.swp
 *.swo
+docs/vault/.obsidian/workspace*
+docs/vault/.obsidian/workspace.json
+docs/vault/.obsidian/plugins/*/data.json
+docs/vault/.obsidian/plugins/*/history.json
+docs/vault/audio/
