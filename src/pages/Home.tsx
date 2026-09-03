@@ -14,6 +14,8 @@ import {
 } from '../components/home';
 import { Button, InlineNotice, Surface } from '../components/ui';
 import { useToast } from '../components/ui/Toast';
+import { computeRecordXpDelta } from '../services/xpService';
+import { getLevelName } from '../domain/gamification';
 import { SUBSTANCES } from '../constants/substances';
 import { buildLastRecordContext, type QuickRecordDraft } from '../domain/record';
 import { useHomeData } from '../hooks/useHomeData';
@@ -84,8 +86,15 @@ export default function Home() {
           methodDetails: lastEntry.methodDetails ?? {}
         };
         const prepared = prepareRecordCommand(draft, batch);
-        await persistPreparedRecord(prepared);
+        const { feedback } = await computeRecordXpDelta(() => persistPreparedRecord(prepared));
         trackEvent('record_repeated');
+        if (feedback?.leveledUp) {
+          showToast({
+            tone: 'success',
+            title: `Уровень ${feedback.newLevel} — ${getLevelName(feedback.newLevel)}`,
+            detail: `+${feedback.xpDelta} XP. Так держать.`
+          });
+        }
         await refreshEntries();
         setLastRecordContext(
           buildLastRecordContext({
