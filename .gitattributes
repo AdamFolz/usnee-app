@@ -11,3 +11,7 @@
 *.html text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# HANDOFF is append-only coordination between two agents;
+# union merge keeps both sides of a conflict instead of markers
+/.hermes/HANDOFF.md merge=union
