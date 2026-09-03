@@ -1,5 +1,8 @@
-import { CheckCircle2, Home, Plus, Undo2 } from 'lucide-react';
+import { CheckCircle2, Home, Plus, Undo2, Zap } from 'lucide-react';
 import { Button, InlineNotice } from '../ui';
+import { XP } from '../../domain/gamification';
+import { hapticNotification } from '../../integrations/telegram';
+import { useEffect } from 'react';
 
 export function RecordResult({
   undoing,
@@ -12,9 +15,13 @@ export function RecordResult({
   onAnother: () => void;
   onUndo: () => void;
 }) {
+  useEffect(() => {
+    hapticNotification('success');
+  }, []);
+
   return (
     <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
-      <div className="grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15">
+      <div className="grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15 animate-level-up">
         <CheckCircle2 className="h-10 w-10 text-usnee-success" />
       </div>
       <div>
@@ -22,6 +29,10 @@ export function RecordResult({
         <p className="mt-2 text-body-sm text-usnee-text2">
           Запись доступна в Истории и Аналитике. Отправка на сервер появится позже.
         </p>
+        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-usnee-brand/15 px-3 py-1 text-body-sm font-semibold text-usnee-brand animate-count-up">
+          <Zap className="h-4 w-4" aria-hidden="true" />
+          +{XP.PER_ENTRY} XP
+        </div>
       </div>
       <InlineNotice tone="pending" title="На устройстве">
         Синхронизация появится, когда будет подключён серверный транспорт.

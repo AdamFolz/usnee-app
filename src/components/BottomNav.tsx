@@ -1,6 +1,7 @@
 import { BarChart3, History, Home, Plus, UserRound } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cx } from './ui';
+import { hapticSelection } from '../integrations/telegram';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Главная', end: true },
@@ -25,6 +26,7 @@ export function BottomNav() {
               to={item.path}
               end={'end' in item ? item.end : undefined}
               aria-label={item.label}
+              onClick={hapticSelection}
               className={({ isActive }) =>
                 cx(
                   'group relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg text-usnee-text3 transition-[color,transform,background-color] duration-normal ease-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus active:scale-[.96] motion-reduce:transform-none',

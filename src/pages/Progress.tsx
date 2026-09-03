@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, CalendarCheck, ChevronRight, Droplets, HeartPulse, Moon, ShieldCheck, Sparkles, TrendingUp, Star, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { ConsumptionEntry, MoodEntry, SleepEntry, Batch, WaterEntry } from '../types';
@@ -7,6 +7,8 @@ import { startOfDay } from '../utils/date';
 import { cleanStreak } from '../domain/stats';
 import { evaluateUnlockedAchievements } from '../domain/achievements';
 import { calculateXpSnapshot, getLevelName, xpForLevel } from '../domain/gamification';
+import { hapticNotification } from '../integrations/telegram';
+import { ConfettiBurst } from '../components/ConfettiBurst';
 import { Button, Surface, TopBar } from '../components/ui';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -52,6 +54,17 @@ export function Progress() {
   const nextLevelXp = xpForLevel(xpSnapshot.level + 1);
   const xpToNext = nextLevelXp - xpSnapshot.xpInLevel;
 
+  // Level-up celebration: fire once when level increases between renders
+  const prevLevelRef = useRef(xpSnapshot.level);
+  const [celebrate, setCelebrate] = useState(0);
+  useEffect(() => {
+    if (xpSnapshot.level > prevLevelRef.current && prevLevelRef.current > 0) {
+      setCelebrate((c) => c + 1);
+      hapticNotification('success');
+    }
+    prevLevelRef.current = xpSnapshot.level;
+  }, [xpSnapshot.level]);
+
 
   const cards = [
     { icon: CalendarCheck, label: 'Дни без записей', value: cleanDays, suffix: 'подряд', tone: 'text-usnee-success' },
@@ -79,10 +92,14 @@ export function Progress() {
           </Surface>
 
           {/* XP / Level Card */}
-          <Surface className="p-4">
+          <Surface className="relative p-4">
+            <ConfettiBurst burstKey={celebrate} active={celebrate > 0} />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent">
+                <div
+                  key={celebrate}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent ${celebrate > 0 ? 'animate-level-up animate-ring-pulse' : ''}`}
+                >
                   <Star className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
@@ -92,9 +109,9 @@ export function Progress() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="flex items-center gap-1 text-usnee-brand">
-                  <Zap className="h-5 w-5" aria-hidden="true" />
-                  <span className="text-title-md font-bold tabular-nums">{xpSnapshot.totalXp}</span>
+                <div className="flex items-center gap-1 text-usnee-brand" key={`xp-${xpSnapshot.totalXp}`}>
+                  <Zap className="h-5 w-5 animate-xp-pop" aria-hidden="true" />
+                  <span className="text-title-md font-bold tabular-nums animate-count-up" key={`num-${xpSnapshot.totalXp}`}>{xpSnapshot.totalXp}</span>
                   <span className="text-caption text-usnee-text3">XP</span>
                 </div>
                 <p className="mt-1 text-caption text-usnee-text2">
