@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "skillkit": {
+      "source": "crafter-station/skill-kit",
+      "sourceType": "github",
+      "skillPath": "skills/skillkit/SKILL.md",
+      "computedHash": "419dcea03782becc1346eb54fdea5c54768522f2d5768e10d5fe6ee920a3d57b"
+    }
+  }
+}
