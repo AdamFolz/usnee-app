@@ -37,7 +37,7 @@ export function prepareRecordCommand(draft: QuickRecordDraft, batch?: Batch | nu
   if (batch) {
     const consumedMass = amount.calculatedMassMg;
     if (consumedMass === undefined || !Number.isFinite(consumedMass) || consumedMass <= 0) {
-      throw new Error('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+      throw new Error('Не удалось рассчитать расход партии. Проверь количество и единицы.');
     }
     movement = {
       id: ids?.movementId ?? createUuid(), operationId, batchId: batch.id, entryId,

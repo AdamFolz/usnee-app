@@ -272,7 +272,7 @@ export default function Settings() {
                   const hasPassword = window.confirm('Файл зашифрован паролем?');
                   let data: string;
                   if (hasPassword) {
-                    const password = window.prompt('Введите пароль:');
+                    const password = window.prompt('Введи пароль:');
                     if (!password) return;
                     data = await decryptData(text, password);
                   } else {

@@ -8,16 +8,16 @@ const lessons = [
     id: 'start',
     icon: Zap,
     eyebrow: '01 · БЫСТРЫЙ СТАРТ',
-    title: 'Запись за минуту',
-    text: 'Нажми «Новая запись», выбери только то, что знаешь. Остальные поля можно заполнить позже — приложение не требует идеальности.',
+    title: 'С чего начать',
+    text: 'Нажми «Новая запись», выбери только то, что знаешь. Остальное потом.',
     steps: ['Открой «Новая запись»', 'Выбери вещество и способ', 'Сохрани — запись останется на устройстве']
   },
   {
     id: 'data',
     icon: LockKeyhole,
     eyebrow: '02 · ТВОИ ДАННЫЕ',
-    title: 'Локально и без сети',
-    text: 'USNEE работает offline-first: записи сначала живут на этом устройстве. Если синхронизация подключена, это будет явно показано.',
+    title: 'На этом телефоне',
+    text: 'Пишет без сети: записи сначала живут на этом устройстве. Если синхронизация подключена, это будет явно показано.',
     steps: ['Сеть не нужна для записи', 'PIN включается в настройках', 'Экспорт можно зашифровать паролем']
   },
   {
@@ -32,8 +32,8 @@ const lessons = [
     id: 'progress',
     icon: Sparkles,
     eyebrow: '04 · ПРОГРЕСС',
-    title: 'Смотри на динамику',
-    text: 'Прогресс — не оценка и не соревнование. Это спокойный способ заметить сон, воду, самочувствие и дни без записей.',
+    title: 'Неделя в цифрах',
+    text: 'Отмечай, чтобы видеть паттерны: сон, воду, самочувствие и дни без записей.',
     steps: ['Отмечай самочувствие', 'Проверяй недельный ритм', 'Выбирай один маленький шаг']
   }
 ] as const;
@@ -56,7 +56,7 @@ export default function Learn() {
         <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-usnee-accent/20 blur-3xl" />
         <div className="relative flex items-start gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-usnee-brand shadow-hero animate-float"><BookOpen className="h-7 w-7 text-white" /></div>
-          <div><p className="text-label uppercase text-usnee-brand">USNEE 101</p><h1 className="mt-1 text-title-lg">Разберись за 2 минуты</h1><p className="mt-2 text-body-sm text-usnee-text2">Короткие интерактивные подсказки вместо длинной инструкции.</p></div>
+          <div><p className="text-label uppercase text-usnee-brand">С чего начать</p><h1 className="mt-1 text-title-lg">Разберись за 2 минуты</h1><p className="mt-2 text-body-sm text-usnee-text2">Короткие интерактивные подсказки вместо длинной инструкции.</p></div>
         </div>
         <div className="mt-5 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-usnee-bg"><div className="h-full rounded-full bg-usnee-brand transition-[width] duration-500" style={{ width: `${(completed.length / lessons.length) * 100}%` }} /></div><span className="text-caption text-usnee-text2">{completed.length}/{lessons.length}</span></div>
       </Surface>

@@ -54,7 +54,7 @@ export function Stats() {
       ) : !entries.length ? (
         <Surface className="p-8 text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-usnee-text3" />
-          <p className="mt-3 text-usnee-text2">Недостаточно данных. Добавьте первую запись.</p>
+          <p className="mt-3 text-usnee-text2">Недостаточно данных. Добавь первую запись.</p>
         </Surface>
       ) : !periodEntries.length ? (
         <Surface className="p-8 text-center">

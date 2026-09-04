@@ -8,8 +8,8 @@ interface OnboardingProps {
 const slides = [
   {
     icon: Eye,
-    title: 'USNEE. Без осуждения, только факты.',
-    text: 'Приложение для тех, кому важны ясность и контроль. Записывай наблюдения и смотри на факты без морализаторства — спокойно и в своём темпе.'
+    title: 'USNEE. Без морали.',
+    text: 'Просто дневник. Записываешь, что было — и сам видишь картину. Никто не ставит оценки.'
   },
   {
     icon: Zap,
@@ -24,7 +24,7 @@ const slides = [
   {
     icon: Lock,
     title: 'Приватность',
-    text: 'Данные сначала сохраняются на вашем устройстве. PIN помогает ограничить доступ к приложению. Содержимое записей никогда не покидает устройство — наружу уходит только обезличенная статистика использования (например, «запись создана»), без названий, доз и заметок.'
+    text: 'Данные сначала на этом телефоне. PIN помогает ограничить доступ к приложению. Содержимое записей никогда не покидает устройство — наружу уходит только обезличенная статистика использования (например, «запись создана»), без названий, доз и заметок.'
   }
 ];
 
@@ -53,7 +53,7 @@ export default function Onboarding({ onDone }: OnboardingProps) {
     <div className="flex h-full flex-col bg-usnee-bg">
       {/* Skip button */}
       <div className="flex items-center justify-between gap-4 p-4">
-        <div className="flex items-center gap-2 text-caption uppercase tracking-[.12em] text-usnee-text3"><Sparkles className="h-3.5 w-3.5 text-usnee-accent" /> USNEE 101</div>
+        <div className="flex items-center gap-2 text-caption uppercase tracking-[.12em] text-usnee-text3"><Sparkles className="h-3.5 w-3.5 text-usnee-accent" /> С чего начать</div>
         <button
           type="button"
           aria-label="Пропустить знакомство"

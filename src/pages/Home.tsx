@@ -145,7 +145,7 @@ export default function Home() {
 
       {data.status === 'error' && (
         <InlineNotice tone="danger" title="Не удалось загрузить локальные данные">
-          <p>Данные не удалены. Попробуйте прочитать их ещё раз.</p>
+          <p>Данные не удалены. Попробуй прочитать их ещё раз.</p>
           <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
         </InlineNotice>
       )}

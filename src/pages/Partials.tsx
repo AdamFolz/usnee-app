@@ -152,7 +152,7 @@ export default function Partials() {
           </div>
         ) : (
           <div className="rounded-xl bg-usnee-surface p-4 text-center">
-            <p className="text-sm text-usnee-text2">Активной партии нет. Создайте партию, чтобы считать остаток — или запишите без неё.</p>
+            <p className="text-sm text-usnee-text2">Активной партии нет. Создай партию, чтобы считать остаток — или запиши без неё.</p>
             <button
               onClick={() => setShowCreate(true)}
               className="big-tap mt-3 inline-flex items-center gap-2 rounded-xl bg-usnee-accent px-4 py-2 text-sm font-semibold text-white transition-all active:scale-95"

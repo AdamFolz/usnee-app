@@ -36,16 +36,16 @@ export function normalizeAmountInput(input: string): string {
 }
 
 export function parseRecordAmount(input: string, unit: string, concentrationMgMl?: number): AmountResult {
-  if (input.trim().startsWith('-')) return { valid: false, error: 'Введите количество больше нуля' };
+  if (input.trim().startsWith('-')) return { valid: false, error: 'Введи количество больше нуля' };
   const normalized = normalizeAmountInput(input);
   const value = Number(normalized);
-  if (!normalized || !Number.isFinite(value) || value <= 0) return { valid: false, error: 'Введите количество больше нуля' };
+  if (!normalized || !Number.isFinite(value) || value <= 0) return { valid: false, error: 'Введи количество больше нуля' };
   let calculatedMassMg: number | undefined;
   if (unit === 'г') calculatedMassMg = value * 1000;
   else if (unit === 'мг') calculatedMassMg = value;
   else if (unit === 'мл' && concentrationMgMl && concentrationMgMl > 0) calculatedMassMg = value * concentrationMgMl;
   if (calculatedMassMg !== undefined && (!Number.isFinite(calculatedMassMg) || calculatedMassMg <= 0)) {
-    return { valid: false, error: 'Не удалось рассчитать расход. Проверьте количество и единицы.' };
+    return { valid: false, error: 'Не удалось рассчитать расход. Проверь количество и единицы.' };
   }
   return { valid: true, value, normalized, calculatedMassMg };
 }
@@ -173,16 +173,16 @@ export function resolveQuickRecordDefaults(
 
 export function validateRecordDraft(draft: QuickRecordDraft, batch?: Batch | null): string[] {
   const errors: string[] = [];
-  if (!draft.substanceId) errors.push('Выберите вещество');
-  if (!draft.methodId) errors.push('Выберите способ');
+  if (!draft.substanceId) errors.push('Выбери вещество');
+  if (!draft.methodId) errors.push('Выбери способ');
   const amount = parseRecordAmount(draft.amountInput, draft.amountUnit, batch?.concentration);
   if (!amount.valid) errors.push(amount.error!);
-  if (!Number.isFinite(draft.occurredAt) || draft.occurredAt > Date.now() + 5 * 60_000) errors.push('Проверьте время записи');
+  if (!Number.isFinite(draft.occurredAt) || draft.occurredAt > Date.now() + 5 * 60_000) errors.push('Проверь время записи');
   if (batch) {
     if (!batch.active || batch.substanceId !== draft.substanceId) errors.push('Партия не подходит для выбранного вещества');
     if (!Number.isFinite(batch.concentration) || batch.concentration <= 0 || batch.remaining < 0) errors.push('Данные партии повреждены');
     if (amount.calculatedMassMg === undefined || !Number.isFinite(amount.calculatedMassMg) || amount.calculatedMassMg <= 0) {
-      errors.push('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+      errors.push('Не удалось рассчитать расход партии. Проверь количество и единицы.');
     } else if (amount.calculatedMassMg > batch.remaining) {
       errors.push('В партии недостаточно остатка');
     }

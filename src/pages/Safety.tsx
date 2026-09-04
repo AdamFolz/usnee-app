@@ -20,7 +20,7 @@ const OVERDOSE_SIGNS = [
 const NALOXONE_STEPS = [
   'Проверь сознание и дыхание. Если не дышит — начни СЛР.',
   'Положи на бок (recovery position), чтобы не подавиться рвотой.',
-  'Распрыскай naloxone в нос (1-2 дозы).',
+  'Распрыскай налоксон в нос (1-2 дозы).',
   'Повторяй каждые 2-3 минуты, если нет реакции.',
   'Вызови 103 и НЕ ОСТАВЛЯЙ одного.',
 ];
@@ -28,7 +28,7 @@ const NALOXONE_STEPS = [
 const HELP_FRIEND_STEPS = [
   'Проверь дыхание: вдохи редкие? Храп? Остановка?',
   'Положи на бок, слегка запрокинув голову.',
-  'Если есть naloxone — используй немедленно.',
+  'Если есть налоксон — используй немедленно.',
   'Набери 103. Скажи: "передозировка, нужна скорая".',
   'Не убирайся, не прячь вещи. Жизнь важнее.',
   'Не оставляй одного до приезда скорой.',
@@ -470,7 +470,7 @@ export default function Safety() {
             onClick={() => alert('Поиск по геолокации в разработке')}
             className="w-full bg-usnee-surface border border-usnee-border text-usnee-text font-bold py-3 rounded-xl min-h-[48px] flex items-center justify-center gap-2 transition-all active:scale-95"
           >
-            Найти пункты выдачи naloxone
+            Найти пункты выдачи налоксон
           </button>
         </div>
 
@@ -710,7 +710,7 @@ export default function Safety() {
               <div className="text-red-200/80">1. Немедленно проверь состояние человека.</div>
               <div className="text-red-200/80">2. Если нет реакции — вызови 103.</div>
               <div className="text-red-200/80">3. Положи на бок, не оставляй одного.</div>
-              <div className="text-red-200/80">4. Если есть naloxone — используй.</div>
+              <div className="text-red-200/80">4. Если есть налоксон — используй.</div>
             </div>
 
             <a

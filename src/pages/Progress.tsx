@@ -83,8 +83,8 @@ export function Progress() {
             <div className="relative flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-label uppercase text-usnee-text3"><Sparkles className="h-4 w-4 text-usnee-brand" /> Твоя динамика</div>
-                <h2 className="mt-3 text-title-lg">Маленькие шаги тоже считаются</h2>
-                <p className="mt-2 max-w-[17rem] text-body-sm text-usnee-text2">Смотри на факты без оценок. Выбери то, что поможет сегодня.</p>
+                <h2 className="mt-3 text-title-lg">Неделя в цифрах</h2>
+                <p className="mt-2 max-w-[17rem] text-body-sm text-usnee-text2">Отмечай, чтобы видеть паттерны.</p>
               </div>
 
             </div>
@@ -177,7 +177,7 @@ export function Progress() {
           </Surface>
 
           <Surface className="p-4">
-            <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-usnee-success" /><div><h2 className="text-title-md">Безопасность — это процесс</h2><p className="mt-1 text-body-sm text-usnee-text2">Проверяй самочувствие, отмечай сон и воду. Эти данные помогают заметить изменения раньше.</p></div></div>
+            <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-usnee-success" /><div><h2 className="text-title-md">Безопасность рядом</h2><p className="mt-1 text-body-sm text-usnee-text2">Проверяй самочувствие, отмечай сон и воду. Эти данные помогают заметить изменения раньше.</p></div></div>
             <Button variant="secondary" className="mt-4 w-full" onClick={() => navigate('/profile')}><TrendingUp className="h-4 w-4" /> Открыть инструменты самопомощи <ChevronRight className="ml-auto h-4 w-4" /></Button>
           </Surface>
         </>

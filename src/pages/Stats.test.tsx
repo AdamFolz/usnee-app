@@ -28,7 +28,7 @@ describe('Stats', () => {
   it('renders neutral empty state', async () => {
     mockedEntries.mockResolvedValue([]);
     render(<Stats />);
-    expect(await screen.findByText('Недостаточно данных. Добавьте первую запись.')).toBeInTheDocument();
+    expect(await screen.findByText('Недостаточно данных. Добавь первую запись.')).toBeInTheDocument();
   });
 
   it('switches between recent and all-time periods', async () => {

@@ -18,7 +18,7 @@ describe('record domain', () => {
   it('does not invent conversion for unknown units', () => expect(parseRecordAmount('2', 'хиты').calculatedMassMg).toBeUndefined());
   it('validates compatible balance', () => expect(validateRecordDraft(draft, batch)).toEqual([]));
   it('rejects unknown units when a batch must be consumed', () => {
-    expect(validateRecordDraft({ ...draft, amountUnit: 'хиты', amountInput: '2' }, batch)).toContain('Не удалось рассчитать расход партии. Проверьте количество и единицы.');
+    expect(validateRecordDraft({ ...draft, amountUnit: 'хиты', amountInput: '2' }, batch)).toContain('Не удалось рассчитать расход партии. Проверь количество и единицы.');
   });
   it('maps inject volume and only accepts a matching active batch', () => {
     expect(resolveRecordAmountFields('inject', { volume: 0.8 })).toEqual({ amountInput: '0.8', amountUnit: 'мл' });

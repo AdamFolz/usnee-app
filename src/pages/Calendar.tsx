@@ -329,15 +329,15 @@ function Calendar() {
                     )}
 
                     {entry.missedShot && (
-                      <p className="mt-1 text-xs text-usnee-danger">Missed shot</p>
+                      <p className="mt-1 text-xs text-usnee-danger">Пропущенный укол</p>
                     )}
                     {entry.fentanylTestResult && (
                       <p className="mt-1 text-xs text-usnee-warning">
-                        Фентанил-тест: {entry.fentanylTestResult}
+                        Фентанил-тест: {entry.fentanylTestResult === 'positive' ? 'положительно' : entry.fentanylTestResult === 'negative' ? 'отрицательно' : 'неоднозначно'}
                       </p>
                     )}
                     {entry.qualityNote && (
-                      <p className="mt-1 text-xs text-usnee-success">Quality note: {entry.qualityNote}</p>
+                      <p className="mt-1 text-xs text-usnee-success">Заметка: {entry.qualityNote}</p>
                     )}
                   </div>
                 ))}

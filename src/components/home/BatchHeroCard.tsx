@@ -23,7 +23,7 @@ export function BatchHeroCard({
     <Surface variant="danger" className="p-5">
       <AlertTriangle className="h-6 w-6 text-usnee-danger" aria-hidden="true" />
       <h2 className="mt-3 text-title-lg">Не удалось рассчитать остаток</h2>
-      <p className="mt-2 text-body-sm text-usnee-text2">Проверьте данные активной партии.</p>
+      <p className="mt-2 text-body-sm text-usnee-text2">Проверь данные активной партии.</p>
       <Button variant="secondary" className="mt-4 w-full" onClick={onOpenBatch}>Проверить партию</Button>
     </Surface>
   );
@@ -32,7 +32,7 @@ export function BatchHeroCard({
       <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-usnee-glass"><FlaskConical className="h-6 w-6 text-usnee-brand" aria-hidden="true" /></div>
       <h2 className="mt-3 text-title-lg">Партии пока нет</h2>
       <p className="mt-2 text-body-sm text-usnee-text2">
-        Создайте партию, чтобы считать остаток и концентрацию. Запись без партии тоже возможна.
+        Создай партию, чтобы считать остаток и концентрацию. Запись без партии тоже возможна.
       </p>
       <Button className="mt-4 w-full" onClick={onOpenBatch}><Plus className="h-4 w-4" aria-hidden="true" />Создать партию</Button>
       {onRecordWithoutBatch && (

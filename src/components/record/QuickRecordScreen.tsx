@@ -115,7 +115,7 @@ export function QuickRecordScreen() {
   if (defaults.status === 'error') {
     return (
       <InlineNotice tone="danger" title="Не удалось открыть быструю запись">
-        Локальные данные недоступны. Вернитесь и попробуйте снова.
+        Локальные данные недоступны. Вернись и попробуй снова.
       </InlineNotice>
     );
   }
@@ -227,7 +227,7 @@ export function QuickRecordScreen() {
           >
             <span>
               <span className="block text-caption text-usnee-text3">Вещество</span>
-              <strong>{current.substanceName || 'Выберите вещество'}</strong>
+              <strong>{current.substanceName || 'Выбери вещество'}</strong>
             </span>
             <ChevronDown className="h-5 w-5" />
           </button>
@@ -238,7 +238,7 @@ export function QuickRecordScreen() {
           >
             <span>
               <span className="block text-caption text-usnee-text3">Способ</span>
-              <strong>{current.methodName || 'Выберите способ'}</strong>
+              <strong>{current.methodName || 'Выбери способ'}</strong>
             </span>
             <ChevronDown className="h-5 w-5" />
           </button>
@@ -328,7 +328,7 @@ export function QuickRecordScreen() {
                 </Button>
               </div>
 
-      <BottomSheet open={picker === 'substance'} onClose={() => setPicker(null)} title="Выберите вещество">
+      <BottomSheet open={picker === 'substance'} onClose={() => setPicker(null)} title="Выбери вещество">
         <div className="grid grid-cols-2 gap-2 pb-2">
           {SUBSTANCES.map((substance) => (
             <ChoiceChip
@@ -348,7 +348,7 @@ export function QuickRecordScreen() {
           ))}
         </div>
       </BottomSheet>
-      <BottomSheet open={picker === 'method'} onClose={() => setPicker(null)} title="Выберите способ">
+      <BottomSheet open={picker === 'method'} onClose={() => setPicker(null)} title="Выбери способ">
         <div className="grid grid-cols-2 gap-2 pb-2">
           {METHODS.map((method) => (
             <ChoiceChip
@@ -385,7 +385,7 @@ export function QuickRecordScreen() {
           </div>
         }
       >
-        <p className="text-body-sm text-usnee-text2">Проверьте количество и время перед сохранением.</p>
+        <p className="text-body-sm text-usnee-text2">Проверь количество и время перед сохранением.</p>
       </Dialog>
       <Dialog
         open={leaveOpen}

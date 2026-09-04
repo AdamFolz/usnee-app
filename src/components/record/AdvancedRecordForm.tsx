@@ -145,7 +145,7 @@ function Section({ title, description, children }: SectionProps) {
 function persistErrorMessage(error: unknown): string {
   const code = error instanceof Error ? error.message : '';
   if (code === 'BATCH_INSUFFICIENT') return 'В партии недостаточно остатка';
-  if (code === 'BATCH_CHANGED') return 'Остаток партии изменился. Обновите экран и попробуйте снова.';
+  if (code === 'BATCH_CHANGED') return 'Остаток партии изменился. Обнови экран и попробуй снова.';
   if (code === 'BATCH_UNAVAILABLE') return 'Активная партия недоступна';
   if (code === 'BATCH_INCOMPATIBLE') return 'Партия не подходит для выбранного вещества';
   return error instanceof Error ? error.message : 'Не удалось сохранить на устройстве';
@@ -624,7 +624,7 @@ export default function AdvancedRecordForm() {
 
   const missingNotice = submitAttempted && highlightMissing && !canSave && (
     <InlineNotice tone="danger" title="Не хватает данных">
-      Укажите вещество, способ и положительную дозу, чтобы сохранить запись.
+      Укажи вещество, способ и положительную дозу, чтобы сохранить запись.
     </InlineNotice>
   );
 
