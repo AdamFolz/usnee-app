@@ -21,9 +21,9 @@
 - [ ] Серверная синхронизация: batch ledger, outbox drain
 - [ ] SOS capability boundary (только локальные действия)
 
-## Метрики (04.09.2026 03:50)
-- master: `14dcee8` (docs ADR-0002; push не делался)
-- Тестов: **241/241 ✅** (27 файлов, vitest run singleThread)
+## Метрики (04.09.2026 07:12)
+- master: `193cedd` (copy-волна 30.08 закоммичена; push не делался, ahead 1)
+- Тестов: **242/242 ✅** (28 файлов; db.v2 — флак hookTimeout, вне очереди 9/9 за 39 мс)
 - PWA: 8 precache, 1183.73 KiB
 - typecheck (`tsc --noEmit`): ✅ без ошибок
 - build (`vite build`): ✅ PWA v0.20.5
