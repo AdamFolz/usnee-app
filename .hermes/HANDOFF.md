@@ -180,3 +180,11 @@
 - **origin/main ушёл вперёд:** `1e172b9` (PR #9 — phase 5 XP feedback merged). Master расходится: локально 4 коммита (b9d6491, e913be9, 62d23c7, c826820), remote 3 (PR #9 + HANDOFF). Перед пушем — rebase master на origin/main.
 - **Не сделано:** пуш (не командовал), /stats absorption (pending).
 - **Следующий шаг:** `git rebase origin/main` → секрет-скан → `git push origin master:main`.
+
+## Сессия 04.09 ~05:30 — скан доработок, коммит confetti, пуш + деплой
+
+- **Скан веток:** все локальные (feat/diary-prototype, feat/landing-telegram-cta, fix/*, review/*) и remote-арены — 0 ahead от master, слиты. Сливать нечего. origin/arena/01a06240 = уже влитой security PR #8 (через rebase), остаток = HANDOFF-шум.
+- **Восстановлен package.json:** in-tree правка убирала `--pool=threads --singleThread` из test-скриптов — это откат фикс-флейка db.v2.test.ts (см. git-workflow reference). Работающее дерево сброшено к HEAD.
+- **Закоммичен хвост:** `5800675` feat(record): confetti burst on level-up в RecordResult (доработка фазы 5, компонент ConfettiBurst уже в дереве).
+- **Цепочка:** test:run 241/241 ✅ → tsc ✅ → build ✅ → push master:main → gh-pages деплой.
+- Планы (.hermes/plans/*) — рабочие артефакты агентов, в репо не тянутся (gitignore не трогали, просто не add).
