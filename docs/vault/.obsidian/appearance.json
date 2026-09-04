@@ -1,0 +1,9 @@
+{
+  "theme": "system",
+  "accentColor": "#ff14e0",
+  "cssTheme": "Apatheia",
+  "interfaceFontFamily": "Franklin Gothic",
+  "textFontFamily": "Sitka Small,Franklin Gothic Medium,Bodoni 72 Smallcaps",
+  "monospaceFontFamily": "Courier New",
+  "baseFontSize": 15
+}

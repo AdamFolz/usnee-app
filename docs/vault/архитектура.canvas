@@ -1,0 +1,15 @@
+{
+	"nodes":[
+		{"id":"app_shell","x":0,"y":0,"width":320,"height":220,"type":"text","text":"## 📱 UI Shell & Core Routes\n\n- `App.tsx` (HashRouter / React Router 6)\n- `AppShell.tsx` (SafeArea, PWA Banner, Offline indicator)\n- `BottomNav.tsx` (5 канонических вкладок)\n- `Onboarding.tsx` & `PinLock.tsx`"},
+		{"id":"flows","x":420,"y":-120,"width":360,"height":260,"type":"text","text":"## ⚡ Key Flows\n\n- **Quick Record** (`/add`): 1-тап запись без review-шага\n- **History** (`/history`): HistoryDashboard (хитмап 12 нед, стрики, дозы)\n- **Progress / XP** (`/analytics`): геймификация, ConfettiBurst, haptic\n- **Safety / SOS** (`/safety`): локальные звонки, без фейковых внешних вызовов"},
+		{"id":"storage_sync","x":420,"y":200,"width":360,"height":240,"type":"text","text":"## 💾 Local-First Ledger & Outbox\n\n- **IndexedDB (`idb 8`)**: `db.v2.ts`\n- `BatchMovement` append-only ledger\n- Outbox sync (`outboxSync.ts`)\n- Client stable UUID (`entityId` + `operationId`)\n- Crypto (`PBKDF2`, AES-GCM) для безопасного экспорта"},
+		{"id":"integrations","x":860,"y":40,"width":320,"height":220,"type":"text","text":"## 🌐 Integrations & Delivery\n\n- **Telegram SDK**: `@telegram-apps/sdk-react`\n- **GitHub Pages**: `adamfolz.github.io/usnee-app`\n- **PWA Service Worker**: offline cache (1183 KiB)\n- **PostHog EU**: 8 событий, autocapture off"},
+		{"id":"agents","x":0,"y":300,"width":320,"height":220,"type":"text","text":"## 🤖 Agent Workflow\n\n- **Hermes Agent API**: `127.0.0.1:8642`\n- **Obsidian Vault**: `usnee/docs/vault/`\n- **Cron**: health-check + autonomous-improve (15m)\n- **Telegram Bot**: алерт-канал и статус"}
+	],
+	"edges":[
+		{"id":"e_shell_flows","fromNode":"app_shell","fromSide":"right","toNode":"flows","toSide":"left"},
+		{"id":"e_flows_storage","fromNode":"flows","fromSide":"bottom","toNode":"storage_sync","toSide":"top"},
+		{"id":"e_storage_integrations","fromNode":"storage_sync","fromSide":"right","toNode":"integrations","toSide":"left"},
+		{"id":"e_shell_agents","fromNode":"app_shell","fromSide":"bottom","toNode":"agents","toSide":"top"}
+	]
+}
