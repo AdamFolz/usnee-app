@@ -4,6 +4,7 @@ import { Button, InlineNotice, Surface } from '../ui';
 import { XP, getLevelName } from '../../domain/gamification';
 import { hapticNotification } from '../../integrations/telegram';
 import type { RecordXpFeedback } from '../../domain/gamificationFeedback';
+import { ConfettiBurst } from '../ConfettiBurst';
 
 export function RecordResult({
   undoing,
@@ -25,8 +26,9 @@ export function RecordResult({
   }, []);
 
   return (
-    <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
-      <div className="grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15 animate-level-up">
+    <div className="relative flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
+      <ConfettiBurst burstKey={feedback?.newLevel ?? 0} active={Boolean(feedback?.leveledUp)} />
+      <div className={`grid h-20 w-20 place-items-center rounded-full bg-usnee-success/15 animate-level-up ${feedback?.leveledUp ? 'animate-ring-pulse' : ''}`}>
         <CheckCircle2 className="h-10 w-10 text-usnee-success" />
       </div>
       <div>
