@@ -162,3 +162,21 @@
 - Цепочка: 232/232, typecheck, build (PWA 8 precache 1181 KiB), CodeQL+Analyze green.
 - XP = производное состояние: миграций нет, undo откатывает XP сам через данные.
 - След.: фаза 6 (по плану PROJECT_STATE) или /stats decision; HANDOFF конвенция append-only + merge=union живая, конфликтов нет.
+## Сессия 04.09 02:00-03:00 МСК (autonomous work-2h, cron f4c0f24b38cd)
+
+- **master:** `62d23c7` (был c11d5bd). Новые коммиты: `c826820` feat(gamification): реальный XP-дельта при сохранении записи + level-up celebrate в RecordResult; `62d23c7` chore: gitignore vault workspace/audio, vitest singleThread pool. **Push НЕ делался** (только по явной команде), ahead ~31.
+- **Фаза 5 закрыта:** `computeXpGain(before, after)` в domain/gamification.ts; QuickRecordScreen снапшотит XP до/после save; RecordResult показывает реальный `+N XP` + конфетти/haptic при level-up. Хардкод XP.PER_ENTRY в результате убран.
+- **База:** тесты 231/231 ✅ (26 файлов), `tsc --noEmit` ✅, `vite build` ✅ PWA v0.20.5 (1183.73 KiB, 8 precache).
+- **Grep-контроль:** console.log в src (не тесты) — 0; `: any` в src — 0.
+- **В процессе:** тест для AdvancedRecordForm.tsx (1020 строк) — писал субагент, проверить src/components/record/AdvancedRecordForm.test.tsx при заходе.
+- **Следующий шаг:** проверить тест AdvancedRecordForm; следующий бэклог — vault/docs (см. usnee/docs/vault/бэклог-автономных-сессий.md).
+- **Дополнение 02:20:** субагент оставил AdvancedRecordForm.test.tsx (10 кейсов, 1 падал) — дочищено: мок prepareRecordCommand был async, реальная ф-ция синхронная → entry из Promise давал все-undefined. Мок переписан на input-derived sync. Итог: **241/241 ✅, tsc ✅**, коммит `e913be9`. Урок: субагентам с лимитом итераций на 1000-строчные компоненты — бюджет мал, дочищивать руками.
+
+## Сессия 04.09 03:20 — vault закоммичен, health-check починен, закрытие
+
+- **health-check cron:** старый `.sh` падал (bash не на PATH на Windows). Переписан на `~/.hermes/scripts/health-check.py` (gateway/API:8642/Obsidian/диск/state.db, silent on success). Авто-рестарт gateway убран — cron блокирует lifecycle-команды (#30719). Job `b262d85fc325` active, every 15m, run ok.
+- **Vault:** `docs/vault/` закоммичен (`b9d6491`) — 14 md + canvas + .obsidian (7 плагинов, 6 тем); data.json/workspace/audio в .gitignore. Секрет-скан дельты чист.
+- **Цепочка:** test:run **241/241 ✅** (27 файлов) → tsc ✅ → build ✅ (PWA 8 precache, 1183.73 KiB).
+- **origin/main ушёл вперёд:** `1e172b9` (PR #9 — phase 5 XP feedback merged). Master расходится: локально 4 коммита (b9d6491, e913be9, 62d23c7, c826820), remote 3 (PR #9 + HANDOFF). Перед пушем — rebase master на origin/main.
+- **Не сделано:** пуш (не командовал), /stats absorption (pending).
+- **Следующий шаг:** `git rebase origin/main` → секрет-скан → `git push origin master:main`.
