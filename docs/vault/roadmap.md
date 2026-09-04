@@ -10,20 +10,19 @@
 - [x] PR #7/#8 merged (security: fail-closed export, PBKDF2, SW cache)
 - [x] Конфетти/haptic — `e338d47`, ConfettiBurst component
 
-## Готово
-- [x] Фаза 5 — XP-фидбек записи: `computeXpGain` (domain/gamification.ts), реальный `+N XP` в RecordResult, level-up конфетти. Тесты 231/231 ✅ (04.09, коммиты c826820/62d23c7)
+- [x] Фаза 5 — XP-фидбек записи: `computeXpGain`, `+N XP` в RecordResult, level-up конфетти (04.09, PR #9)
+- [x] Фаза 4 — геймификация: streak (HistoryDashboard/Progress), XP + уровни (gamification.ts), ачивки в UI (Profile/Progress/RecordResult). Проверено 04.09: всё в src, тесты 241/241 ✅
 
 ## В работе
 - [ ] Решение по /stats — поглотить дашбордом или отдельный роут
 
 ## Очередь
-- [ ] Фаза 4 — геймификация (streak + XP + уровни + ачивки в UI)
 - [ ] Telegram Mini App: бот, deep links, TG-нативный UX
 - [ ] Серверная синхронизация: batch ledger, outbox drain
 - [ ] SOS capability boundary (только локальные действия)
 
-## Метрики (04.09.2026 02:05)
-- master: `e913be9` (фаза 5 + тесты AdvancedRecordForm; push не делался)
+## Метрики (04.09.2026 03:50)
+- master: `14dcee8` (docs ADR-0002; push не делался)
 - Тестов: **241/241 ✅** (27 файлов, vitest run singleThread)
 - PWA: 8 precache, 1183.73 KiB
 - typecheck (`tsc --noEmit`): ✅ без ошибок
