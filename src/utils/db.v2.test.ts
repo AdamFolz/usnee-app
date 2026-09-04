@@ -8,7 +8,17 @@ const batch: Batch = { id: 'b1', substanceId: 'meph', name: '№014', totalWeigh
 
 async function reset() {
   closeDB();
-  await new Promise<void>((resolve, reject) => { const request = indexedDB.deleteDatabase('usnee-db'); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); request.onblocked = () => reject(new Error('blocked')); });
+  await new Promise<void>((resolve, reject) => {
+    // Retry: a pending transaction from the previous test can briefly hold the
+    // connection open; an immediate deleteDatabase then gets stuck "blocked".
+    const tryDelete = (attempt: number): void => {
+      const request = indexedDB.deleteDatabase('usnee-db');
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => { if (attempt >= 20) reject(new Error('blocked')); else setTimeout(() => tryDelete(attempt + 1), 25); };
+    };
+    tryDelete(0);
+  });
 }
 
 beforeEach(reset);

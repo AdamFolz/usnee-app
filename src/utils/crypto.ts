@@ -7,18 +7,21 @@
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-function bufToBase64(buf: ArrayBuffer): string {
+function bufToBase64(buf: ArrayBufferLike): string {
   const bytes = new Uint8Array(buf);
   let bin = '';
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin);
 }
 
-function base64ToBuf(b64: string): ArrayBuffer {
+function base64ToBuf(b64: string): Uint8Array<ArrayBuffer> {
   const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
+  const bytes = new Uint8Array(new ArrayBuffer(bin.length));
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes.buffer;
+  // Return the view, not .buffer: Node's webcrypto (CI, Node 20) rejects a bare
+  // cross-realm ArrayBuffer in Pbkdf2Params with "salt ... is not instance of
+  // ArrayBuffer" — TypedArray views pass its ArrayBuffer.isView check.
+  return bytes;
 }
 
 const PIN_ITER = 150_000;
@@ -40,7 +43,7 @@ export async function verifyPin(pin: string, stored: string): Promise<boolean> {
   const parts = stored.split(':');
   if (parts.length !== 3) return false;
   const [, saltB64, hashB64] = parts;
-  let salt: ArrayBuffer;
+  let salt: Uint8Array<ArrayBuffer>;
   try {
     salt = base64ToBuf(saltB64);
   } catch {
