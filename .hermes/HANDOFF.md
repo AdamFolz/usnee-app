@@ -192,3 +192,9 @@
 ## 04.09 ~10:00 (work-2h)
 - **CI deploy red с 03.09 15:43 (после PR #8):** Node 20 webcrypto strict — Pbkdf2Params.salt не принимает голый ArrayBuffer из vitest-воркера; decryptData передавал `.buffer`, encryptData — Uint8Array (потому падал только roundtrip). Фикс `6108cba`: base64ToBuf → Uint8Array<ArrayBuffer> view; db.v2 reset() retry on deleteDatabase blocked. 242/242, tsc, build ✅.
 - **Ждёт юзера:** push master→main (master 6108cba, ahead 4) — после пуша CI зелёный, Pages обновится. Без пуша правило work-2h: только по явной команде.
+
+## Сессия 02.09 ~19:00 (crafter-станция-скан + Pets) — закрытие
+- Прошёрстили экосистему crafter-station + related: установлен skillkit (`npx skills add crafter-station/skill-kit --skill skillkit`, SessionEnd hook on, bun 1.4.0), скиллы ray+tinte (Railly/tinte, symlink в Hermes), tinte CLI 1.3.0 в `~\.bun\bin` (не в PATH — хвост).
+- Вердикты: ai-elements-assistant/kata/elements/crafter-run ui — мимо; LatAm-комьюнити (crafter.run, hack0.dev, thenextcraft, catch, v0-неделя) — мимо; ui.shadcn.com — держать как справку; **agentfiles** (Obsidian-плагин, GUI поверх скиллов + skillkit dashboard) — единственная находка, установка за юзером (не подтверждено).
+- hermesagents.net — неофиц. фан-сайт, не источник. Статья про Hermes Pets проверена на живой сборке: `hermes pets` работает, v0.20.6, 4675 питомцев, выбран jill-stingray. `hermes update` доступен (1127 позади) — не делался.
+- **Хвосты:** push master→main (master 775ed46, ahead 5, origin/main 0 позади — fast-forward) — по явной команде; PATH для `~\.bun\bin`; установка agentfiles в Obsidian.
