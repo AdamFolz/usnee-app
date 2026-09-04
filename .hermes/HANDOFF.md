@@ -188,3 +188,7 @@
 - **Закоммичен хвост:** `5800675` feat(record): confetti burst on level-up в RecordResult (доработка фазы 5, компонент ConfettiBurst уже в дереве).
 - **Цепочка:** test:run 241/241 ✅ → tsc ✅ → build ✅ → push master:main → gh-pages деплой.
 - Планы (.hermes/plans/*) — рабочие артефакты агентов, в репо не тянутся (gitignore не трогали, просто не add).
+
+## 04.09 ~10:00 (work-2h)
+- **CI deploy red с 03.09 15:43 (после PR #8):** Node 20 webcrypto strict — Pbkdf2Params.salt не принимает голый ArrayBuffer из vitest-воркера; decryptData передавал `.buffer`, encryptData — Uint8Array (потому падал только roundtrip). Фикс `6108cba`: base64ToBuf → Uint8Array<ArrayBuffer> view; db.v2 reset() retry on deleteDatabase blocked. 242/242, tsc, build ✅.
+- **Ждёт юзера:** push master→main (master 6108cba, ahead 4) — после пуша CI зелёный, Pages обновится. Без пуша правило work-2h: только по явной команде.
