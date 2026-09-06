@@ -25,3 +25,9 @@ docs/vault/audio/
 .hermes/plans/
 .hermes/skills/
 docs/vault
+
+# agent scratch (не репозиторий)
+.tmp_*
+_av*.html
+_avito*.html
+avito_jina.txt
