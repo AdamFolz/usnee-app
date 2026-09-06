@@ -1,10 +1,18 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HistoryDashboard } from './HistoryDashboard';
 import type { ConsumptionEntry, Batch } from '../../types';
 
 const DAY = 24 * 60 * 60 * 1000;
 const now = new Date(2026, 8, 2, 18).getTime();
+
+// Компонент зовёт Date.now() напрямую (стрики, 30д-окно) — фиксируем время,
+// иначе тесты дрейфуют по календарю.
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(now));
+});
+afterEach(() => vi.useRealTimers());
 
 function entry(id: string, substanceId: string, ts: number, dose = 1, doseUnit = 'мл', batchId?: string): ConsumptionEntry {
   return {
