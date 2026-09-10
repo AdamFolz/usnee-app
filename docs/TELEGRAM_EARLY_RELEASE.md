@@ -8,13 +8,42 @@ https://adamfolz.github.io/usnee-app/
 
 ## Что работает
 
-- Telegram Mini App bootstrap (`ready`, `expand`, цвета WebView);
+- Telegram Mini App bootstrap (`ready`, `expand`, цвета WebView из `themeParams` с фолбэком);
 - Telegram BackButton на экране записи и поверх открытых sheet/dialog;
-- Quick Record и расширенная форма;
+- closing confirmation на экране записи, пока черновик не сохранён;
+- deep links из `start_param` (таблица ниже);
+- Quick Record (расширенная форма пока вне роута `/add`);
 - локальное атомарное сохранение в IndexedDB;
 - History с честными локальными/sync-статусами;
-- базовая Stats за 7, 30 дней и всё время;
+- Прогресс: XP/уровни, недельный ритм и сводка за 7/30 дней и всё время;
 - offline outbox для будущей отправки на backend.
+
+## Deep links (start_param)
+
+Приложение работает на HashRouter, маршруты вида `#/add`. Параметр `start_param`
+читается один раз при старте и заменяет корневой `#/` на целевой маршрут
+(`replace`, без записи в историю). Если пользователь открыл ссылку с явным
+глубоким hash — он не перезаписывается.
+
+Источник значения: `initDataUnsafe.start_param`, иначе query-параметр
+`tgWebAppStartParam`. Неизвестное значение или отсутствие параметра — `#/`.
+
+| start_param | Маршрут |
+| --- | --- |
+| `add`, `record` | `#/add` |
+| `history` | `#/history` |
+| `safety`, `sos` | `#/safety` |
+| `progress`, `stats` | `#/progress` |
+| `settings` | `#/settings` |
+
+## Тема и закрытие WebView
+
+- Если Telegram передаёт `themeParams`, цвет header берётся из
+  `secondary_bg_color` (fallback `bg_color`), фон — из `bg_color`
+  (fallback `secondary_bg_color`). Без `themeParams` — `#0b0d1a`.
+- На экране записи включается native closing confirmation, пока черновик
+  не сохранён. После успешного сохранения и при уходе с экрана — выключается,
+  чтобы confirmation не блокировал закрытие пустого приложения.
 
 ## Текущие ограничения
 
@@ -52,7 +81,8 @@ https://adamfolz.github.io/usnee-app/
    - Quick Record;
    - повторное открытие WebView;
    - сохранность History;
-   - Stats;
+   - Прогресс (сводка переехала сюда, `/stats` редиректит);
+   - deep link `start_param=record` открывает экран записи;
    - Telegram BackButton.
 
 BotFather и токен бота не хранятся в frontend-репозитории.
