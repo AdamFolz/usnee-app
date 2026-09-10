@@ -189,7 +189,7 @@ export default function Home() {
         <QuickActionGrid
           onRecord={goRecord}
           onBatch={() => navigate('/partials')}
-          onAnalytics={() => navigate('/stats')}
+          onAnalytics={() => navigate('/progress')}
           onSafety={() => navigate('/safety')}
         />
       )}

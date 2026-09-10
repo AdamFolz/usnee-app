@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, CalendarCheck, ChevronRight, Droplets, HeartPulse, Moon, ShieldCheck, Sparkles, TrendingUp, Star, Zap } from 'lucide-react';
+import { Activity, BarChart3, CalendarCheck, CalendarDays, ChevronRight, Droplets, Hash, HeartPulse, Moon, Pill, ShieldCheck, Sparkles, TrendingUp, Star, Zap, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { ConsumptionEntry, MoodEntry, SleepEntry, Batch, WaterEntry } from '../types';
 import { getEntries, getMoods, getSleep, getWater, getBatches } from '../utils/db';
 import { startOfDay } from '../utils/date';
-import { cleanStreak } from '../domain/stats';
+import { aggregateSimpleStats, cleanStreak, filterEntriesByPeriod, type StatsPeriod } from '../domain/stats';
 import { evaluateUnlockedAchievements } from '../domain/achievements';
 import { calculateXpSnapshot, getLevelName, xpForLevel } from '../domain/gamification';
 import { hapticNotification } from '../integrations/telegram';
+import { trackEvent } from '../integrations/analytics';
 import { ConfettiBurst } from '../components/ConfettiBurst';
 import { Button, Surface, TopBar } from '../components/ui';
 
 const DAY = 24 * 60 * 60 * 1000;
+
+const periods: Array<{ id: StatsPeriod; label: string }> = [
+  { id: '7d', label: '7 дней' },
+  { id: '30d', label: '30 дней' },
+  { id: 'all', label: 'Всё время' }
+];
 
 export function Progress() {
   const navigate = useNavigate();
@@ -21,8 +28,10 @@ export function Progress() {
   const [water, setWater] = useState<WaterEntry[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<StatsPeriod>('7d');
 
   useEffect(() => {
+    trackEvent('stats_viewed');
     Promise.all([getEntries(), getMoods(), getSleep(), getWater(), getBatches()]).then(([e, m, s, w, b]) => {
       setEntries(e);
       setMoods(m);
@@ -36,6 +45,9 @@ export function Progress() {
     const today = startOfDay(Date.now());
     return Array.from({ length: 7 }, (_, index) => today - (6 - index) * DAY);
   }, []);
+
+  const periodEntries = useMemo(() => filterEntriesByPeriod(entries, period), [entries, period]);
+  const simpleStats = useMemo(() => aggregateSimpleStats(periodEntries), [periodEntries]);
 
   const activeDays = useMemo(() => new Set(entries.map((entry) => startOfDay(entry.timestamp))), [entries]);
   const cleanDays = useMemo(() => cleanStreak(entries, Date.now()), [entries]);
@@ -175,6 +187,50 @@ export function Progress() {
               })}
             </div>
           </Surface>
+
+          <section className="space-y-3" aria-labelledby="progress-summary">
+            <h2 id="progress-summary" className="flex items-center gap-2 text-title-md"><BarChart3 className="h-5 w-5 text-usnee-accent" />Сводка</h2>
+            <div className="grid grid-cols-3 gap-2" aria-label="Период статистики">
+              {periods.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={period === item.id}
+                  onClick={() => setPeriod(item.id)}
+                  className={`min-h-12 rounded-lg px-2 text-body-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-usnee-focus ${period === item.id ? 'bg-usnee-brand text-white' : 'bg-usnee-surface text-usnee-text2'}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {!entries.length ? (
+              <Surface className="p-8 text-center">
+                <AlertCircle className="mx-auto h-8 w-8 text-usnee-text3" />
+                <p className="mt-3 text-usnee-text2">Недостаточно данных. Добавь первую запись.</p>
+              </Surface>
+            ) : !periodEntries.length ? (
+              <Surface className="p-8 text-center">
+                <CalendarDays className="mx-auto h-8 w-8 text-usnee-text3" />
+                <p className="mt-3 text-usnee-text2">За выбранный период записей нет.</p>
+              </Surface>
+            ) : (
+              <>
+                <Surface variant="glass" className="p-5">
+                  <Hash className="h-5 w-5 text-usnee-brand" />
+                  <p className="mt-3 text-label uppercase text-usnee-text3">Всего записей</p>
+                  <p className="mt-1 text-display-lg tabular-nums">{simpleStats.total}</p>
+                </Surface>
+                <section className="space-y-3" aria-labelledby="progress-days">
+                  <h3 id="progress-days" className="flex items-center gap-2 text-title-md"><CalendarDays className="h-5 w-5 text-usnee-info" />По дням</h3>
+                  {simpleStats.byDay.map((item) => <Surface key={item.id} className="flex items-center justify-between p-4"><span className="text-body-sm">{item.label}</span><strong className="tabular-nums">{item.count}</strong></Surface>)}
+                </section>
+                <section className="space-y-3" aria-labelledby="progress-substances">
+                  <h3 id="progress-substances" className="flex items-center gap-2 text-title-md"><Pill className="h-5 w-5 text-usnee-cyan" />По веществам</h3>
+                  {simpleStats.bySubstance.map((item) => <Surface key={item.id} className="flex items-center justify-between p-4"><span className="text-body-sm">{item.label}</span><strong className="tabular-nums">{item.count}</strong></Surface>)}
+                </section>
+              </>
+            )}
+          </section>
 
           <Surface className="p-4">
             <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-usnee-success" /><div><h2 className="text-title-md">Безопасность рядом</h2><p className="mt-1 text-body-sm text-usnee-text2">Проверяй самочувствие, отмечай сон и воду. Эти данные помогают заметить изменения раньше.</p></div></div>
