@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -203,5 +203,52 @@ describe('record screen layout', () => {
     await userEvent.type(screen.getByLabelText('Количество'), '5');
     await userEvent.click(screen.getByRole('button', { name: 'мл' }));
     expect(screen.getByLabelText('Количество')).toHaveValue('');
+  });
+});
+
+describe('record screen pickers', () => {
+  it('method tiles are inline, not hidden in a second sheet', () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    expect(screen.getByRole('group', { name: 'Способ употребления' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Инъекция' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: /Способ/ })).not.toBeInTheDocument();
+  });
+
+  it('switching method resets the amount and flips the default unit', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    await userEvent.type(screen.getByLabelText('Количество'), '5');
+    await userEvent.click(screen.getByRole('button', { name: 'Курение' }));
+    expect(screen.getByRole('button', { name: 'Курение' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Инъекция' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByLabelText('Количество')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'мг' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('substance sheet opens the searchable list and selects by tap', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    await userEvent.click(screen.getByRole('button', { name: /Вещество/ }));
+    expect(screen.getByLabelText('Поиск вещества')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Мефедрон/ })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Поиск вещества'), { target: { value: 'меф' } });
+    expect(screen.queryByRole('option', { name: /MDMA/ })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Поиск вещества'), { target: { value: '' } });
+    await userEvent.click(screen.getByRole('option', { name: /MDMA/ }));
+    expect(screen.queryByRole('dialog', { name: 'Выбери вещество' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Вещество/ })).toHaveTextContent('MDMA');
+  });
+
+  it('custom substance row keeps the sheet open for the name input', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    await userEvent.click(screen.getByRole('button', { name: /Вещество/ }));
+    await userEvent.click(screen.getByRole('option', { name: 'Свой вариант' }));
+    expect(screen.getByLabelText('Название')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Название'), 'жвачка');
+    expect(screen.getByRole('option', { name: 'Свой вариант' })).toHaveAttribute('aria-selected', 'true');
   });
 });

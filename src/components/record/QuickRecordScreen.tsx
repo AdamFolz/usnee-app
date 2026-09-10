@@ -19,6 +19,8 @@ import { disableClosingConfirmation, enableClosingConfirmation, registerTelegram
 import { BottomSheet, Button, Dialog, InlineNotice, Surface, TopBar } from '../ui';
 import { AmountDisplay } from './AmountDisplay';
 import { MethodGuidance } from './MethodGuidance';
+import { MethodPicker } from './MethodPicker';
+import { SubstancePicker } from './SubstancePicker';
 import { ChoiceChip } from './ChoiceChip';
 import { RecordResult } from './RecordResult';
 
@@ -49,7 +51,9 @@ export function QuickRecordScreen() {
   const refreshEntries = useAppStore((state) => state.refreshEntries);
   const setLastRecordContext = useAppStore((state) => state.setLastRecordContext);
   const [draft, setDraft] = useState<QuickRecordDraft | null>(null);
-  const [picker, setPicker] = useState<'substance' | 'method' | null>(null);
+  const [picker, setPicker] = useState<'substance' | null>(null);
+  const [substanceQuery, setSubstanceQuery] = useState('');
+  const [customName, setCustomName] = useState('');
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -76,6 +80,32 @@ export function QuickRecordScreen() {
   }, [current, defaults.draft, defaults.status, draft, savedCommand]);
 
   const goHome = () => navigate('/');
+
+  const handleSubstanceSelect = (id: string) => {
+    setSubstanceQuery('');
+    if (id === 'custom') {
+      update({ substanceId: 'custom', substanceName: customName.trim() || undefined });
+      return;
+    }
+    const substance = SUBSTANCES.find((s) => s.id === id);
+    setCustomName('');
+    update({
+      substanceId: id,
+      substanceName: substance?.name,
+      batchId: defaults.batch?.substanceId === id ? defaults.batch.id : undefined
+    });
+    setPicker(null);
+  };
+
+  const handleMethodSelect = (id: string) => {
+    const method = METHODS.find((m) => m.id === id);
+    update({
+      methodId: id,
+      methodName: method?.name,
+      amountInput: '',
+      amountUnit: id === 'inject' ? 'мл' : 'мг'
+    });
+  };
 
   const requestLeave = () => {
     if (picker) {
@@ -236,17 +266,6 @@ export function QuickRecordScreen() {
             </span>
             <ChevronDown className="h-5 w-5" />
           </button>
-          <button
-            type="button"
-            onClick={() => setPicker('method')}
-            className="flex min-h-12 w-full items-center justify-between rounded-lg bg-usnee-glass px-4 text-left focus-visible:ring-2 focus-visible:ring-usnee-focus"
-          >
-            <span>
-              <span className="block text-caption text-usnee-text3">Способ</span>
-              <strong>{current.methodName || 'Выбери способ'}</strong>
-            </span>
-            <ChevronDown className="h-5 w-5" />
-          </button>
           {defaults.batch && defaults.batch.substanceId === current.substanceId && (
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -264,6 +283,16 @@ export function QuickRecordScreen() {
             </div>
           )}
         </Surface>
+
+        <div className="space-y-2">
+          <p className="px-1 text-caption uppercase text-usnee-text3">Способ</p>
+          <MethodPicker
+            methods={METHODS}
+            selectedId={current.methodId}
+            onSelect={handleMethodSelect}
+            accentColor={SUBSTANCES.find((s) => s.id === current.substanceId)?.color}
+          />
+        </div>
 
         <AmountDisplay
           value={current.amountInput}
@@ -338,45 +367,18 @@ export function QuickRecordScreen() {
       </div>
 
       <BottomSheet open={picker === 'substance'} onClose={() => setPicker(null)} title="Выбери вещество">
-        <div className="grid grid-cols-2 gap-2 pb-2">
-          {SUBSTANCES.map((substance) => (
-            <ChoiceChip
-              key={substance.id}
-              selected={current.substanceId === substance.id}
-              onClick={() => {
-                update({
-                  substanceId: substance.id,
-                  substanceName: substance.name,
-                  batchId: defaults.batch?.substanceId === substance.id ? defaults.batch.id : undefined
-                });
-                setPicker(null);
-              }}
-            >
-              {substance.name}
-            </ChoiceChip>
-          ))}
-        </div>
-      </BottomSheet>
-      <BottomSheet open={picker === 'method'} onClose={() => setPicker(null)} title="Выбери способ">
-        <div className="grid grid-cols-2 gap-2 pb-2">
-          {METHODS.map((method) => (
-            <ChoiceChip
-              key={method.id}
-              selected={current.methodId === method.id}
-              onClick={() => {
-                update({
-                  methodId: method.id,
-                  methodName: method.name,
-                  amountInput: '',
-                  amountUnit: method.id === 'inject' ? 'мл' : 'мг'
-                });
-                setPicker(null);
-              }}
-            >
-              {method.name}
-            </ChoiceChip>
-          ))}
-        </div>
+        <SubstancePicker
+          substances={SUBSTANCES}
+          selectedId={current.substanceId}
+          onSelect={handleSubstanceSelect}
+          query={substanceQuery}
+          onQueryChange={setSubstanceQuery}
+          customName={customName}
+          onCustomNameChange={(value) => {
+            setCustomName(value);
+            update({ substanceName: value.trim() || undefined });
+          }}
+        />
       </BottomSheet>
       <Dialog
         open={duplicateOpen}
