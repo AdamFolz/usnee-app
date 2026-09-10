@@ -13,6 +13,7 @@ export interface TelegramHapticFeedback {
 
 export interface TelegramWebApp {
   initData?: string;
+  initDataUnsafe?: { start_param?: string };
   viewportHeight?: number;
   viewportStableHeight?: number;
   BackButton?: TelegramBackButton;
@@ -40,6 +41,33 @@ const handleTelegramBack = () => {
 
 export function getTelegramWebApp(): TelegramWebApp | null {
   return window.Telegram?.WebApp ?? null;
+}
+
+const START_PARAM_ROUTES: Record<string, string> = {
+  add: '/add',
+  record: '/add',
+  history: '/history',
+  safety: '/safety',
+  sos: '/safety',
+  progress: '/progress',
+  stats: '/progress',
+  settings: '/settings'
+};
+
+export function getTelegramStartParam(): string | null {
+  try {
+    const fromInitData = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+    if (fromInitData) return fromInitData;
+    const fromQuery = new URLSearchParams(window.location.search).get('tgWebAppStartParam');
+    return fromQuery || null;
+  } catch {
+    return null;
+  }
+}
+
+export function startParamToPath(param: string | null): string {
+  if (!param) return '/';
+  return START_PARAM_ROUTES[param] ?? '/';
 }
 
 export function initTelegramMiniApp(): boolean {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { initTelegramMiniApp, registerTelegramBackHandler, subscribeTelegramViewport } from './telegram';
+import { getTelegramStartParam, initTelegramMiniApp, registerTelegramBackHandler, startParamToPath, subscribeTelegramViewport } from './telegram';
 
 afterEach(() => {
   delete window.Telegram;
@@ -60,5 +60,30 @@ describe('Telegram Mini App adapter', () => {
     expect(route).toHaveBeenCalledOnce();
     unregisterRoute();
     expect(backButton.hide).toHaveBeenCalled();
+  });
+
+  it('maps start_param to hash routes', () => {
+    expect(startParamToPath('add')).toBe('/add');
+    expect(startParamToPath('record')).toBe('/add');
+    expect(startParamToPath('history')).toBe('/history');
+    expect(startParamToPath('safety')).toBe('/safety');
+    expect(startParamToPath('sos')).toBe('/safety');
+    expect(startParamToPath('progress')).toBe('/progress');
+    expect(startParamToPath('stats')).toBe('/progress');
+    expect(startParamToPath('settings')).toBe('/settings');
+    expect(startParamToPath('unknown-thing')).toBe('/');
+    expect(startParamToPath(null)).toBe('/');
+    expect(startParamToPath('')).toBe('/');
+  });
+
+  it('reads start_param from initDataUnsafe, then query, else null', () => {
+    expect(getTelegramStartParam()).toBeNull();
+    window.Telegram = { WebApp: { initDataUnsafe: { start_param: 'record' } } };
+    expect(getTelegramStartParam()).toBe('record');
+    window.Telegram = { WebApp: {} };
+    window.history.replaceState(null, '', '/?tgWebAppStartParam=history');
+    expect(getTelegramStartParam()).toBe('history');
+    window.history.replaceState(null, '', '/');
+    expect(getTelegramStartParam()).toBeNull();
   });
 });

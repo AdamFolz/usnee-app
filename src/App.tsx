@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { UserSettings } from './types';
 import { useAppStore } from './stores/appStore';
 import { initDB } from './utils/db';
@@ -18,7 +18,7 @@ import { Profile } from './pages/Profile';
 import { Partials } from './pages/Partials';
 import { Progress } from './pages/Progress';
 import Learn from './pages/Learn';
-import { initTelegramMiniApp, subscribeTelegramViewport } from './integrations/telegram';
+import { initTelegramMiniApp, getTelegramStartParam, startParamToPath, subscribeTelegramViewport } from './integrations/telegram';
 import { initAnalytics, trackEvent } from './integrations/analytics';
 import { useOutboxSync } from './hooks/useOutboxSync';
 
@@ -32,6 +32,11 @@ function App() {
   useOutboxSync(dbReady && !showOnboarding && (!settings.pinHash || unlocked));
 
   const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const path = startParamToPath(getTelegramStartParam());
+    if (path !== '/' && location.pathname === '/') navigate(path, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (dbReady && !showOnboarding && (!settings.pinHash || unlocked)) {
       trackEvent('screen_view', { name: location.pathname });
