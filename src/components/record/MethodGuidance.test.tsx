@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { MethodGuidance } from './MethodGuidance';
 import { METHOD_GUIDANCE_DISCLOSURE } from '../../constants/methodGuidance';
@@ -47,5 +48,17 @@ describe('MethodGuidance', () => {
     expect(screen.queryByText(/100%/)).not.toBeInTheDocument();
     expect(screen.queryByText(/гарантированно/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/спасёт жизнь/i)).not.toBeInTheDocument();
+  });
+
+  it('is collapsed by default and expands on summary click', async () => {
+    render(<MethodGuidance methodId="inject" />);
+    const details = screen.getByTestId('method-guidance').querySelector('details');
+    expect(details).not.toBeNull();
+    expect(details).not.toHaveAttribute('open');
+
+    await userEvent.click(screen.getByText('Справка по способу'));
+    expect(details).toHaveAttribute('open');
+    expect(screen.getByText(/Используй только свой инструмент/)).toBeInTheDocument();
+    expect(screen.getByTestId('method-guidance-disclosure')).toBeInTheDocument();
   });
 });

@@ -151,3 +151,57 @@ describe('QuickRecordScreen one-tap save', () => {
     });
   });
 });
+
+describe('record screen layout', () => {
+  it('dose is a single editable input without on-screen keypad', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    const dose = screen.getByLabelText('Количество');
+    expect(dose.tagName).toBe('INPUT');
+    await userEvent.clear(dose);
+    await userEvent.type(dose, '2.5');
+    expect(dose).toHaveValue('2.5');
+
+    expect(screen.queryByLabelText('Цифровая клавиатура')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '+' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '−' })).not.toBeInTheDocument();
+  });
+
+  it('guidance stays collapsed under summary until the user expands it', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    const details = screen.getByTestId('method-guidance').querySelector('details');
+    expect(details).not.toBeNull();
+    expect(details).not.toHaveAttribute('open');
+    expect(screen.getByText('Справка по способу')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('Справка по способу'));
+    expect(details).toHaveAttribute('open');
+    expect(screen.getByText(/Используй только свой инструмент/)).toBeInTheDocument();
+    expect(screen.getByText('Снижение вреда')).toBeInTheDocument();
+  });
+
+  it('save button sits before below-the-fold extras and date field exists', () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    const save = screen.getByRole('button', { name: /Записать/ });
+    const time = screen.getByLabelText('Время');
+    expect(time).toHaveAttribute('type', 'datetime-local');
+    expect(save.compareDocumentPosition(time) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    const details = screen.getByTestId('method-guidance').querySelector('details');
+    expect(time.compareDocumentPosition(details!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('unit switch ml/mg resets the amount input', async () => {
+    render(<MemoryRouter><QuickRecordScreen /></MemoryRouter>);
+
+    await userEvent.type(screen.getByLabelText('Количество'), '5');
+    await userEvent.click(screen.getByRole('button', { name: 'мг' }));
+    expect(screen.getByLabelText('Количество')).toHaveValue('');
+
+    await userEvent.type(screen.getByLabelText('Количество'), '5');
+    await userEvent.click(screen.getByRole('button', { name: 'мл' }));
+    expect(screen.getByLabelText('Количество')).toHaveValue('');
+  });
+});

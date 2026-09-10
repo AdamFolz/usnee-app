@@ -20,7 +20,6 @@ import { BottomSheet, Button, Dialog, InlineNotice, Surface, TopBar } from '../u
 import { AmountDisplay } from './AmountDisplay';
 import { MethodGuidance } from './MethodGuidance';
 import { ChoiceChip } from './ChoiceChip';
-import { NumericKeypad } from './NumericKeypad';
 import { RecordResult } from './RecordResult';
 
 function toLocalDateTime(timestamp: number): string {
@@ -271,18 +270,33 @@ export function QuickRecordScreen() {
           unit={current.amountUnit}
           batch={batch}
           error={saveError || (current.amountInput && !amount.valid ? amount.error : undefined)}
+          disabled={saving}
+          onChange={(amountInput) => update({ amountInput })}
         />
-        <MethodGuidance methodId={current.methodId} />
-        <input
-          id="record-amount"
-          aria-label="Количество"
-          inputMode="decimal"
-          value={current.amountInput}
-          onChange={(event) => update({ amountInput: event.target.value })}
-          className="min-h-12 rounded-lg border border-usnee-border bg-usnee-surface px-4 text-center text-title-lg"
-          placeholder={`Количество, ${current.amountUnit}`}
-        />
-        <NumericKeypad value={current.amountInput} onChange={(amountInput) => update({ amountInput })} disabled={saving} />
+        <div className="flex justify-center gap-2">
+          <ChoiceChip
+            selected={current.amountUnit === 'мл'}
+            onClick={() => update({ amountUnit: 'мл', amountInput: '' })}
+          >
+            мл
+          </ChoiceChip>
+          <ChoiceChip
+            selected={current.amountUnit === 'мг'}
+            onClick={() => update({ amountUnit: 'мг', amountInput: '' })}
+          >
+            мг
+          </ChoiceChip>
+        </div>
+        {errors.length > 0 && current.amountInput && (
+          <p role="alert" className="text-body-sm text-usnee-danger">
+            {errors[0]}
+          </p>
+        )}
+        <Button size="lg" className="w-full" disabled={errors.length > 0} loading={saving} onClick={() => void save()}>
+          <Save className="h-5 w-5" />
+          Записать
+        </Button>
+
         <div>
           <p className="mb-2 text-label uppercase text-usnee-text3">Компания</p>
           <div className="flex gap-2">
@@ -317,22 +331,11 @@ export function QuickRecordScreen() {
             placeholder="Необязательно"
           />
         </Surface>
-        {errors.length > 0 && current.amountInput && (
-          <p role="alert" className="text-body-sm text-usnee-danger">
-            {errors[0]}
-          </p>
-        )}
+        <MethodGuidance methodId={current.methodId} />
         <Button variant="ghost" onClick={goHome}>
-                  На главную
-                </Button>
-              </div>
-
-              <div className="sticky bottom-0 z-20 -mx-1 border-t border-usnee-border bg-usnee-bg px-1 pb-[calc(0.75rem+var(--safe-area-bottom,0px))] pt-3">
-                <Button size="lg" className="w-full" disabled={errors.length > 0} loading={saving} onClick={() => void save()}>
-                  <Save className="h-5 w-5" />
-                  Записать
-                </Button>
-              </div>
+          На главную
+        </Button>
+      </div>
 
       <BottomSheet open={picker === 'substance'} onClose={() => setPicker(null)} title="Выбери вещество">
         <div className="grid grid-cols-2 gap-2 pb-2">
