@@ -198,3 +198,14 @@
 - Вердикты: ai-elements-assistant/kata/elements/crafter-run ui — мимо; LatAm-комьюнити (crafter.run, hack0.dev, thenextcraft, catch, v0-неделя) — мимо; ui.shadcn.com — держать как справку; **agentfiles** (Obsidian-плагин, GUI поверх скиллов + skillkit dashboard) — единственная находка, установка за юзером (не подтверждено).
 - hermesagents.net — неофиц. фан-сайт, не источник. Статья про Hermes Pets проверена на живой сборке: `hermes pets` работает, v0.20.6, 4675 питомцев, выбран jill-stingray. `hermes update` доступен (1127 позади) — не делался.
 - **Хвосты:** push master→main (master 775ed46, ahead 5, origin/main 0 позади — fast-forward) — по явной команде; PATH для `~\.bun\bin`; установка agentfiles в Obsidian.
+
+## Сессия 10.09 ZCode PHASE A
+
+- Контекст: ZCode GLM-5.3-Flash, режим продакт-инженера по ZCODE-PROMPT.md (Desktop). Без пуша, без субагентов. Старт: 05d213b.
+- `2e003c4` feat(progress): absorb /stats summary into progress — сводка (7д/30д/все, byDay, bySubstance) переехала в Progress как секция-регион «Сводка»; Stats.tsx = Navigate to /progress; Progress.test.tsx создан (4 теста), Stats.test.tsx → тест редиректа; ссылка QuickActionGrid в Home → /progress.
+- `ea5a867` feat(tma): map start_param to hash routes — getTelegramStartParam (initDataUnsafe.start_param → tgWebAppStartParam query), startParamToPath (add|record→/add, history→/history, safety|sos→/safety, progress|stats→/progress, settings→/settings, иначе /); App навигирует replace один раз при монте только с корня; telegram.test +2.
+- `90f8c21` feat(tma): themeParams + closing confirmation on /add — themeParams: header=secondary_bg_color→bg_color→#0b0d1a, bg=bg_color→secondary_bg_color→#0b0d1a; обёртки enable/disableClosingConfirmation; QuickRecordScreen: вкл на активной форме, выкл после успешного save (RecordResult) и на unmount; AddEntry.test — сквозной save-тест.
+- `df06748` test(pin): PinLock unlock/fail paths — 4 теста: верный PIN → onUnlock + resetPinAttempts; неверный → «Неверный PIN» + registerPinFailure; дисклеймер «не шифрует хранилище»; lockout → кнопки disabled + countdown-текст.
+- `a101877` docs(tma): start_param and stats redirect — таблица start_param, HashRouter (#/add), themeParams-фолбэк, closing confirmation, /stats→/progress, чеклист BotFather обновлён.
+- Ворота PHASE A: test:run 253 passed (было 242) ✅ → typecheck ✅ → PWA build ✅. PHASE B (a11y/onboarding/sync-ветки/лендинг) — по квоте после 04:00.
+- untracked avito_scan/ и coverage_gaps_audit.json не тронуты. Пуш за юзером (master ahead 10 от origin/master, origin/main позади на эти же коммиты).
