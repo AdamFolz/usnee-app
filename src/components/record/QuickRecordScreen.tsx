@@ -15,7 +15,7 @@ import type { RecordXpFeedback } from '../../domain/gamificationFeedback';
 import { METHODS } from '../../constants/methods';
 import { SUBSTANCES } from '../../constants/substances';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
-import { registerTelegramBackHandler } from '../../integrations/telegram';
+import { disableClosingConfirmation, enableClosingConfirmation, registerTelegramBackHandler } from '../../integrations/telegram';
 import { BottomSheet, Button, Dialog, InlineNotice, Surface, TopBar } from '../ui';
 import { AmountDisplay } from './AmountDisplay';
 import { MethodGuidance } from './MethodGuidance';
@@ -102,6 +102,12 @@ export function QuickRecordScreen() {
     if (defaults.status !== 'ready' || savedCommand) return undefined;
     return registerTelegramBackHandler(requestLeave);
   }, [defaults.status, savedCommand, dirty, picker, duplicateOpen, leaveOpen, current, draft]);
+
+  useEffect(() => {
+    if (savedCommand) return undefined;
+    enableClosingConfirmation();
+    return () => disableClosingConfirmation();
+  }, [savedCommand]);
 
   if (defaults.status === 'loading') {
     return (

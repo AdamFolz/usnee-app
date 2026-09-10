@@ -11,9 +11,15 @@ export interface TelegramHapticFeedback {
   selectionChanged: () => void;
 }
 
+export interface TelegramThemeParams {
+  bg_color?: string;
+  secondary_bg_color?: string;
+}
+
 export interface TelegramWebApp {
   initData?: string;
   initDataUnsafe?: { start_param?: string };
+  themeParams?: TelegramThemeParams;
   viewportHeight?: number;
   viewportStableHeight?: number;
   BackButton?: TelegramBackButton;
@@ -22,6 +28,8 @@ export interface TelegramWebApp {
   expand?: () => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  enableClosingConfirmation?: () => void;
+  disableClosingConfirmation?: () => void;
   onEvent?: (event: 'viewportChanged', handler: () => void) => void;
   offEvent?: (event: 'viewportChanged', handler: () => void) => void;
 }
@@ -70,15 +78,26 @@ export function startParamToPath(param: string | null): string {
   return START_PARAM_ROUTES[param] ?? '/';
 }
 
+const DEFAULT_SURFACE = '#0b0d1a';
+
 export function initTelegramMiniApp(): boolean {
   const webApp = getTelegramWebApp();
   if (!webApp) return false;
 
   webApp.expand?.();
-  webApp.setHeaderColor?.('#0b0d1a');
-  webApp.setBackgroundColor?.('#0b0d1a');
+  const theme = webApp.themeParams ?? {};
+  webApp.setHeaderColor?.(theme.secondary_bg_color ?? theme.bg_color ?? DEFAULT_SURFACE);
+  webApp.setBackgroundColor?.(theme.bg_color ?? theme.secondary_bg_color ?? DEFAULT_SURFACE);
   webApp.ready?.();
   return true;
+}
+
+export function enableClosingConfirmation(): void {
+  getTelegramWebApp()?.enableClosingConfirmation?.();
+}
+
+export function disableClosingConfirmation(): void {
+  getTelegramWebApp()?.disableClosingConfirmation?.();
 }
 
 export function subscribeTelegramViewport(): (() => void) | undefined {

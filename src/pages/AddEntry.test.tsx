@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { QuickRecordDraft } from '../domain/record';
+import { persistPreparedRecord, prepareRecordCommand } from '../services/recordPersistence';
 import AddEntry from './AddEntry';
 
 const preparedDraft: QuickRecordDraft = {
@@ -56,5 +58,44 @@ describe('AddEntry route (quick record)', () => {
     expect(screen.getByText('Мефедрон')).toBeInTheDocument();
     expect(screen.getByText('Инъекция')).toBeInTheDocument();
     expect(screen.getByLabelText('Количество')).toHaveValue('1');
+  });
+
+  it('enables closing confirmation until the record is saved', async () => {
+    const enable = vi.fn();
+    const disable = vi.fn();
+    window.Telegram = { WebApp: { enableClosingConfirmation: enable, disableClosingConfirmation: disable } };
+    const savedCommand = {
+      entry: {
+        id: 'entry-1',
+        substanceId: 'meph',
+        substanceName: 'Мефедрон',
+        methodId: 'inject',
+        methodName: 'Инъекция',
+        timestamp: Date.now(),
+        dose: 1,
+        doseUnit: 'мл',
+        methodDetails: {},
+        alone: true,
+        createdAt: 1,
+        updatedAt: 1
+      },
+      operation: {},
+      sync: {}
+    } as unknown as ReturnType<typeof prepareRecordCommand>;
+    vi.mocked(prepareRecordCommand).mockReturnValue(savedCommand);
+    vi.mocked(persistPreparedRecord).mockResolvedValue('created');
+
+    render(
+      <MemoryRouter>
+        <AddEntry />
+      </MemoryRouter>
+    );
+    expect(enable).toHaveBeenCalledOnce();
+    expect(disable).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: /Записать/ }));
+    expect(await screen.findByText('Сохранено на устройстве')).toBeInTheDocument();
+    expect(disable).toHaveBeenCalled();
+    delete window.Telegram;
   });
 });

@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getTelegramStartParam, initTelegramMiniApp, registerTelegramBackHandler, startParamToPath, subscribeTelegramViewport } from './telegram';
+import {
+  disableClosingConfirmation,
+  enableClosingConfirmation,
+  getTelegramStartParam,
+  initTelegramMiniApp,
+  registerTelegramBackHandler,
+  startParamToPath,
+  subscribeTelegramViewport
+} from './telegram';
 
 afterEach(() => {
   delete window.Telegram;
@@ -85,5 +93,47 @@ describe('Telegram Mini App adapter', () => {
     expect(getTelegramStartParam()).toBe('history');
     window.history.replaceState(null, '', '/');
     expect(getTelegramStartParam()).toBeNull();
+  });
+
+  it('derives header and background from themeParams', () => {
+    const setHeaderColor = vi.fn();
+    const setBackgroundColor = vi.fn();
+    window.Telegram = { WebApp: {
+      ready: vi.fn(),
+      expand: vi.fn(),
+      setHeaderColor,
+      setBackgroundColor,
+      themeParams: { bg_color: '#17212b', secondary_bg_color: '#232e3c' }
+    } };
+    initTelegramMiniApp();
+    expect(setHeaderColor).toHaveBeenCalledWith('#232e3c');
+    expect(setBackgroundColor).toHaveBeenCalledWith('#17212b');
+  });
+
+  it('falls back to the brand surface when themeParams lack colors', () => {
+    const setHeaderColor = vi.fn();
+    const setBackgroundColor = vi.fn();
+    window.Telegram = { WebApp: {
+      ready: vi.fn(),
+      expand: vi.fn(),
+      setHeaderColor,
+      setBackgroundColor,
+      themeParams: {}
+    } };
+    initTelegramMiniApp();
+    expect(setHeaderColor).toHaveBeenCalledWith('#0b0d1a');
+    expect(setBackgroundColor).toHaveBeenCalledWith('#0b0d1a');
+  });
+
+  it('toggles closing confirmation when the host supports it', () => {
+    enableClosingConfirmation();
+    disableClosingConfirmation();
+    const enable = vi.fn();
+    const disable = vi.fn();
+    window.Telegram = { WebApp: { enableClosingConfirmation: enable, disableClosingConfirmation: disable } };
+    enableClosingConfirmation();
+    disableClosingConfirmation();
+    expect(enable).toHaveBeenCalledOnce();
+    expect(disable).toHaveBeenCalledOnce();
   });
 });
