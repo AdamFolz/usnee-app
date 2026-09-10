@@ -209,3 +209,13 @@
 - `a101877` docs(tma): start_param and stats redirect — таблица start_param, HashRouter (#/add), themeParams-фолбэк, closing confirmation, /stats→/progress, чеклист BotFather обновлён.
 - Ворота PHASE A: test:run 253 passed (было 242) ✅ → typecheck ✅ → PWA build ✅. PHASE B (a11y/onboarding/sync-ветки/лендинг) — по квоте после 04:00.
 - untracked avito_scan/ и coverage_gaps_audit.json не тронуты. Пуш за юзером (master ahead 10 от origin/master, origin/main позади на эти же коммиты).
+
+## Сессия 11.09 ZCode PHASE B
+
+- Запущена сразу после PHASE A (00:10 MSK) — квота сгорает в 04:00, пункты B в рамках того же клиента.
+- `0accbdb` test(a11y): aria-current and sheet Esc/focus-trap coverage — код менять не пришлось: NavLink v6 сам ставит aria-current="page", BottomSheet уже имел Esc + Tab-trap + возврат фокуса. Добавлены BottomNav.test.tsx (2) и BottomSheet.test.tsx (2: Esc, trap с wrap в обе стороны).
+- `175887c` test(onboarding): complete path — 3 теста: все 4 слайда → «Начать» → onDone; «Пропустить» → onDone; переход по точкам назад + disabled «Назад» на первом шаге.
+- `6fbe5eb` test(sync): acknowledgement branches — flushEntryOutbox: conflict/rejected → paused с errorCode (ack сохранён, failOutboxOperation не зовётся), duplicate → complete; statusFromAcknowledgement: conflict→conflicted, rejected→failed, duplicate/accepted→synced + свежий lastSyncedAt.
+- B4 лендинг: проверен — все ссылки на https://t.me/usnee_bot, бот жив (страница Launch Mini App), битых URL и usnee.me нет. Дифф пустой — коммит не делался.
+- Ворота PHASE B: test:run 266 passed ✅ → typecheck ✅ → PWA build ✅. Version не бампал, CHANGELOG не трогал.
+- Итог сессии: 9 коммитов (5×PHASE A + 3×PHASE B + HANDOFF), 242→266 теста. master ahead 14 от origin/master. Пуш за юзером: `git push origin master:main`.
