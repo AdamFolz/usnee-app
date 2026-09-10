@@ -219,3 +219,10 @@
 - B4 лендинг: проверен — все ссылки на https://t.me/usnee_bot, бот жив (страница Launch Mini App), битых URL и usnee.me нет. Дифф пустой — коммит не делался.
 - Ворота PHASE B: test:run 266 passed ✅ → typecheck ✅ → PWA build ✅. Version не бампал, CHANGELOG не трогал.
 - Итог сессии: 9 коммитов (5×PHASE A + 3×PHASE B + HANDOFF), 242→266 теста. master ahead 14 от origin/master. Пуш за юзером: `git push origin master:main`.
+
+## Сессия 11.09 ZCode — B4 лендинг (side-сессия, параллельно)
+
+- Разделение работ: PHASE A целиком и B1–B3/B5 — основная сессия (выше); эта сессия взяла только B4, не пересекаясь по файлам.
+- `44e9c88` fix(landing): facts and links — CTA-блок: убрана устаревшая фраза «Кнопка в бота появится, когда будет ссылка» (ссылка уже есть: @usnee_bot жив, Pages URL публичный), добавлена ghost-кнопка «Открыть в браузере» → https://adamfolz.github.io/usnee-app/ (из docs/TELEGRAM_EARLY_RELEASE.md «Публичный URL»), div получил класс hero-actions. Больше ничего в лендинге не тронуто.
+- Уточнение к блоку выше: «дифф пустой» был верен для проверки битых URL; факт-дрифт в CTA нашёлся отдельно.
+- Цепочка на момент коммита: test:run 266 passed ✅ → typecheck ✅ → PWA build ✅ (landing в vitest/tsc/build не входит, копируется deploy.yml).
