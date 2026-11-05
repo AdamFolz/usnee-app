@@ -141,37 +141,47 @@ export function History() {
             entry.substanceName ||
             SUBSTANCES.find((item) => item.id === entry.substanceId)?.name ||
             entry.substanceId;
+          const color = SUBSTANCES.find((item) => item.id === entry.substanceId)?.color ?? 'var(--color-brand-primary)';
           return (
-            <Surface key={entry.id} variant="interactive" className="p-4">
-              <button
-                type="button"
-                onClick={() => setSelected(entry)}
-                className="flex min-w-0 w-full items-start justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus"
-                aria-label={`Открыть запись: ${substance}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-title-md">{substance}</p>
-                  <p className="mt-1 text-body-sm text-usnee-text2">
-                    {entry.dose} {entry.doseUnit} · {entry.methodName || entry.methodId}
-                  </p>
-                  <p className="mt-2 text-caption text-usnee-text3">{formatDateTime(entry.timestamp)}</p>
-                </div>
-                <StatusBadge tone={tone}>{label}</StatusBadge>
-              </button>
-              <div className="mt-3 flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEdit(entry)}>
-                  <Pencil className="h-4 w-4" />
-                  Изменить
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={!sync?.createOperationId}
-                  onClick={() => setDeleteEntry(entry)}
+            <Surface key={entry.id} className="overflow-hidden p-0">
+              <div className="flex items-stretch">
+                <span className="w-1.5 shrink-0" style={{ backgroundColor: color }} aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => setSelected(entry)}
+                  className="flex min-w-0 flex-1 flex-col gap-1 px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus"
+                  aria-label={`Открыть запись: ${substance}`}
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Удалить
-                </Button>
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="truncate text-body-md font-bold">{substance}</span>
+                    <span className="shrink-0 text-caption tabular-nums text-usnee-text3">{formatDateTime(entry.timestamp)}</span>
+                  </span>
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="truncate text-caption tabular-nums text-usnee-text2">
+                      {entry.dose} {entry.doseUnit} · {entry.methodName || entry.methodId}
+                    </span>
+                    <StatusBadge tone={tone} className="min-h-6 shrink-0 px-2 text-[10px]">{label}</StatusBadge>
+                  </span>
+                </button>
+                <div className="flex items-start gap-0.5 pr-1.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(entry)}
+                    aria-label="Изменить"
+                    className="grid h-9 w-9 place-items-center rounded-md text-usnee-text3 transition-colors hover:bg-usnee-glass hover:text-usnee-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus"
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!sync?.createOperationId}
+                    onClick={() => setDeleteEntry(entry)}
+                    aria-label="Удалить"
+                    className="grid h-9 w-9 place-items-center rounded-md text-usnee-text3 transition-colors hover:bg-usnee-glass hover:text-usnee-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </Surface>
           );

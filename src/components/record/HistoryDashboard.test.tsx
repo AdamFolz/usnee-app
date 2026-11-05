@@ -42,15 +42,16 @@ describe('HistoryDashboard', () => {
     render(<HistoryDashboard entries={entries} batches={[]} />);
     const streakValues = screen.getAllByText('2');
     expect(streakValues.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('дней подряд')).toBeInTheDocument();
-    expect(screen.getByText('дней без записей')).toBeInTheDocument();
+    expect(screen.getByText('подряд')).toBeInTheDocument();
+    expect(screen.getByText('без записей')).toBeInTheDocument();
+    expect(screen.getByText('всего / 30д')).toBeInTheDocument();
   });
 
   it('renders heatmap with activity header and total count', () => {
     const entries = [entry('1', 'meph', now)];
     render(<HistoryDashboard entries={entries} batches={[]} />);
-    expect(screen.getByText('Активность')).toBeInTheDocument();
-    expect(screen.getByText('1 запись · 1 за 30д')).toBeInTheDocument();
+    expect(screen.getByText(/Активность/)).toBeInTheDocument();
+    expect(screen.getAllByText('1 запись').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders heatmap cells with aria-labels', () => {
@@ -80,14 +81,14 @@ describe('HistoryDashboard', () => {
     ];
     render(<HistoryDashboard entries={entries} batches={[]} />);
     // Should show "2 записи" — the count word, NOT "2 × 2 записи"
-    expect(screen.getByText('2 записи')).toBeInTheDocument();
+    expect(screen.getAllByText('2 записи').length).toBeGreaterThanOrEqual(1);
     // Must NOT show the duplicated form
     expect(screen.queryByText('2 × 2 записи')).not.toBeInTheDocument();
   });
 
   it('shows empty state gracefully', () => {
     render(<HistoryDashboard entries={[]} batches={[]} />);
-    expect(screen.getByText('0 записей · 0 за 30д')).toBeInTheDocument();
+    expect(screen.getByText('0 записей')).toBeInTheDocument();
     // No dose summary section when empty
     expect(screen.queryByText('Суммы доз')).not.toBeInTheDocument();
   });

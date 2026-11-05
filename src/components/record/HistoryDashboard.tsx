@@ -1,13 +1,8 @@
 import { useMemo } from 'react';
-import { Flame, TrendingUp, Droplet } from 'lucide-react';
+import { Activity, Droplet, Flame } from 'lucide-react';
 import type { ConsumptionEntry, Batch } from '../../types';
 import type { HeatmapCell } from '../../domain/stats';
-import {
-  buildHeatmap,
-  aggregateDoseSummary,
-  usageStreak,
-  cleanStreak,
-} from '../../domain/stats';
+import { buildHeatmap, aggregateDoseSummary, usageStreak, cleanStreak } from '../../domain/stats';
 import { Surface } from '../ui';
 import { formatCountRu, RECORD_FORMS } from '../../utils/pluralize';
 
@@ -16,10 +11,10 @@ const HEATMAP_DAYS = 84; // ~12 weeks
 
 const INTENSITY_COLORS = [
   'bg-usnee-surface3',
-  'bg-usnee-accent/30',
-  'bg-usnee-accent/50',
-  'bg-usnee-accent/70',
-  'bg-usnee-accent',
+  'bg-usnee-brand/25',
+  'bg-usnee-brand/45',
+  'bg-usnee-brand/70',
+  'bg-usnee-brand'
 ];
 
 function formatMg(mg: number): string {
@@ -38,9 +33,8 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
   const usageDays = useMemo(() => usageStreak(entries), [entries]);
   const cleanDays = useMemo(() => cleanStreak(entries, Date.now()), [entries]);
 
-  // Group heatmap cells into weeks (7 per column)
   const weeks = useMemo(() => {
-    const result: typeof heatmap.cells[] = [];
+    const result: HeatmapCell[][] = [];
     for (let i = 0; i < heatmap.cells.length; i += 7) {
       result.push(heatmap.cells.slice(i, i + 7));
     }
@@ -50,43 +44,48 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
   const visibleWeeks = weeks.slice(-12);
   const totalEntries = entries.length;
   const totalEntries30d = useMemo(
-    () => entries.filter((e) => e.timestamp >= Date.now() - 30 * DAY).length,
+    () => entries.filter((entry) => entry.timestamp >= Date.now() - 30 * DAY).length,
     [entries]
   );
 
   return (
     <div className="space-y-3">
-      {/* Streaks */}
-      <div className="grid grid-cols-2 gap-2">
-        <Surface className="flex items-center gap-3 p-3">
-          <Flame className="h-5 w-5 text-usnee-accent" />
-          <div>
-            <p className="text-title-sm leading-tight">{usageDays}</p>
-            <p className="text-caption text-usnee-text3">дней подряд</p>
-          </div>
-        </Surface>
-        <Surface className="flex items-center gap-3 p-3">
-          <TrendingUp className="h-5 w-5 text-usnee-success" />
-          <div>
-            <p className="text-title-sm leading-tight">{cleanDays}</p>
-            <p className="text-caption text-usnee-text3">дней без записей</p>
-          </div>
-        </Surface>
-      </div>
+      <Surface className="grid grid-cols-3 divide-x divide-usnee-borderSubtle px-1 py-2.5 text-center">
+        <div className="px-2">
+          <p className="flex items-center justify-center gap-1 text-caption text-usnee-text3">
+            <Flame className="h-3.5 w-3.5 text-usnee-accent" aria-hidden="true" />
+            подряд
+          </p>
+          <p className="mt-0.5 text-title-md tabular-nums">{usageDays}</p>
+        </div>
+        <div className="px-2">
+          <p className="text-caption text-usnee-text3">без записей</p>
+          <p className="mt-0.5 text-title-md tabular-nums text-usnee-success">{cleanDays}</p>
+        </div>
+        <div className="px-2">
+          <p className="text-caption text-usnee-text3">всего / 30д</p>
+          <p className="mt-0.5 text-title-md tabular-nums">
+            {totalEntries}
+            <span className="text-usnee-text3"> / {totalEntries30d}</span>
+          </p>
+        </div>
+      </Surface>
 
-      {/* Heatmap */}
       <Surface className="p-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-body-sm font-bold">Активность</p>
-          <p className="text-caption text-usnee-text3">{formatCountRu(totalEntries, RECORD_FORMS)} · {totalEntries30d} за 30д</p>
+          <p className="flex items-center gap-1.5 text-caption uppercase text-usnee-text3">
+            <Activity className="h-3.5 w-3.5" aria-hidden="true" />
+            Активность · 12 недель
+          </p>
+          <p className="text-caption text-usnee-text3">{formatCountRu(totalEntries, RECORD_FORMS)}</p>
         </div>
         <div className="flex gap-1 overflow-x-auto pb-1" role="img" aria-label="Тепловая карта активности по дням">
           {visibleWeeks.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-1">
-              {week.map((cell: HeatmapCell) => (
+              {week.map((cell) => (
                 <div
                   key={cell.date}
-                  className={`h-3 w-3 rounded-sm ${INTENSITY_COLORS[cell.intensity]}`}
+                  className={`h-3.5 w-3.5 rounded-[3px] ${INTENSITY_COLORS[cell.intensity]}`}
                   aria-label={`${formatDateLabel(cell.date)}: ${formatCountRu(cell.count, RECORD_FORMS)}`}
                   title={`${formatDateLabel(cell.date)}: ${cell.count}`}
                 />
@@ -94,36 +93,33 @@ export function HistoryDashboard({ entries, batches }: { entries: ConsumptionEnt
             </div>
           ))}
         </div>
-        <div className="mt-2 flex items-center justify-end gap-1 text-caption text-usnee-text3">
+        <div className="mt-1.5 flex items-center justify-end gap-1 text-caption text-usnee-text3">
           <span>меньше</span>
-          {INTENSITY_COLORS.map((c, i) => (
-            <div key={i} className={`h-2 w-2 rounded-sm ${c}`} />
+          {INTENSITY_COLORS.map((color, index) => (
+            <div key={index} className={`h-2 w-2 rounded-[2px] ${color}`} />
           ))}
           <span>больше</span>
         </div>
       </Surface>
 
-      {/* Dose summary */}
       {doseSummary.bySubstance.length > 0 && (
         <Surface className="p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <Droplet className="h-4 w-4 text-usnee-accent" />
-            <p className="text-body-sm font-bold">Суммы доз</p>
-          </div>
-          <div className="space-y-2">
-            {doseSummary.bySubstance.slice(0, 5).map((s) => (
-              <div key={s.substanceId} className="flex items-baseline justify-between gap-2">
-                <span className="min-w-0 flex-1 truncate text-body-sm text-usnee-text2">{s.label}</span>
-                <span className="text-body-sm font-bold">
-                  {s.totalMg !== undefined ? formatMg(s.totalMg) : formatCountRu(s.count, RECORD_FORMS)}
+          <p className="mb-1.5 flex items-center gap-1.5 text-caption uppercase text-usnee-text3">
+            <Droplet className="h-3.5 w-3.5 text-usnee-accent" aria-hidden="true" />
+            Суммы доз
+          </p>
+          <div className="divide-y divide-usnee-borderSubtle">
+            {doseSummary.bySubstance.slice(0, 5).map((item) => (
+              <div key={item.substanceId} className="flex items-baseline justify-between gap-2 py-1.5 text-body-sm">
+                <span className="min-w-0 flex-1 truncate text-usnee-text2">{item.label}</span>
+                <span className="font-bold tabular-nums">
+                  {item.totalMg !== undefined ? formatMg(item.totalMg) : formatCountRu(item.count, RECORD_FORMS)}
                 </span>
               </div>
             ))}
           </div>
-          {doseSummary.bySubstance.some((s) => s.totalMg === undefined) && (
-            <p className="mt-2 text-caption text-usnee-text3">
-              Без концентрации партии — счётчиками, не суммой
-            </p>
+          {doseSummary.bySubstance.some((item) => item.totalMg === undefined) && (
+            <p className="mt-1 text-caption text-usnee-text3">Без концентрации партии — счётчиками, не суммой</p>
           )}
         </Surface>
       )}

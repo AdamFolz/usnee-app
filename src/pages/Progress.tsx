@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, BarChart3, CalendarCheck, CalendarDays, ChevronRight, Droplets, Hash, HeartPulse, Moon, Pill, ShieldCheck, Sparkles, TrendingUp, Star, Zap, AlertCircle } from 'lucide-react';
+import { Activity, BarChart3, CalendarCheck, CalendarDays, ChevronRight, Droplets, HeartPulse, Moon, ShieldCheck, TrendingUp, Star, Zap, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { ConsumptionEntry, MoodEntry, SleepEntry, Batch, WaterEntry } from '../types';
 import { getEntries, getMoods, getSleep, getWater, getBatches } from '../utils/db';
@@ -90,79 +90,39 @@ export function Progress() {
       <TopBar title="Прогресс" eyebrow="ЗА ПОСЛЕДНИЕ 7 ДНЕЙ" />
       {loading ? <div role="status" className="h-72 animate-pulse rounded-card bg-usnee-surface motion-reduce:animate-none" /> : (
         <>
-          <Surface variant="glass" className="relative overflow-hidden p-5">
-
-            <div className="relative flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 text-label uppercase text-usnee-text3"><Sparkles className="h-4 w-4 text-usnee-brand" /> Твоя динамика</div>
-                <h2 className="mt-3 text-title-lg">Неделя в цифрах</h2>
-                <p className="mt-2 max-w-[17rem] text-body-sm text-usnee-text2">Отмечай, чтобы видеть паттерны.</p>
-              </div>
-
-            </div>
-
-          </Surface>
-
-          {/* XP / Level Card */}
           <Surface className="relative p-4">
             <ConfettiBurst burstKey={celebrate} active={celebrate > 0} />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  key={celebrate}
-                  className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent ${celebrate > 0 ? 'animate-level-up animate-ring-pulse' : ''}`}
-                >
-                  <Star className="h-6 w-6 text-white" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-caption uppercase text-usnee-text3">Уровень</p>
-                  <p className="text-title-lg font-bold text-usnee-text">Ур. {xpSnapshot.level}</p>
-                  <p className="text-caption text-usnee-text2">{levelName}</p>
-                </div>
+            <div className="flex items-center gap-2.5">
+              <div
+                key={celebrate}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent ${celebrate > 0 ? 'animate-level-up animate-ring-pulse' : ''}`}
+              >
+                <Star className="h-4 w-4 text-white" aria-hidden="true" />
               </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-usnee-brand" key={`xp-${xpSnapshot.totalXp}`}>
-                  <Zap className="h-5 w-5 animate-xp-pop" aria-hidden="true" />
-                  <span className="text-title-md font-bold tabular-nums animate-count-up" key={`num-${xpSnapshot.totalXp}`}>{xpSnapshot.totalXp}</span>
-                  <span className="text-caption text-usnee-text3">XP</span>
-                </div>
-                <p className="mt-1 text-caption text-usnee-text2">
-                  до ур. {xpSnapshot.level + 1}: {xpToNext} XP
+              <div className="flex-1">
+                <p className="text-body-sm font-bold">
+                  Ур. {xpSnapshot.level} · {levelName}
                 </p>
+                <p className="text-caption text-usnee-text2">до ур. {xpSnapshot.level + 1}: {xpToNext} XP</p>
+              </div>
+              <div className="flex items-center gap-1 text-usnee-brand" key={`xp-${xpSnapshot.totalXp}`}>
+                <Zap className="h-4 w-4 animate-xp-pop" aria-hidden="true" />
+                <span className="text-body-md font-bold tabular-nums animate-count-up" key={`num-${xpSnapshot.totalXp}`}>{xpSnapshot.totalXp}</span>
+                <span className="text-caption text-usnee-text3">XP</span>
               </div>
             </div>
-            {/* XP Progress Bar */}
-            <div className="mt-4">
-              <div className="flex justify-between text-caption text-usnee-text3 mb-1">
-                <span>Прогресс уровня</span>
-                <span>{Math.round(xpSnapshot.xpProgress * 100)}%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-usnee-surface2">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-usnee-brand to-usnee-accent transition-all duration-500"
-                  style={{ width: `${Math.round(xpSnapshot.xpProgress * 100)}%` }}
-                  role="progressbar"
-                  aria-valuenow={Math.round(xpSnapshot.xpProgress * 100)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`Прогресс уровня ${xpSnapshot.xpProgress * 100}%`}
-                />
-              </div>
-            </div>
-            {/* XP Breakdown */}
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-caption text-usnee-text3">Записи</p>
-                <p className="text-caption font-semibold text-usnee-text">{xpSnapshot.breakdown.entriesXp}</p>
-              </div>
-              <div>
-                <p className="text-caption text-usnee-text3">Ачивки</p>
-                <p className="text-caption font-semibold text-usnee-brand">+{xpSnapshot.breakdown.achievementsXp}</p>
-              </div>
-              <div>
-                <p className="text-caption text-usnee-text3">Трекинг</p>
-                <p className="text-caption font-semibold text-usnee-text">{xpSnapshot.breakdown.moodXp + xpSnapshot.breakdown.sleepXp + xpSnapshot.breakdown.waterXp}</p>
-              </div>
+            <div
+              className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-usnee-surface2"
+              role="progressbar"
+              aria-valuenow={Math.round(xpSnapshot.xpProgress * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Прогресс уровня ${Math.round(xpSnapshot.xpProgress * 100)}%`}
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-usnee-brand to-usnee-accent transition-all duration-500"
+                style={{ width: `${Math.round(xpSnapshot.xpProgress * 100)}%` }}
+              />
             </div>
           </Surface>
 
@@ -189,44 +149,57 @@ export function Progress() {
           </Surface>
 
           <section className="space-y-3" aria-labelledby="progress-summary">
-            <h2 id="progress-summary" className="flex items-center gap-2 text-title-md"><BarChart3 className="h-5 w-5 text-usnee-accent" />Сводка</h2>
-            <div className="grid grid-cols-3 gap-2" aria-label="Период статистики">
+            <h2 id="progress-summary" className="flex items-center gap-2 text-title-md"><BarChart3 className="h-4 w-4 text-usnee-accent" />Сводка</h2>
+            <div className="flex rounded-full border border-usnee-border bg-usnee-surface2 p-0.5" role="group" aria-label="Период статистики">
               {periods.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   aria-pressed={period === item.id}
                   onClick={() => setPeriod(item.id)}
-                  className={`min-h-12 rounded-lg px-2 text-body-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-usnee-focus ${period === item.id ? 'bg-usnee-brand text-white' : 'bg-usnee-surface text-usnee-text2'}`}
+                  className={`min-h-9 flex-1 rounded-full px-3 text-caption font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus ${period === item.id ? 'bg-usnee-brand text-white' : 'text-usnee-text2'}`}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
             {!entries.length ? (
-              <Surface className="p-8 text-center">
-                <AlertCircle className="mx-auto h-8 w-8 text-usnee-text3" />
-                <p className="mt-3 text-usnee-text2">Недостаточно данных. Добавь первую запись.</p>
+              <Surface className="p-6 text-center">
+                <AlertCircle className="mx-auto h-6 w-6 text-usnee-text3" aria-hidden="true" />
+                <p className="mt-2 text-body-sm text-usnee-text2">Недостаточно данных. Добавь первую запись.</p>
               </Surface>
             ) : !periodEntries.length ? (
-              <Surface className="p-8 text-center">
-                <CalendarDays className="mx-auto h-8 w-8 text-usnee-text3" />
-                <p className="mt-3 text-usnee-text2">За выбранный период записей нет.</p>
+              <Surface className="p-6 text-center">
+                <CalendarDays className="mx-auto h-6 w-6 text-usnee-text3" aria-hidden="true" />
+                <p className="mt-2 text-body-sm text-usnee-text2">За выбранный период записей нет.</p>
               </Surface>
             ) : (
               <>
-                <Surface variant="glass" className="p-5">
-                  <Hash className="h-5 w-5 text-usnee-brand" />
-                  <p className="mt-3 text-label uppercase text-usnee-text3">Всего записей</p>
-                  <p className="mt-1 text-display-lg tabular-nums">{simpleStats.total}</p>
+                <Surface className="flex items-baseline justify-between px-4 py-3">
+                  <span className="text-caption uppercase text-usnee-text3">Всего записей</span>
+                  <strong className="text-title-xl tabular-nums">{simpleStats.total}</strong>
                 </Surface>
-                <section className="space-y-3" aria-labelledby="progress-days">
-                  <h3 id="progress-days" className="flex items-center gap-2 text-title-md"><CalendarDays className="h-5 w-5 text-usnee-info" />По дням</h3>
-                  {simpleStats.byDay.map((item) => <Surface key={item.id} className="flex items-center justify-between p-4"><span className="text-body-sm">{item.label}</span><strong className="tabular-nums">{item.count}</strong></Surface>)}
+                <section className="space-y-1.5" aria-labelledby="progress-days">
+                  <h3 id="progress-days" className="text-caption uppercase text-usnee-text3">По дням</h3>
+                  <Surface className="divide-y divide-usnee-borderSubtle px-4 py-1">
+                    {simpleStats.byDay.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-3 py-2 text-body-sm">
+                        <span className="truncate">{item.label}</span>
+                        <strong className="tabular-nums">{item.count}</strong>
+                      </div>
+                    ))}
+                  </Surface>
                 </section>
-                <section className="space-y-3" aria-labelledby="progress-substances">
-                  <h3 id="progress-substances" className="flex items-center gap-2 text-title-md"><Pill className="h-5 w-5 text-usnee-cyan" />По веществам</h3>
-                  {simpleStats.bySubstance.map((item) => <Surface key={item.id} className="flex items-center justify-between p-4"><span className="text-body-sm">{item.label}</span><strong className="tabular-nums">{item.count}</strong></Surface>)}
+                <section className="space-y-1.5" aria-labelledby="progress-substances">
+                  <h3 id="progress-substances" className="text-caption uppercase text-usnee-text3">По веществам</h3>
+                  <Surface className="divide-y divide-usnee-borderSubtle px-4 py-1">
+                    {simpleStats.bySubstance.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-3 py-2 text-body-sm">
+                        <span className="truncate">{item.label}</span>
+                        <strong className="tabular-nums">{item.count}</strong>
+                      </div>
+                    ))}
+                  </Surface>
                 </section>
               </>
             )}
