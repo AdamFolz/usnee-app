@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import {
   ActiveLocalStates,
   BatchHeroCard,
   HomeHeader,
   HomeSkeleton,
-  IntervalCard,
   LastEntryCard,
   QuickActionGrid,
   SyncStatus,
   WeeklySummaryCard
 } from '../components/home';
-import { Button, InlineNotice, Surface } from '../components/ui';
+import { Button, InlineNotice } from '../components/ui';
 import { useToast } from '../components/ui/Toast';
 import { computeRecordXpDelta } from '../services/xpService';
 import { getLevelName } from '../domain/gamification';
@@ -165,62 +164,54 @@ export default function Home() {
       )}
 
       {showFirstRecordEmpty ? (
-        <Surface className="p-5 text-center">
-          <h2 className="text-title-lg">Пока нет записей</h2>
-          <p className="mt-2 text-body-sm text-usnee-text2">
-            Начни с короткой записи — она сохранится только на этом устройстве. Сеть не нужна.
-          </p>
-          <Button size="lg" className="mt-4 w-full" onClick={goRecord}>
-            <Plus className="h-5 w-5" aria-hidden="true" /> Сделать первую запись
-          </Button>
-          {!data.activeBatch && (
-            <Button variant="ghost" className="mt-2 w-full" onClick={() => navigate('/partials')}>
-              Создать партию
-            </Button>
-          )}
-        </Surface>
-      ) : (
-        <Button size="lg" className="w-full" onClick={goRecord}>
-          <Plus className="h-5 w-5" aria-hidden="true" /> Новая запись
-        </Button>
-      )}
-
-      {!showFirstRecordEmpty && (
-        <QuickActionGrid
-          onRecord={goRecord}
-          onBatch={() => navigate('/partials')}
-          onAnalytics={() => navigate('/progress')}
-          onSafety={() => navigate('/safety')}
-        />
-      )}
-
-      {!showFirstRecordEmpty && (
-        <section aria-labelledby="home-summary" className="space-y-3">
-          <h2 id="home-summary" className="text-title-md">Сводка</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <IntervalCard lastTimestamp={lastEntry?.timestamp} now={now} />
-            <WeeklySummaryCard entries={entries} todayCount={todayCount} now={now} />
-          </div>
-        </section>
-      )}
-
-      {lastEntry ? (
         <LastEntryCard
-          entry={lastEntry}
-          substanceName={getSubstanceName(lastEntry.substanceId)}
+          entry={null}
+          substanceName=""
+          now={now}
           onOpenHistory={() => navigate('/history')}
           onCreate={goRecord}
-          onRepeat={() => void repeatLast()}
-          repeating={repeating}
         />
-      ) : data.errors.entries ? (
+      ) : (
+        lastEntry && (
+          <LastEntryCard
+            entry={lastEntry}
+            substanceName={getSubstanceName(lastEntry.substanceId)}
+            now={now}
+            onOpenHistory={() => navigate('/history')}
+            onCreate={goRecord}
+            onRepeat={() => void repeatLast()}
+            repeating={repeating}
+          />
+        )
+      )}
+
+      {!lastEntry && data.errors.entries && !showFirstRecordEmpty && (
         <InlineNotice tone="danger" title="История временно недоступна">
           Последняя запись не отображается, чтобы не показывать устаревшие сведения.
           {data.status !== 'error' && (
             <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
           )}
         </InlineNotice>
-      ) : null}
+      )}
+
+      <QuickActionGrid
+        onBatch={() => navigate('/partials')}
+        onAnalytics={() => navigate('/progress')}
+        onSafety={() => navigate('/safety')}
+      />
+
+      {!showFirstRecordEmpty && (
+        <section aria-labelledby="home-summary" className="space-y-3">
+          <h2 id="home-summary" className="text-title-md">Сводка</h2>
+          <WeeklySummaryCard entries={entries} todayCount={todayCount} now={now} />
+        </section>
+      )}
+
+      {showFirstRecordEmpty && !data.activeBatch && (
+        <Button variant="ghost" className="w-full" onClick={() => navigate('/partials')}>
+          Создать партию
+        </Button>
+      )}
 
       <ActiveLocalStates
         timers={timers}

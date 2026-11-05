@@ -12,9 +12,11 @@ export function WeeklySummaryCard({ entries, todayCount, now }: { entries: Consu
   const count = getWeekCount(entries, now);
   return (
     <Surface variant="glass" className="p-4">
-      <CalendarDays className="h-5 w-5 text-usnee-cyan" aria-hidden="true" />
-      <p className="mt-3 text-label uppercase text-usnee-text3">За 7 дней</p>
-      <p className="mt-1 text-title-lg tabular-nums">{formatCountRu(count, RECORD_FORMS)}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label uppercase text-usnee-text3">На неделе</p>
+        <CalendarDays className="h-4 w-4 text-usnee-cyan" aria-hidden="true" />
+      </div>
+      <p className="mt-2 text-title-lg tabular-nums">{formatCountRu(count, RECORD_FORMS)}</p>
       <p className="mt-1 text-caption text-usnee-text2">Сегодня: {todayCount}</p>
     </Surface>
   );

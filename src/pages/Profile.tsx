@@ -275,7 +275,7 @@ export default function Profile() {
 
   return (
       <div className="space-y-6 pb-8">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 pr-14">
           <div>
             <h1 className="text-2xl font-bold text-usnee-text">Самоконтроль</h1>
             <p className="mt-1 text-sm text-usnee-text2">Профиль · сон, настроение, лимиты</p>
@@ -283,11 +283,10 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => navigate('/settings')}
-            className="big-tap inline-flex min-h-12 items-center gap-2 rounded-xl border border-usnee-border bg-usnee-surface px-3 py-2 text-sm font-semibold text-usnee-text transition-all active:scale-95"
+            className="big-tap inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-usnee-border bg-usnee-surface text-usnee-text transition-all active:scale-95"
             aria-label="Настройки"
           >
-            <Settings className="h-4 w-4" aria-hidden="true" />
-            Настройки
+            <Settings className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
