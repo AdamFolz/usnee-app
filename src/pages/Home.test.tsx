@@ -70,7 +70,7 @@ describe('Home', () => {
     renderHome();
     expect(screen.getByRole('status', { name: 'Загрузка главного экрана' })).toBeInTheDocument();
     expect(screen.queryByText('Активной партии нет')).not.toBeInTheDocument();
-    expect(screen.queryByText('Пока нет записей')).not.toBeInTheDocument();
+    expect(screen.queryByText('Пока пусто')).not.toBeInTheDocument();
   });
 
   it('renders existing entries even while the first load flag is still false', () => {
@@ -79,7 +79,7 @@ describe('Home', () => {
     expect(screen.queryByRole('status', { name: 'Загрузка главного экрана' })).not.toBeInTheDocument();
     expect(screen.getByText('Мефедрон')).toBeInTheDocument();
     expect(screen.getByText('Сводка')).toBeInTheDocument();
-    expect(screen.queryByText('Пока нет записей')).not.toBeInTheDocument();
+    expect(screen.queryByText('Пока пусто')).not.toBeInTheDocument();
   });
 
   it('keeps the previous home frame while a later reload is in flight', () => {
@@ -99,7 +99,7 @@ describe('Home', () => {
   it('renders a clean first-record empty state', () => {
     homeState.data = { ...homeState.data, entries: [], activeBatch: null };
     renderHome();
-    expect(screen.getByText('Пока нет записей')).toBeInTheDocument();
+    expect(screen.getByText('Пока пусто')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Сделать первую запись/ })).toBeInTheDocument();
     expect(screen.queryByText('Партии пока нет')).not.toBeInTheDocument();
     expect(screen.queryByText('Записей пока нет')).not.toBeInTheDocument();
@@ -154,8 +154,8 @@ describe('Home', () => {
       reload
     };
     renderHome();
-    expect(screen.getByText('Не удалось загрузить локальные данные')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(screen.getByText('Что-то пошло не так')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Попробовать ещё раз' }));
     expect(reload).toHaveBeenCalled();
     expect(screen.getByText('USNEE')).toBeInTheDocument();
   });
@@ -164,6 +164,6 @@ describe('Home', () => {
     homeState.data = { ...homeState.data, status: 'partial-error', errors: { entries: 'unavailable' } };
     renderHome();
     expect(screen.getByText('Мефедрон')).toBeInTheDocument();
-    expect(screen.queryByText('История временно недоступна')).not.toBeInTheDocument();
+    expect(screen.queryByText('Журнал не читается')).not.toBeInTheDocument();
   });
 });

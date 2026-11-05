@@ -27,7 +27,7 @@ describe('Home components', () => {
     rerender(<LastEntryCard entry={entry} substanceName="Мефедрон" now={Date.now()} onCreate={create} onOpenHistory={open} onRepeat={vi.fn()} />);
     expect(screen.getByText('Мефедрон')).toBeInTheDocument();
     expect(screen.getByText(/20 мг/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /Открыть историю/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Открыть журнал/ }));
     expect(open).toHaveBeenCalled();
   });
   it('shows how long ago the last entry was', () => {
@@ -38,7 +38,7 @@ describe('Home components', () => {
   it('handles all quick actions', async () => {
     const handlers = [vi.fn(), vi.fn(), vi.fn()];
     render(<QuickActionGrid onBatch={handlers[0]} onAnalytics={handlers[1]} onSafety={handlers[2]} />);
-    for (const [index, name] of ['Партия', 'Аналитика', 'Безопасность'].entries()) {
+    for (const [index, name] of ['Партии', 'Выписка', 'Экстренно'].entries()) {
       await userEvent.click(screen.getByRole('button', { name }));
       expect(handlers[index]).toHaveBeenCalled();
     }

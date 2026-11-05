@@ -87,7 +87,7 @@ export function Progress() {
 
   return (
     <div className="space-y-5 pb-8">
-      <TopBar title="Прогресс" eyebrow="ЗА ПОСЛЕДНИЕ 7 ДНЕЙ" />
+      <TopBar title="Выписка" eyebrow="ЗА ПОСЛЕДНИЕ 7 ДНЕЙ" />
       {loading ? <div role="status" className="h-72 animate-pulse rounded-card bg-usnee-surface motion-reduce:animate-none" /> : (
         <>
           <Surface className="relative p-4">
@@ -95,7 +95,7 @@ export function Progress() {
             <div className="flex items-center gap-2.5">
               <div
                 key={celebrate}
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-usnee-brand to-usnee-accent ${celebrate > 0 ? 'animate-level-up animate-ring-pulse' : ''}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-usnee-brand ${celebrate > 0 ? 'animate-level-up animate-ring-pulse' : ''}`}
               >
                 <Star className="h-4 w-4 text-white" aria-hidden="true" />
               </div>
@@ -120,7 +120,7 @@ export function Progress() {
               aria-label={`Прогресс уровня ${Math.round(xpSnapshot.xpProgress * 100)}%`}
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-usnee-brand to-usnee-accent transition-all duration-500"
+                className="h-full rounded-full bg-usnee-brand transition-all duration-500"
                 style={{ width: `${Math.round(xpSnapshot.xpProgress * 100)}%` }}
               />
             </div>

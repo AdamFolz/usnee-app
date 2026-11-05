@@ -20,7 +20,7 @@ const tones: Record<StatusTone, string> = {
 export function StatusBadge({ tone, dot = true, className, children, ...props }: StatusBadgeProps) {
   return (
     <span
-      className={cx('inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none', tones[tone], className)}
+      className={cx('inline-flex min-h-6 items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[10px] font-semibold leading-none tracking-[.04em]', tones[tone], className)}
       {...props}
     >
       {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />}

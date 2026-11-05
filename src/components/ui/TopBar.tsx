@@ -13,15 +13,15 @@ export interface TopBarProps {
 
 export function TopBar({ title, eyebrow, onBack, action, className }: TopBarProps) {
   return (
-    <header className={cx('flex min-h-14 items-center gap-3', className)}>
+    <header className={cx('flex min-h-14 items-center gap-3 pr-14', className)}>
       {onBack && (
         <IconButton onClick={onBack} aria-label="Назад" className="shrink-0">
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </IconButton>
       )}
       <div className="min-w-0 flex-1">
-        {eyebrow && <p className="text-label uppercase text-usnee-text3">{eyebrow}</p>}
-        <h1 className="truncate font-display text-title-xl font-extrabold text-usnee-text">{title}</h1>
+        {eyebrow && <p className="text-caption uppercase tracking-[.14em] text-usnee-text3">{eyebrow}</p>}
+        <h1 className="display truncate text-title-xl text-usnee-text">{title}</h1>
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </header>

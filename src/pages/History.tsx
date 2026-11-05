@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Clock3, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import type { EntrySyncRecord } from '../contracts';
 import type { Batch, ConsumptionEntry } from '../types';
 import { getBatches, getEntries, getEntrySyncRecords, updateEntryDetailsTransaction } from '../utils/db';
@@ -105,9 +105,9 @@ export function History() {
     }
     if (!entries.length) {
       return (
-        <Surface className="p-8 text-center">
-          <Clock3 className="mx-auto h-8 w-8 text-usnee-text3" />
-          <p className="mt-3 text-usnee-text2">Записей пока нет.</p>
+        <Surface className="p-6 text-center">
+          <p className="display text-title-md">Пока пусто</p>
+          <p className="mt-1 text-body-sm text-usnee-text2">Первая запись — как первая строка. Дальше будет проще.</p>
         </Surface>
       );
     }
@@ -194,7 +194,7 @@ export function History() {
 
   return (
     <div className="space-y-4 pb-8">
-      <TopBar title="История" eyebrow={eyebrow} />
+      <TopBar title="Журнал" eyebrow={eyebrow} />
       {error && (
         <InlineNotice tone="danger" title="Ошибка">
           {error}

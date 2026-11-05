@@ -4,34 +4,34 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="description" content="USNEE — дневник употребления. Отметь, что было, и посмотри, как это складывается. Данные остаются на телефоне." />
-<meta name="theme-color" content="#0b0d1a" />
+<meta name="theme-color" content="#12100d" />
 <title>USNEE — дневник употребления. Без лекций.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..600&family=Onest:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet" />
 <style>
 /* ============ TOKENS (USNEE) ============ */
 :root {
-  --bg-void: #070814;
-  --bg-base: #0b0d1a;
-  --surface-1: #14182a;
-  --surface-2: #1b2035;
-  --surface-3: #252b43;
-  --text-1: #ffffff;
-  --text-2: #a7adc3;
-  --text-3: #69708b;
-  --brand: #9b7cff;
-  --brand-2: #b18cff;
-  --accent: #e078f4;
-  --cyan: #67e8f9;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #fb476b;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(155, 124, 255, 0.4);
-  --focus: #a855f7;
-  --radius-card: 1.375rem;
-  --radius-hero: 1.875rem;
+  --bg-void: #0f0d0b;
+  --bg-base: #12100d;
+  --surface-1: #161310;
+  --surface-2: #1d1915;
+  --surface-3: #26211b;
+  --text-1: #efe8db;
+  --text-2: #a79e8f;
+  --text-3: #6e675c;
+  --brand: #c94f4f;
+  --brand-2: #d9615f;
+  --accent: #e0766f;
+  --cyan: #6e8fa3;
+  --success: #8aa06e;
+  --warning: #c9974e;
+  --danger: #d9615f;
+  --border: rgba(239, 232, 219, 0.10);
+  --border-strong: rgba(239, 232, 219, 0.24);
+  --focus: #c94f4f;
+  --radius-card: 0.875rem;
+  --radius-hero: 1rem;
   --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.45);
   --shadow-hero: 0 24px 70px rgba(0, 0, 0, 0.55);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -46,7 +46,7 @@ html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
 body {
   background: var(--bg-base);
   color: var(--text-2);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Onest', system-ui, -apple-system, sans-serif;
   font-weight: 400;
   line-height: 1.6;
   overflow-x: hidden;
@@ -85,7 +85,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 3px;
@@ -99,7 +99,7 @@ body {
   border-radius: 10px;
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
-  box-shadow: 0 0 24px rgba(155, 124, 255, 0.35), inset 0 0 12px rgba(155, 124, 255, 0.15);
+  box-shadow: 0 0 24px rgba(201, 79, 79, 0.35), inset 0 0 12px rgba(201, 79, 79, 0.15);
   font-size: 14px;
   font-weight: 600;
   color: var(--brand-2);
@@ -113,7 +113,7 @@ body {
 .nav-links a {
   display: inline-block;
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -122,26 +122,26 @@ body {
   text-decoration: none;
   transition: color var(--fast) var(--ease), background-color var(--fast) var(--ease);
 }
-.nav-links a:hover { color: var(--text-1); background: rgba(155, 124, 255, 0.12); }
+.nav-links a:hover { color: var(--text-1); background: rgba(201, 79, 79, 0.12); }
 .nav-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 42px;
   padding: 0 18px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: var(--brand);
-  color: #0b0d1a;
+  color: #12100d;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   text-decoration: none;
-  box-shadow: 0 6px 24px rgba(155, 124, 255, 0.35);
+  box-shadow: 0 6px 24px rgba(201, 79, 79, 0.35);
   transition: transform var(--normal) var(--ease), box-shadow var(--normal) var(--ease), background-color var(--normal) var(--ease);
 }
-.nav-cta:hover { transform: translateY(-2px); background: var(--brand-2); box-shadow: 0 10px 32px rgba(155, 124, 255, 0.5); }
-.nav-cta .soon { font-size: 8px; font-weight: 700; letter-spacing: 1px; padding: 2px 7px; border-radius: 999px; background: rgba(251, 71, 107, 0.18); color: var(--danger); }
+.nav-cta:hover { transform: translateY(-2px); background: var(--brand-2); box-shadow: 0 10px 32px rgba(201, 79, 79, 0.5); }
+.nav-cta .soon { font-size: 8px; font-weight: 700; letter-spacing: 1px; padding: 2px 7px; border-radius: 8px; background: rgba(217, 97, 95, 0.18); color: var(--danger); }
 
 @media (max-width: 720px) {
   .nav-links { display: none; }
@@ -155,7 +155,7 @@ body {
   width: 0%;
   z-index: 60;
   background: var(--brand-2);
-  box-shadow: 0 0 12px rgba(155, 124, 255, 0.7);
+  box-shadow: 0 0 12px rgba(201, 79, 79, 0.7);
   pointer-events: none;
 }
 
@@ -192,11 +192,11 @@ body {
   letter-spacing: 4px;
   text-transform: uppercase;
   color: var(--brand-2);
-  text-shadow: 0 0 24px rgba(155, 124, 255, 0.45);
+  text-shadow: 0 0 24px rgba(201, 79, 79, 0.45);
 }
 
 .hero h1 {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 500;
   font-size: clamp(34px, 7vw, 84px);
   line-height: 1.12;
@@ -208,7 +208,7 @@ body {
 .hero h1 em {
   font-style: normal;
   color: var(--brand-2);
-  text-shadow: 0 0 34px rgba(155, 124, 255, 0.5), 0 0 90px rgba(155, 124, 255, 0.18);
+  text-shadow: 0 0 34px rgba(201, 79, 79, 0.5), 0 0 90px rgba(201, 79, 79, 0.18);
 }
 
 .hero-sub {
@@ -235,7 +235,7 @@ body {
   gap: 10px;
   min-height: 52px;
   padding: 0 26px;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid transparent;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -249,13 +249,13 @@ body {
 
 .btn-primary {
   background: var(--brand);
-  color: #0b0d1a;
-  box-shadow: 0 8px 32px rgba(155, 124, 255, 0.35);
+  color: #12100d;
+  box-shadow: 0 8px 32px rgba(201, 79, 79, 0.35);
 }
 .btn-primary:hover {
   transform: translateY(-2px);
   background: var(--brand-2);
-  box-shadow: 0 14px 44px rgba(155, 124, 255, 0.5);
+  box-shadow: 0 14px 44px rgba(201, 79, 79, 0.5);
 }
 
 .btn-ghost {
@@ -267,21 +267,21 @@ body {
 .btn-ghost:hover {
   transform: translateY(-2px);
   border-color: var(--border-strong);
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55), 0 0 24px rgba(155, 124, 255, 0.15);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55), 0 0 24px rgba(201, 79, 79, 0.15);
 }
 
 .btn:focus-visible, a:focus-visible, button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
-  border-radius: 999px;
+  border-radius: 8px;
 }
 
 .pill-soon {
   display: inline-block;
   margin-left: 8px;
   padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(251, 71, 107, 0.45);
+  border-radius: 8px;
+  border: 1px solid rgba(217, 97, 95, 0.45);
   color: var(--danger);
   font-size: 10px;
   font-weight: 600;
@@ -310,7 +310,7 @@ body {
   height: 44px;
   border-radius: 2px;
   background: var(--surface-3);
-  box-shadow: 0 0 14px rgba(155, 124, 255, 0.35);
+  box-shadow: 0 0 14px rgba(201, 79, 79, 0.35);
   position: relative;
   overflow: hidden;
 }
@@ -345,7 +345,7 @@ body {
   color: var(--text-3);
 }
 .manifesto h2 {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 400;
   font-size: clamp(24px, 4vw, 44px);
   line-height: 1.35;
@@ -372,7 +372,7 @@ body {
 }
 .features-head h2 {
   margin-top: 14px;
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 400;
   font-size: clamp(24px, 4vw, 40px);
   color: var(--text-1);
@@ -416,7 +416,7 @@ body {
 .card:hover {
   transform: translateY(-6px);
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-hero), 0 0 34px rgba(155, 124, 255, 0.12);
+  box-shadow: var(--shadow-hero), 0 0 34px rgba(201, 79, 79, 0.12);
 }
 .card:hover::before { opacity: 1; }
 
@@ -427,12 +427,12 @@ body {
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--brand-2);
-  box-shadow: 0 0 18px rgba(155, 124, 255, 0.18);
+  box-shadow: 0 0 18px rgba(201, 79, 79, 0.18);
 }
 .card-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.card:nth-child(2) .card-icon { color: var(--cyan); box-shadow: 0 0 18px rgba(103, 232, 249, 0.18); }
+.card:nth-child(2) .card-icon { color: var(--cyan); box-shadow: 0 0 18px rgba(110, 143, 163, 0.18); }
 .card:nth-child(3) .card-icon { color: var(--accent); box-shadow: 0 0 18px rgba(224, 120, 244, 0.18); }
-.card:nth-child(4) .card-icon { color: var(--success); box-shadow: 0 0 18px rgba(52, 211, 153, 0.18); }
+.card:nth-child(4) .card-icon { color: var(--success); box-shadow: 0 0 18px rgba(138, 160, 110, 0.18); }
 
 .card-num {
   font-size: 10px;
@@ -467,12 +467,12 @@ body {
 }
 .how-head h2 {
   margin-top: 14px;
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 400;
   font-size: clamp(24px, 4vw, 40px);
   color: var(--text-1);
 }
-.how-head h2 em { font-style: normal; color: var(--cyan); text-shadow: 0 0 30px rgba(103, 232, 249, 0.3); }
+.how-head h2 em { font-style: normal; color: var(--cyan); text-shadow: 0 0 30px rgba(110, 143, 163, 0.3); }
 
 .steps {
   display: grid;
@@ -489,19 +489,19 @@ body {
   position: relative;
   padding: 24px 22px 26px;
   border-radius: var(--radius-card);
-  background: rgba(11, 13, 26, 0.65);
+  background: rgba(29, 25, 21, 0.75);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
   transition: transform var(--normal) var(--ease), border-color var(--normal) var(--ease);
 }
-.step:hover { transform: translateY(-4px); border-color: rgba(103, 232, 249, 0.35); }
+.step:hover { transform: translateY(-4px); border-color: rgba(110, 143, 163, 0.35); }
 .step-num {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-size: 30px;
   font-weight: 500;
   color: var(--cyan);
   opacity: 0.85;
-  text-shadow: 0 0 26px rgba(103, 232, 249, 0.3);
+  text-shadow: 0 0 26px rgba(110, 143, 163, 0.3);
   line-height: 1;
 }
 .step h3 {
@@ -530,7 +530,7 @@ body {
   padding: 96px 24px;
 }
 .quote-section blockquote {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 400;
   font-size: clamp(20px, 3.2vw, 36px);
   line-height: 1.45;
@@ -538,7 +538,7 @@ body {
   color: var(--text-1);
   text-shadow: 0 2px 34px rgba(0, 0, 0, 0.6);
 }
-.quote-section blockquote em { font-style: normal; color: var(--success); text-shadow: 0 0 30px rgba(52, 211, 153, 0.3); }
+.quote-section blockquote em { font-style: normal; color: var(--success); text-shadow: 0 0 30px rgba(138, 160, 110, 0.3); }
 .quote-attr {
   font-size: 11px;
   font-weight: 500;
@@ -559,7 +559,7 @@ body {
   padding: 96px 24px;
 }
 .cta-section h2 {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-weight: 500;
   font-size: clamp(30px, 5.5vw, 60px);
   line-height: 1.15;
@@ -569,7 +569,7 @@ body {
 .cta-section h2 em {
   font-style: normal;
   color: var(--brand-2);
-  text-shadow: 0 0 40px rgba(155, 124, 255, 0.5), 0 0 100px rgba(155, 124, 255, 0.2);
+  text-shadow: 0 0 40px rgba(201, 79, 79, 0.5), 0 0 100px rgba(201, 79, 79, 0.2);
 }
 .cta-sub {
   font-size: 15px;
@@ -609,7 +609,7 @@ footer {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 3px;
@@ -708,6 +708,7 @@ footer p {
     <li><a href="#manifesto">Философия</a></li>
     <li><a href="#features">Что внутри</a></li>
     <li><a href="#how">Как это</a></li>
+    <li><a href="#where">Где открыть</a></li>
     <li><a href="https://t.me/usnee_bot" target="_blank" rel="noopener noreferrer">Открыть</a></li>
   </ul>
   <a class="nav-cta" href="https://t.me/usnee_bot" target="_blank" rel="noopener noreferrer">Открыть</a>
@@ -720,8 +721,8 @@ footer p {
     <p class="hero-tag" data-reveal data-delay="1">В Telegram · записи на телефоне</p>
     <h1 data-reveal data-delay="2">Дневник употребления.<br /><em>Без лекций.</em></h1>
     <p class="hero-sub" data-reveal data-delay="3">
-      Отметь, что было. Посмотри, как это складывается.
-      Данные остаются на телефоне.
+      Отметь, что было. Через неделю уже не вспомнить — запись держит числа.
+      Данные остаются на телефоне, не в аккаунте.
     </p>
     <div class="hero-actions" data-reveal data-delay="4">
       <a class="btn btn-primary" href="https://t.me/usnee_bot" target="_blank" rel="noopener noreferrer" aria-label="Открыть USNEE в Telegram">
@@ -762,7 +763,7 @@ footer p {
         <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
         <span class="card-num">02 · Приватно</span>
         <h3>На этом телефоне</h3>
-        <p>Пишет без сети. PIN и шифрованный экспорт — если включишь.</p>
+        <p>Пишется на устройство, не в аккаунт. PIN и шифрованный экспорт — если включишь.</p>
       </article>
       <article class="card" data-reveal data-delay="3">
         <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
@@ -774,7 +775,7 @@ footer p {
         <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6Z"/><path d="M9.5 12l2 2 3.5-4"/></svg></div>
         <span class="card-num">04 · Рядом</span>
         <h3>Если срочно</h3>
-        <p>SOS-контакт и таймер. Не скорая.</p>
+        <p>SOS-контакт и таймер. Скорую не вызывает — звони сам.</p>
       </article>
     </div>
   </section>
@@ -809,9 +810,35 @@ footer p {
     </div>
   </section>
 
+
+  <!-- ============ WHERE ============ -->
+  <section class="section how" data-stage="4" id="where" aria-label="Где открыть">
+    <div class="how-head">
+      <span class="section-label" data-reveal>Где открыть</span>
+      <h2 data-reveal data-delay="1">Два входа. <em>Данные на телефоне.</em></h2>
+    </div>
+    <div class="steps">
+      <div class="step" data-reveal data-delay="1">
+        <div class="step-num" aria-hidden="true">01</div>
+        <h3>В Telegram</h3>
+        <p>Бот <strong>@usnee_bot</strong> открывает дневник прямо в чате-приложении.</p>
+      </div>
+      <div class="step" data-reveal data-delay="2">
+        <div class="step-num" aria-hidden="true">02</div>
+        <h3>В браузере</h3>
+        <p>Та же сборка по прямой ссылке. Можно добавить на домашний экран.</p>
+      </div>
+      <div class="step" data-reveal data-delay="3">
+        <div class="step-num" aria-hidden="true">03</div>
+        <h3>На телефоне</h3>
+        <p>Записи живут в приложении. В чате ничего не появилось — и это нормально.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ CTA ============ -->
   <section class="section cta-section" data-stage="4" id="cta" aria-label="Открыть USNEE">
-    <h2 data-reveal>Пока только <em>визитка</em></h2>
+    <h2 data-reveal>Хватит читать. <em>Открывай.</em></h2>
     <p class="cta-sub" data-reveal data-delay="1">
       Mini App уже работает — открой по прямой ссылке или через бота @usnee_bot.
     </p>
@@ -823,8 +850,8 @@ footer p {
       <a class="btn btn-ghost" href="https://adamfolz.github.io/usnee-app/" target="_blank" rel="noopener noreferrer">Открыть в браузере</a>
     </div>
     <p class="safety-note" data-reveal data-delay="3">
-      USNEE не заменяет экстренные службы.<br />
-      При угрозе жизни — <strong>звони 112</strong>.
+      Приложение не вызывает скорую и не заменяет экстренные службы.<br />
+      При угрозе жизни — <strong>звони 112 сам</strong>.
     </p>
   </section>
 
@@ -850,7 +877,7 @@ footer p {
   var ctx = canvas.getContext('2d');
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var MAX_DPR = 1.5;
-  var COLORS = ['155,124,255', '103,232,249', '224,120,244'];
+  var COLORS = ['201,79,79', '110,143,163', '201,151,78'];
 
   var W = 0, H = 0;
   var raf = null;
@@ -935,8 +962,8 @@ footer p {
 
     /* фон — глубокое свечение (canvas light) */
     var g1 = ctx.createRadialGradient(W * 0.5, H * 0.42, 0, W * 0.5, H * 0.42, Math.max(W, H) * 0.7);
-    g1.addColorStop(0, 'rgba(155,124,255,0.05)');
-    g1.addColorStop(1, 'rgba(155,124,255,0)');
+    g1.addColorStop(0, 'rgba(201,79,79,0.05)');
+    g1.addColorStop(1, 'rgba(201,79,79,0)');
     ctx.fillStyle = g1;
     ctx.fillRect(0, 0, W, H);
 
@@ -982,7 +1009,7 @@ footer p {
       var bz = 0.2 + (m % 5) * 0.24;
       var p1 = project(bx, -0.9, bz, ROLL);
       var p2 = project(bx * 0.7, -0.9, bz + 0.9, ROLL);
-      ctx.strokeStyle = 'rgba(155,124,255,' + (0.02 + 0.03 * ((m % 3) / 2)).toFixed(3) + ')';
+      ctx.strokeStyle = 'rgba(201,79,79,' + (0.02 + 0.03 * ((m % 3) / 2)).toFixed(3) + ')';
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p2.x, p2.y);

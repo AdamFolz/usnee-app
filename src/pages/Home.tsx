@@ -143,9 +143,9 @@ export default function Home() {
       />
 
       {data.status === 'error' && (
-        <InlineNotice tone="danger" title="Не удалось загрузить локальные данные">
-          <p>Данные не удалены. Попробуй прочитать их ещё раз.</p>
-          <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
+        <InlineNotice tone="danger" title="Что-то пошло не так">
+          <p>Записи не пропали — они на устройстве. Прочитать не вышло.</p>
+          <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Попробовать ещё раз</Button>
         </InlineNotice>
       )}
       {data.status === 'partial-error' && (
@@ -186,10 +186,10 @@ export default function Home() {
       )}
 
       {!lastEntry && data.errors.entries && !showFirstRecordEmpty && (
-        <InlineNotice tone="danger" title="История временно недоступна">
-          Последняя запись не отображается, чтобы не показывать устаревшие сведения.
+        <InlineNotice tone="danger" title="Журнал не читается">
+          Последняя запись не отображается, чтобы не показывать устаревшее.
           {data.status !== 'error' && (
-            <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Повторить</Button>
+            <Button variant="secondary" size="sm" className="mt-3" onClick={data.reload}>Попробовать ещё раз</Button>
           )}
         </InlineNotice>
       )}
@@ -222,7 +222,7 @@ export default function Home() {
 
       {!online && (
         <InlineNotice tone="info" title="Работа без сети">
-          Локальные записи и навигация доступны. Серверная отправка сейчас не выполняется.
+          Записи и навигация доступны. Отправка на сервер пока не выполняется.
         </InlineNotice>
       )}
 

@@ -8,9 +8,9 @@ export interface QuickActionGridProps {
 }
 
 const actions = [
-  ['Партия', FlaskConical, 'batch'] as const,
-  ['Аналитика', BarChart3, 'analytics'] as const,
-  ['Безопасность', ShieldCheck, 'safety'] as const
+  ['Партии', FlaskConical, 'batch'] as const,
+  ['Выписка', BarChart3, 'analytics'] as const,
+  ['Экстренно', ShieldCheck, 'safety'] as const
 ];
 
 export function QuickActionGrid(props: QuickActionGridProps) {
@@ -25,8 +25,8 @@ export function QuickActionGrid(props: QuickActionGridProps) {
           className="rounded-card text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-usnee-focus"
         >
           <Surface variant="interactive" className={cx('flex min-h-[4.25rem] flex-col justify-between gap-2 p-3')}>
-            <Icon className="h-5 w-5 text-usnee-text2" aria-hidden="true" />
-            <span className="text-caption font-bold">{label}</span>
+            <Icon className="h-5 w-5 text-usnee-text2" strokeWidth={1.9} aria-hidden="true" />
+            <span className="text-caption font-semibold">{label}</span>
           </Surface>
         </button>
       ))}

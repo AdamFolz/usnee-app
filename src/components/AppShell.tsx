@@ -24,7 +24,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <ToastProvider>
-      <div className="app-shell relative flex min-h-0 flex-col overflow-hidden bg-usnee-bg text-usnee-text">
+      <div className="app-shell paper-grain relative flex min-h-0 flex-col overflow-hidden bg-usnee-bg text-usnee-text">
         <AmbientField />
         <a
           href="#main-content"

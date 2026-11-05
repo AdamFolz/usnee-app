@@ -16,13 +16,13 @@ function renderNav(route: string) {
 describe('BottomNav', () => {
   it('marks the active tab with aria-current=page', () => {
     renderNav('/history');
-    expect(screen.getByRole('link', { name: 'История' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Главная' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Журнал' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Дневник' })).not.toHaveAttribute('aria-current');
   });
 
   it('marks home tab active only on the root route', () => {
     renderNav('/');
-    expect(screen.getByRole('link', { name: 'Главная' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Прогресс' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Дневник' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Выписка' })).not.toHaveAttribute('aria-current');
   });
 });
